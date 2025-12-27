@@ -9,10 +9,10 @@ import pc from 'picocolors';
 import prompts from 'prompts';
 
 const log = {
-  info: (msg: string) => console.log(`${pc.cyan('ℹ')} ${msg}`),
-  success: (msg: string) => console.log(`${pc.green('✓')} ${msg}`),
-  warn: (msg: string) => console.log(`${pc.yellow('⚠')} ${pc.yellow(msg)}`),
-  error: (msg: string) => console.log(`${pc.red('✗')} ${pc.red(msg)}`),
+  info: (msg: string) => console.log(`  ${pc.cyan('ℹ')} ${msg}`),
+  success: (msg: string) => console.log(`  ${pc.green('✔')} ${msg}`),
+  warn: (msg: string) => console.log(`  ${pc.yellow('⚠')} ${pc.yellow(msg)}`),
+  error: (msg: string) => console.log(`  ${pc.red('✖')} ${pc.red(msg)}`),
   blank: () => console.log(''),
 };
 
@@ -60,7 +60,7 @@ interface ${toPascalCase(name)}Props {
 }
 ` : '';
     const propsType = options.props ? `{ className, children }: ${toPascalCase(name)}Props` : '{}';
-    
+
     return `${options.client ? "'use client';\n\n" : ''}import React from 'react';
 import { cn } from '@/lib/utils';
 ${propsInterface}
@@ -333,14 +333,14 @@ function writeFile(filePath: string, content: string): void {
 // Generator Commands
 // ============================================================================
 
-export type GeneratorType = 
-  | 'page' 
-  | 'layout' 
-  | 'component' 
-  | 'hook' 
-  | 'api' 
-  | 'action' 
-  | 'middleware' 
+export type GeneratorType =
+  | 'page'
+  | 'layout'
+  | 'component'
+  | 'hook'
+  | 'api'
+  | 'action'
+  | 'middleware'
   | 'context'
   | 'loading'
   | 'error'
@@ -348,7 +348,7 @@ export type GeneratorType =
 
 export async function runGenerate(type?: string, name?: string): Promise<void> {
   const cwd = process.cwd();
-  
+
   // Check if we're in a FlexiReact project
   if (!fs.existsSync(path.join(cwd, 'package.json'))) {
     log.error('Not in a FlexiReact project. Run this command in your project root.');
@@ -391,10 +391,10 @@ export async function runGenerate(type?: string, name?: string): Promise<void> {
 
   // Validate type
   const validTypes: GeneratorType[] = [
-    'page', 'layout', 'component', 'hook', 'api', 
+    'page', 'layout', 'component', 'hook', 'api',
     'action', 'middleware', 'context', 'loading', 'error', 'not-found'
   ];
-  
+
   if (!validTypes.includes(type as GeneratorType)) {
     log.error(`Invalid type: ${type}`);
     log.info(`Valid types: ${validTypes.join(', ')}`);
@@ -471,7 +471,7 @@ async function generatePage(name: string, cwd: string): Promise<void> {
   ]);
 
   const fileName = response.directory === 'app' ? 'page.tsx' : `${toKebabCase(name)}.tsx`;
-  const filePath = response.directory === 'app' 
+  const filePath = response.directory === 'app'
     ? path.join(cwd, 'app', toKebabCase(name), fileName)
     : path.join(cwd, 'pages', fileName);
 
@@ -559,10 +559,10 @@ async function generateSpecialFile(type: 'loading' | 'error' | 'not-found', cwd:
   });
 
   const basePath = response.path ? path.join(cwd, 'app', response.path) : path.join(cwd, 'app');
-  
+
   let fileName: string;
   let content: string;
-  
+
   switch (type) {
     case 'loading':
       fileName = 'loading.tsx';
@@ -588,29 +588,19 @@ async function generateSpecialFile(type: 'loading' | 'error' | 'not-found', cwd:
 // ============================================================================
 
 export function listGenerators(): void {
-  console.log(`
-${pc.bold('Available Generators:')}
+  console.log(`  ${pc.bold('Available Generators')}`);
+  log.blank();
 
-  ${pc.cyan('page')}        Create a new page (app/ or pages/)
-  ${pc.cyan('layout')}      Create a layout wrapper
-  ${pc.cyan('component')}   Create a React component
-  ${pc.cyan('hook')}        Create a custom hook
-  ${pc.cyan('api')}         Create an API route
-  ${pc.cyan('action')}      Create a server action
-  ${pc.cyan('middleware')}  Create request middleware
-  ${pc.cyan('context')}     Create a React context
-  ${pc.cyan('loading')}     Create a loading component
-  ${pc.cyan('error')}       Create an error boundary
-  ${pc.cyan('not-found')}   Create a 404 page
+  console.log(`    ${pc.cyan('page')}        ${pc.dim('Create a new page')}`);
+  console.log(`    ${pc.cyan('layout')}      ${pc.dim('Create a layout wrapper')}`);
+  console.log(`    ${pc.cyan('component')}   ${pc.dim('Create a React component')}`);
+  console.log(`    ${pc.cyan('hook')}        ${pc.dim('Create a custom hook')}`);
+  console.log(`    ${pc.cyan('api')}         ${pc.dim('Create an API route')}`);
+  console.log(`    ${pc.cyan('action')}      ${pc.dim('Create a server action')}`);
+  console.log(`    ${pc.cyan('middleware')}  ${pc.dim('Create request middleware')}`);
+  log.blank();
 
-${pc.bold('Usage:')}
-  ${pc.dim('$')} flexi generate ${pc.cyan('<type>')} ${pc.dim('[name]')}
-  ${pc.dim('$')} flexi g ${pc.cyan('<type>')} ${pc.dim('[name]')}
-
-${pc.bold('Examples:')}
-  ${pc.dim('$')} flexi g page dashboard
-  ${pc.dim('$')} flexi g component Button
-  ${pc.dim('$')} flexi g hook auth
-  ${pc.dim('$')} flexi g api users
-`);
+  console.log(`  ${pc.bold('Usage')}`);
+  console.log(`    $ flexi g <type> [name]`);
+  log.blank();
 }

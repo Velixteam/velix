@@ -1,3 +1,4 @@
+
 /**
  * Default Template - Full-featured FlexiReact v4 setup
  * 
@@ -10,7 +11,9 @@
 
 import type { TemplateFiles } from './index.js';
 
-export function defaultTemplate(projectName: string): TemplateFiles {
+export function defaultTemplate(projectName: string, options: { styling?: 'tailwind' | 'css' } = {}): TemplateFiles {
+  const isTailwind = options.styling !== 'css';
+
   return {
     // ========================================================================
     // Config Files
@@ -22,25 +25,28 @@ export function defaultTemplate(projectName: string): TemplateFiles {
       private: true,
       type: 'module',
       scripts: {
-        dev: 'npm run css && flexireact dev',
-        build: 'npm run css && flexireact build',
+        dev: isTailwind ? 'npm run css && flexireact dev' : 'flexireact dev',
+        build: isTailwind ? 'npm run css && flexireact build' : 'flexireact build',
         start: 'flexireact start',
-        css: 'tailwindcss -i ./app/styles/globals.css -o ./public/styles.css --minify',
+        ...(isTailwind ? { css: 'tailwindcss -i ./app/styles/globals.css -o ./public/styles.css --minify' } : {}),
       },
       dependencies: {
-        react: '^18.2.0',
-        'react-dom': '^18.2.0',
-        '@flexireact/core': '^3.0.0',
+        react: '^19.0.0',
+        'react-dom': '^19.0.0',
+        '@flexireact/core': '^4.1.0',
+        'lucide-react': '^0.344.0',
         clsx: '^2.1.0',
         'tailwind-merge': '^2.2.0',
       },
       devDependencies: {
-        '@types/react': '^18.2.0',
-        '@types/react-dom': '^18.2.0',
+        '@types/react': '^19.0.0',
+        '@types/react-dom': '^19.0.0',
         typescript: '^5.3.0',
-        tailwindcss: '^4.0.0',
-        '@tailwindcss/cli': '^4.0.0',
-        '@tailwindcss/postcss': '^4.0.0',
+        ...(isTailwind ? {
+          tailwindcss: '^4.0.0',
+          '@tailwindcss/cli': '^4.0.0',
+          '@tailwindcss/postcss': '^4.0.0',
+        } : {}),
       },
     }, null, 2),
 
@@ -68,12 +74,14 @@ export function defaultTemplate(projectName: string): TemplateFiles {
       exclude: ['node_modules', '.flexi', 'public'],
     }, null, 2),
 
-    'postcss.config.js': `export default {
+    ...(isTailwind ? {
+      'postcss.config.js': `export default {
   plugins: {
     "@tailwindcss/postcss": {},
   },
 };
 `,
+    } : {}),
 
     'flexireact.config.js': `/** @type {import('@flexireact/core').FlexiConfig} */
 const config = {
@@ -112,12 +120,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <link rel="stylesheet" href="/styles.css" />
         <link rel="icon" href="/favicon.svg" />
       </head>
-      <body className="bg-background text-foreground min-h-screen antialiased">
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+      <body className="${isTailwind ? 'bg-background text-foreground min-h-screen antialiased flex flex-col' : 'app-body'}">
+        <Navbar />
+        <main className="${isTailwind ? 'flex-1' : 'main-content'}">{children}</main>
+        <Footer />
       </body>
     </html>
   );
@@ -126,39 +132,52 @@ export default function RootLayout({ children }: RootLayoutProps) {
 
     // Components - UI
     'app/components/ui/Button.tsx': `import React from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'; // Keep utility usage
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
+  href?: string;
 }
 
 export function Button({ 
   className, 
   variant = 'primary', 
   size = 'md',
+  href,
   children,
   ...props 
 }: ButtonProps) {
+  const baseStyles = ${isTailwind
+        ? "'inline-flex items-center justify-center font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed'"
+        : "'btn'"};
+  
+  const variants = {
+    primary: ${isTailwind ? "'bg-primary text-black hover:bg-primary/90'" : "'btn-primary'"},
+    secondary: ${isTailwind ? "'bg-secondary text-white hover:bg-secondary/80'" : "'btn-secondary'"},
+    ghost: ${isTailwind ? "'hover:bg-white/5'" : "'btn-ghost'"},
+    outline: ${isTailwind ? "'border border-border hover:bg-white/5 hover:border-primary'" : "'btn-outline'"},
+  };
+
+  const sizes = {
+    sm: ${isTailwind ? "'px-3 py-1.5 text-sm'" : "'btn-sm'"},
+    md: ${isTailwind ? "'px-4 py-2 text-sm'" : "'btn-md'"},
+    lg: ${isTailwind ? "'px-6 py-3 text-base'" : "'btn-lg'"},
+  };
+
+  const classes = cn(
+    baseStyles,
+    variants[variant],
+    sizes[size],
+    className
+  );
+
+  if (href) {
+    return <a href={href} className={classes}>{children}</a>;
+  }
+
   return (
-    <button
-      className={cn(
-        'inline-flex items-center justify-center font-medium rounded-lg transition-all',
-        'focus:outline-none focus:ring-2 focus:ring-primary/50',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
-        {
-          'bg-primary text-black hover:bg-primary/90': variant === 'primary',
-          'bg-secondary text-white hover:bg-secondary/80': variant === 'secondary',
-          'hover:bg-white/5': variant === 'ghost',
-          'border border-border hover:bg-white/5 hover:border-primary': variant === 'outline',
-          'px-3 py-1.5 text-sm': size === 'sm',
-          'px-4 py-2 text-sm': size === 'md',
-          'px-6 py-3 text-base': size === 'lg',
-        },
-        className
-      )}
-      {...props}
-    >
+    <button className={classes} {...props}>
       {children}
     </button>
   );
@@ -176,12 +195,11 @@ export function Card({ className, variant = 'default', children, ...props }: Car
   return (
     <div
       className={cn(
-        'rounded-xl border border-border p-6 transition-all',
+        ${isTailwind ? "'rounded-xl border border-border p-6 transition-all hover:border-primary/50'" : "'card'"},
         {
-          'bg-card': variant === 'default',
-          'bg-white/5 backdrop-blur-xl': variant === 'glass',
+          ${isTailwind ? "'bg-card': variant === 'default'," : ""},
+          ${isTailwind ? "'bg-white/5 backdrop-blur-xl': variant === 'glass'," : ""},
         },
-        'hover:border-primary/50',
         className
       )}
       {...props}
@@ -192,15 +210,15 @@ export function Card({ className, variant = 'default', children, ...props }: Car
 }
 
 export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('mb-4', className)} {...props} />;
+  return <div className={cn(${isTailwind ? "'mb-4'" : "'card-header'"}, className)} {...props} />;
 }
 
 export function CardTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h3 className={cn('text-lg font-semibold', className)} {...props} />;
+  return <h3 className={cn(${isTailwind ? "'text-lg font-semibold'" : "'card-title'"}, className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('text-muted', className)} {...props} />;
+  return <div className={cn(${isTailwind ? "'text-muted-foreground'" : "'card-content'"}, className)} {...props} />;
 }
 `,
 
@@ -210,28 +228,29 @@ export { Card, CardHeader, CardTitle, CardContent } from './Card';
 
     // Components - Layout
     'app/components/layout/Navbar.tsx': `import React from 'react';
+import { Zap, Github } from 'lucide-react';
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">
-      <nav className="container mx-auto px-4 h-16 flex items-center justify-between max-w-6xl">
-        <a href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <span className="text-black font-bold text-sm">F</span>
+    <header className="${isTailwind ? 'sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl' : 'navbar'}">
+      <nav className="${isTailwind ? 'container mx-auto px-4 h-16 flex items-center justify-between max-w-6xl' : 'navbar-container'}">
+        <a href="/" className="${isTailwind ? 'flex items-center gap-2' : 'navbar-brand'}">
+          <div className="${isTailwind ? 'w-8 h-8 bg-primary rounded-lg flex items-center justify-center' : 'logo-container'}">
+            <Zap className="${isTailwind ? 'w-5 h-5 text-black' : 'logo-icon'}" />
           </div>
-          <span className="font-semibold text-lg">FlexiReact</span>
+          <span className="${isTailwind ? 'font-semibold text-lg' : 'brand-text'}">FlexiReact</span>
         </a>
         
-        <div className="flex items-center gap-6">
-          <a href="/" className="text-sm text-muted hover:text-foreground transition-colors">Home</a>
-          <a href="/about" className="text-sm text-muted hover:text-foreground transition-colors">About</a>
-          <a href="/blog" className="text-sm text-muted hover:text-foreground transition-colors">Blog</a>
+        <div className="${isTailwind ? 'flex items-center gap-6' : 'navbar-links'}">
+          <a href="/" className="${isTailwind ? 'text-sm text-muted-foreground hover:text-foreground transition-colors' : 'nav-link'}">Home</a>
+          <a href="/about" className="${isTailwind ? 'text-sm text-muted-foreground hover:text-foreground transition-colors' : 'nav-link'}">About</a>
+          <a href="/blog" className="${isTailwind ? 'text-sm text-muted-foreground hover:text-foreground transition-colors' : 'nav-link'}">Blog</a>
           <a 
             href="https://github.com/flexireact/flexireact" 
             target="_blank"
-            className="text-sm text-muted hover:text-foreground transition-colors"
+            className="${isTailwind ? 'text-sm text-muted-foreground hover:text-foreground transition-colors' : 'nav-link'}"
           >
-            GitHub
+            <Github className="w-5 h-5" />
           </a>
         </div>
       </nav>
@@ -244,11 +263,11 @@ export function Navbar() {
 
 export function Footer() {
   return (
-    <footer className="border-t border-border py-8 mt-auto">
-      <div className="container mx-auto px-4 text-center text-sm text-muted max-w-6xl">
+    <footer className="${isTailwind ? 'border-t border-border py-8 mt-auto' : 'footer'}">
+      <div className="${isTailwind ? 'container mx-auto px-4 text-center text-sm text-muted-foreground max-w-6xl' : 'footer-container'}">
         <p>Built with FlexiReact v4 • {new Date().getFullYear()}</p>
-        <p className="mt-2">
-          <a href="https://discord.gg/rFSZxFtpAA" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+        <p className="${isTailwind ? 'mt-2' : ''}">
+          <a href="https://discord.gg/rFSZxFtpAA" target="_blank" rel="noopener noreferrer" className="${isTailwind ? 'text-primary hover:underline' : 'link'}">
             Join our Discord Community 💬
           </a>
         </p>
@@ -295,6 +314,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
+  // For classic CSS body class handling could be added here if needed
+  if (${!isTailwind}) {
+    useEffect(() => {
+      document.body.className = theme;
+    }, [theme]);
+  }
+
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
       {children}
@@ -310,7 +336,7 @@ export function useTheme() {
 `,
 
     // Styles
-    'app/styles/globals.css': `@import "tailwindcss";
+    'app/styles/globals.css': isTailwind ? `@import "tailwindcss";
 
 /* FlexiReact v4 Theme */
 @theme {
@@ -320,6 +346,7 @@ export function useTheme() {
   --color-primary: #00FF9C;
   --color-secondary: #1a1a1a;
   --color-muted: #71717a;
+  --color-muted-foreground: #a1a1aa;
   --color-border: #27272a;
   --color-card: #18181b;
   
@@ -338,41 +365,80 @@ body {
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
 }
-
-/* Fade-in and slide-up animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+` : `/* Modern CSS Variables */
+:root {
+  --bg-color: #0a0a0a;
+  --text-color: #ffffff;
+  --primary-color: #00FF9C;
+  --border-color: #333;
+  --card-bg: #18181b;
+  --muted-text: #a1a1aa;
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+body {
+  background: var(--bg-color);
+  color: var(--text-color);
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.animate-delay-100 {
-  animation-delay: 0.1s;
-  opacity: 0;
-}
+/* Structural Classes */
+.app-body { min-height: 100vh; display: flex; flex-direction: column; }
+.main-content { flex: 1; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 
-.animate-delay-200 {
-  animation-delay: 0.2s;
-  opacity: 0;
-}
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-primary { background: var(--primary-color); color: #000; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-outline { border: 1px solid var(--border-color); color: white; background: transparent; }
+.btn-outline:hover { border-color: var(--primary-color); }
+.btn-ghost { background: transparent; color: white; }
+.btn-ghost:hover { background: rgba(255,255,255,0.1); }
+.btn-sm { font-size: 0.8rem; padding: 5px 10px; }
+.btn-lg { font-size: 1.2rem; padding: 15px 30px; }
 
-.animate-delay-300 {
-  animation-delay: 0.3s;
-  opacity: 0;
-}
+/* Navbar */
+.navbar { border-bottom: 1px solid var(--border-color); padding: 15px 0; background: rgba(10,10,10,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 50; }
+.navbar-container { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.navbar-brand { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 1.2rem; color: white; text-decoration: none; }
+.logo-container { width: 32px; height: 32px; background: var(--primary-color); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-icon { color: black; width: 20px; height: 20px; }
+.navbar-links { display: flex; gap: 20px; }
+.nav-link { color: var(--muted-text); text-decoration: none; font-weight: 500; font-size: 0.9rem; }
+.nav-link:hover { color: white; }
 
-.animate-delay-400 {
-  animation-delay: 0.4s;
-  opacity: 0;
+/* Footer */
+.footer { border-top: 1px solid var(--border-color); padding: 40px 0; margin-top: auto; text-align: center; color: var(--muted-text); font-size: 0.9rem; }
+.footer-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.link { color: var(--primary-color); text-decoration: none; }
+.link:hover { text-decoration: underline; }
+
+/* Cards */
+.card { border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; background: var(--card-bg); transition: border-color 0.2s; }
+.card:hover { border-color: rgba(0, 255, 156, 0.5); }
+.card-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 10px; margin-top: 0; }
+.card-content { color: var(--muted-text); }
+.feature-icon { margin-bottom: 15px; color: var(--primary-color); }
+
+/* Home Page Specifics */
+.home-page { text-align: center; padding: 80px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 8rem); }
+.badge { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 99px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; color: var(--muted-text); margin-bottom: 30px; }
+.page-title { font-size: 4rem; line-height: 1.1; margin-bottom: 20px; font-weight: 800; letter-spacing: -0.02em; }
+.highlight { background: linear-gradient(to right, var(--primary-color), #00D68F); -webkit-background-clip: text; color: transparent; }
+.subtitle { font-size: 1.25rem; color: var(--muted-text); max-width: 600px; margin: 0 auto 40px; line-height: 1.6; }
+.actions { display: flex; gap: 15px; justify-content: center; }
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 60px; text-align: left; width: 100%; max-width: 900px; }
+`,
+
+    'lib/utils.ts': `import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
 `,
 
@@ -382,6 +448,7 @@ body {
 
     'routes/(public)/home.tsx': `import React from 'react';
 import { Button } from '@/app/components/ui';
+import { Zap, Box, Palette, Lock } from 'lucide-react';
 
 export const metadata = {
   title: 'FlexiReact v4 - The Modern React Framework',
@@ -390,72 +457,59 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4">
-      <div className="max-w-4xl mx-auto text-center space-y-8">
+    <div className="${isTailwind ? 'flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] px-4' : 'home-page'}">
+      <div className="${isTailwind ? 'max-w-4xl mx-auto text-center space-y-8' : 'container'}">
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+        <div className="${isTailwind ? 'inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-sm' : 'badge'}">
+          <span className="${isTailwind ? 'relative flex h-2 w-2' : ''}">
+             {/* Badge dot logic simplified for css mode */}
+            {${isTailwind} && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>}
+            <span className="${isTailwind ? 'relative inline-flex rounded-full h-2 w-2 bg-primary' : 'badge-dot'}"></span>
           </span>
-          <span className="text-muted">Introducing FlexiReact v4.0</span>
+          <span className="${isTailwind ? 'text-muted-foreground' : ''}">Introducing FlexiReact v4.0</span>
         </div>
 
         {/* Heading */}
-        <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+        <h1 className="${isTailwind ? 'text-5xl md:text-7xl font-bold tracking-tight' : 'page-title'}">
           The React Framework
           <br />
-          <span className="bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+          <span className="${isTailwind ? 'bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent' : 'highlight'}">
             for the Web
           </span>
         </h1>
 
         {/* Description */}
-        <p className="text-xl text-muted max-w-2xl mx-auto leading-relaxed">
-          FlexiReact enables you to create full-stack web applications with TypeScript, Tailwind CSS, and modern tooling.
+        <p className="${isTailwind ? 'text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed' : 'subtitle'}">
+          FlexiReact enables you to create full-stack web applications with TypeScript${isTailwind ? ", Tailwind CSS," : ""}, and modern tooling.
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-          <Button size="lg" className="text-base">
+        <div className="${isTailwind ? 'flex flex-col sm:flex-row gap-4 justify-center pt-4' : 'actions'}">
+          <Button size="lg" className="${isTailwind ? 'text-base' : ''}">
             Get Started →
           </Button>
-          <Button variant="outline" size="lg" className="text-base">
+          <Button variant="outline" size="lg" className="${isTailwind ? 'text-base' : ''}">
             Learn More
           </Button>
         </div>
 
-        {/* Terminal Preview */}
-        <div className="mt-12 max-w-2xl mx-auto">
-          <div className="rounded-lg border border-border bg-background/50 backdrop-blur-sm overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-white/5">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                <div className="w-3 h-3 rounded-full bg-green-500/60" />
-              </div>
-            </div>
-            <div className="p-6 font-mono text-sm">
-              <div className="text-muted">$ npx create-flexireact@latest</div>
-            </div>
-          </div>
-        </div>
-
         {/* Features Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-16 max-w-3xl mx-auto">
-          {[
-            { icon: '⚡', label: 'Fast Refresh' },
-            { icon: '📦', label: 'File Routing' },
-            { icon: '🎨', label: 'Tailwind CSS' },
-            { icon: '🔒', label: 'TypeScript' },
-          ].map((feature) => (
-            <div key={feature.label} className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-white/5 hover:bg-white/10 transition-colors">
-              <span className="text-2xl">{feature.icon}</span>
-              <span className="text-sm font-medium">{feature.label}</span>
-            </div>
-          ))}
+        <div className="${isTailwind ? 'grid grid-cols-2 md:grid-cols-4 gap-4 pt-16 max-w-3xl mx-auto' : 'features-grid'}">
+          <Feature icon={<Zap size={24} />} label="Fast Refresh" />
+          <Feature icon={<Box size={24} />} label="File Routing" />
+          <Feature icon={<Palette size={24} />} label="${isTailwind ? 'Tailwind CSS' : 'Modern CSS'}" />
+          <Feature icon={<Lock size={24} />} label="TypeScript" />
         </div>
       </div>
+    </div>
+  );
+}
+
+function Feature({ icon, label }: any) {
+  return (
+    <div className="${isTailwind ? 'flex flex-col items-center gap-2 p-4 rounded-lg border border-border bg-white/5 hover:bg-white/10 transition-colors' : 'feature-card'}">
+      <span className="${isTailwind ? 'text-primary' : 'feature-icon'}">{icon}</span>
+      <span className="${isTailwind ? 'text-sm font-medium' : 'feature-label'}">{label}</span>
     </div>
   );
 }
@@ -470,10 +524,10 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto px-4 py-16 max-w-3xl">
-      <h1 className="text-4xl font-bold mb-8">About FlexiReact</h1>
+    <div className="${isTailwind ? 'container mx-auto px-4 py-16 max-w-3xl' : 'container'}">
+      <h1 className="${isTailwind ? 'text-4xl font-bold mb-8' : 'page-title'}">About FlexiReact</h1>
       
-      <Card className="mb-6">
+      <Card className="${isTailwind ? 'mb-6' : ''}">
         <CardHeader>
           <CardTitle>What is FlexiReact?</CardTitle>
         </CardHeader>
@@ -491,13 +545,12 @@ export default function AboutPage() {
           <CardTitle>Features</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-2">
+          <ul className="${isTailwind ? 'space-y-2' : 'feature-list'}">
             <li>✓ Server-Side Rendering (SSR)</li>
             <li>✓ Static Site Generation (SSG)</li>
             <li>✓ Islands Architecture</li>
             <li>✓ File-based Routing</li>
             <li>✓ TypeScript Support</li>
-            <li>✓ Tailwind CSS v4</li>
           </ul>
         </CardContent>
       </Card>
@@ -521,12 +574,12 @@ const posts = [
 
 export default function BlogPage() {
   return (
-    <div className="container mx-auto px-4 py-16 max-w-6xl">
-      <h1 className="text-4xl font-bold mb-8">Blog</h1>
+    <div className="${isTailwind ? 'container mx-auto px-4 py-16 max-w-6xl' : 'container'}">
+      <h1 className="${isTailwind ? 'text-4xl font-bold mb-8' : 'page-title'}">Blog</h1>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="${isTailwind ? 'grid gap-6 md:grid-cols-2 lg:grid-cols-3' : 'features-grid'}">
         {posts.map((post) => (
-          <a key={post.slug} href={\`/blog/\${post.slug}\`}>
+          <a key={post.slug} href={\`/blog/\${post.slug}\`} style={{ textDecoration: 'none' }}>
             <Card className="h-full">
               <CardHeader>
                 <CardTitle>{post.title}</CardTitle>
@@ -552,15 +605,15 @@ interface BlogPostProps {
 
 export default function BlogPost({ params }: BlogPostProps) {
   return (
-    <div className="container mx-auto px-4 py-16 max-w-3xl">
-      <a href="/blog">
-        <Button variant="ghost" size="sm" className="mb-8">← Back to Blog</Button>
-      </a>
+    <div className="${isTailwind ? 'container mx-auto px-4 py-16 max-w-3xl' : 'container'}">
+      <div className="mb-8">
+        <Button variant="ghost" size="sm" href="/blog">← Back to Blog</Button>
+      </div>
       
-      <h1 className="text-4xl font-bold mb-4">Blog Post: {params.slug}</h1>
+      <h1 className="${isTailwind ? 'text-4xl font-bold mb-4' : 'page-title'}">Blog Post: {params.slug}</h1>
       
-      <p className="text-muted mb-8">
-        This is a dynamic route. The slug parameter is: <code className="text-primary">{params.slug}</code>
+      <p className="${isTailwind ? 'text-muted-foreground mb-8' : 'subtitle'}">
+        This is a dynamic route. The slug parameter is: <code className="${isTailwind ? 'text-primary' : 'highlight'}">{params.slug}</code>
       </p>
       
       <div className="prose prose-invert">
@@ -588,18 +641,6 @@ export async function POST(request: Request) {
     received: body,
     message: 'POST request received',
   });
-}
-`,
-
-    // ========================================================================
-    // Lib Directory
-    // ========================================================================
-
-    'lib/utils.ts': `import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
 }
 `,
 

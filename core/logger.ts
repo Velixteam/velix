@@ -1,18 +1,15 @@
 /**
  * FlexiReact Logger
- * Premium console output inspired by Next.js, Vite, and Bun
+ * Minimalist, professional output inspired by modern CLIs
  */
 
-// ANSI color codes
+// ANSI color codes (Picocolors-like API for internal use if needed, but we prefer external libs)
 const colors = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
   dim: '\x1b[2m',
-  italic: '\x1b[3m',
-  underline: '\x1b[4m',
-  
+
   // Text colors
-  black: '\x1b[30m',
   red: '\x1b[31m',
   green: '\x1b[32m',
   yellow: '\x1b[33m',
@@ -21,31 +18,19 @@ const colors = {
   cyan: '\x1b[36m',
   white: '\x1b[37m',
   gray: '\x1b[90m',
-  
-  // Bright colors
-  brightRed: '\x1b[91m',
-  brightGreen: '\x1b[92m',
-  brightYellow: '\x1b[93m',
-  brightBlue: '\x1b[94m',
-  brightMagenta: '\x1b[95m',
-  brightCyan: '\x1b[96m',
-  brightWhite: '\x1b[97m',
-  
-  // Background colors
-  bgRed: '\x1b[41m',
-  bgGreen: '\x1b[42m',
-  bgYellow: '\x1b[43m',
-  bgBlue: '\x1b[44m',
-  bgMagenta: '\x1b[45m',
-  bgCyan: '\x1b[46m',
 };
 
 const c = colors;
 
+// Helper to strip colors if needed (not implemented here for simplicity)
+
 // Get current time formatted
 function getTime() {
   const now = new Date();
-  return `${c.dim}${now.toLocaleTimeString('en-US', { hour12: false })}${c.reset}`;
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  return `${c.dim}${hours}:${minutes}:${seconds}${c.reset}`;
 }
 
 // Status code colors
@@ -59,16 +44,7 @@ function getStatusColor(status) {
 
 // Method colors
 function getMethodColor(method) {
-  const methodColors = {
-    GET: c.brightGreen,
-    POST: c.brightBlue,
-    PUT: c.brightYellow,
-    PATCH: c.brightMagenta,
-    DELETE: c.brightRed,
-    OPTIONS: c.gray,
-    HEAD: c.gray,
-  };
-  return methodColors[method] || c.white;
+  return c.white; // Keep methods neutral for calmness
 }
 
 // Format time
@@ -79,128 +55,107 @@ function formatTime(ms) {
   return `${c.red}${ms}ms${c.reset}`;
 }
 
-// FlexiReact ASCII Logo - Premium Design
+// Minimalist Logo
 const LOGO = `
-${c.green}   ╭─────────────────────────────────────────────╮${c.reset}
-${c.green}   │${c.reset}                                             ${c.green}│${c.reset}
-${c.green}   │${c.reset}   ${c.brightGreen}⚡${c.reset} ${c.bold}${c.white}F L E X I R E A C T${c.reset}   ${c.dim}v1.0.0${c.reset}       ${c.green}│${c.reset}
-${c.green}   │${c.reset}                                             ${c.green}│${c.reset}
-${c.green}   │${c.reset}   ${c.dim}The Modern React Framework${c.reset}              ${c.green}│${c.reset}
-${c.green}   │${c.reset}                                             ${c.green}│${c.reset}
-${c.green}   ╰─────────────────────────────────────────────╯${c.reset}
+  ${c.white}▲${c.reset} ${c.bold}FlexiReact${c.reset} ${c.dim}4.0.0${c.reset}
 `;
-
-const MINI_LOGO = `${c.brightGreen}⚡${c.reset} ${c.bold}FlexiReact${c.reset}`;
-
-// Compact ready message like Next.js
-const READY_MSG = `   ${c.green}▲${c.reset} ${c.bold}Ready${c.reset} in`;
 
 export const logger = {
   // Show startup logo
   logo() {
     console.log(LOGO);
+    console.log(`${c.dim}  ──────────────────────────────────────────────${c.reset}`);
+    console.log('');
   },
 
-  // Server started - Next.js style
+  // Server started - Minimalist style
   serverStart(config, startTime = Date.now()) {
-    const { port, host, mode, pagesDir, islands, rsc } = config;
+    const { port, host, mode, pagesDir } = config;
     const elapsed = Date.now() - startTime;
-    
+
+    // We use console.log directly for better control
+    console.log(`  ${c.green}✔${c.reset} ${c.bold}Ready${c.reset} in ${elapsed}ms`);
     console.log('');
-    console.log(`   ${c.green}▲${c.reset} ${c.bold}Ready${c.reset} in ${c.cyan}${elapsed}ms${c.reset}`);
-    console.log('');
-    console.log(`   ${c.dim}┌${c.reset} ${c.bold}Local:${c.reset}        ${c.cyan}http://${host}:${port}${c.reset}`);
-    console.log(`   ${c.dim}├${c.reset} ${c.bold}Environment:${c.reset}  ${mode === 'development' ? `${c.yellow}development${c.reset}` : `${c.green}production${c.reset}`}`);
-    if (islands) {
-      console.log(`   ${c.dim}├${c.reset} ${c.bold}Islands:${c.reset}      ${c.green}enabled${c.reset}`);
-    }
-    if (rsc) {
-      console.log(`   ${c.dim}├${c.reset} ${c.bold}RSC:${c.reset}          ${c.green}enabled${c.reset}`);
-    }
-    console.log(`   ${c.dim}└${c.reset} ${c.bold}Pages:${c.reset}        ${c.dim}${pagesDir}${c.reset}`);
+    console.log(`  ${c.bold}Local:${c.reset}      ${c.cyan}http://${host}:${port}${c.reset}`);
+    console.log(`  ${c.bold}Mode:${c.reset}       ${mode === 'development' ? c.yellow : c.green}${mode}${c.reset}`);
+    console.log(`  ${c.bold}Pages:${c.reset}      ${c.dim}${pagesDir}${c.reset}`);
     console.log('');
   },
 
-  // HTTP request log - Compact single line like Next.js
+  // HTTP request log - Compact single line
   request(method: string, path: string, status: number, time: number, extra: { type?: string } = {}) {
     const methodColor = getMethodColor(method);
     const statusColor = getStatusColor(status);
     const timeStr = formatTime(time);
-    
-    // Route type badge
-    let badge = '';
-    if (extra.type === 'static' || extra.type === 'ssg') {
-      badge = `${c.dim}○${c.reset}`;  // Static
-    } else if (extra.type === 'dynamic' || extra.type === 'ssr') {
-      badge = `${c.magenta}ƒ${c.reset}`;  // Function/SSR
+
+    // Minimalist badges
+    let badge = `${c.dim}○${c.reset}`; // Default (static/asset)
+
+    if (extra.type === 'dynamic' || extra.type === 'ssr') {
+      badge = `${c.white}ƒ${c.reset}`;
     } else if (extra.type === 'api') {
-      badge = `${c.blue}λ${c.reset}`;  // API
-    } else if (extra.type === 'asset') {
-      badge = `${c.dim}◦${c.reset}`;  // Asset
-    } else {
-      badge = `${c.magenta}ƒ${c.reset}`;
+      badge = `${c.cyan}λ${c.reset}`;
     }
-    
+
     const statusStr = `${statusColor}${status}${c.reset}`;
     const methodStr = `${methodColor}${method}${c.reset}`;
-    
-    // Single line format like Next.js
-    console.log(`   ${badge} ${methodStr} ${path} ${statusStr} ${c.dim}in${c.reset} ${timeStr}`);
+
+    // Align: Badge Method Path Status duration
+    console.log(`  ${badge} ${methodStr} ${path} ${statusStr} ${c.dim}${timeStr}${c.reset}`);
   },
 
   // Info message
   info(msg) {
-    console.log(`   ${c.cyan}ℹ${c.reset} ${msg}`);
+    console.log(`  ${c.cyan}ℹ${c.reset} ${msg}`);
   },
 
   // Success message
   success(msg) {
-    console.log(`   ${c.green}✓${c.reset} ${msg}`);
+    console.log(`  ${c.green}✔${c.reset} ${msg}`);
   },
 
   // Warning message
   warn(msg) {
-    console.log(`   ${c.yellow}⚠${c.reset} ${c.yellow}${msg}${c.reset}`);
+    console.log(`  ${c.yellow}⚠${c.reset} ${c.yellow}${msg}${c.reset}`);
   },
 
   // Error message
   error(msg, err = null) {
-    console.log(`   ${c.red}✗${c.reset} ${c.red}${msg}${c.reset}`);
+    console.log(`  ${c.red}✖${c.reset} ${c.red}${msg}${c.reset}`);
     if (err && err.stack) {
+      console.log('');
       const stack = err.stack.split('\n').slice(1, 4).join('\n');
       console.log(`${c.dim}${stack}${c.reset}`);
+      console.log('');
     }
   },
 
   // Compilation message
   compile(file, time) {
-    console.log(`   ${c.magenta}◉${c.reset} Compiled ${c.cyan}${file}${c.reset} ${c.dim}(${time}ms)${c.reset}`);
+    console.log(`  ${c.white}●${c.reset} Compiling ${c.dim}${file}${c.reset} ${c.dim}(${time}ms)${c.reset}`);
   },
 
   // Hot reload
   hmr(file) {
-    console.log(`   ${c.yellow}↻${c.reset} HMR update: ${c.cyan}${file}${c.reset}`);
+    console.log(`  ${c.green}↻${c.reset} Fast Refresh ${c.dim}${file}${c.reset}`);
   },
 
   // Plugin loaded
   plugin(name) {
-    console.log(`   ${c.blue}⬡${c.reset} Plugin: ${c.cyan}${name}${c.reset}`);
+    console.log(`  ${c.cyan}◆${c.reset} Plugin ${c.dim}${name}${c.reset}`);
   },
 
   // Route info
   route(path, type) {
-    const typeColors = {
-      static: c.green,
-      dynamic: c.yellow,
-      api: c.blue,
-    };
-    const color = typeColors[type] || c.white;
-    console.log(`   ${c.dim}├─${c.reset} ${path} ${color}[${type}]${c.reset}`);
+    // Keep it super clean
+    const typeLabel = type === 'api' ? 'λ' : type === 'dynamic' ? 'ƒ' : '○';
+    const color = type === 'api' ? c.cyan : type === 'dynamic' ? c.white : c.dim;
+    console.log(`  ${color}${typeLabel}${c.reset} ${path}`);
   },
 
   // Divider
   divider() {
-    console.log(`${c.dim}   ─────────────────────────────────────────${c.reset}`);
+    console.log(`${c.dim}  ──────────────────────────────────────────────${c.reset}`);
   },
 
   // Blank line
@@ -208,34 +163,26 @@ export const logger = {
     console.log('');
   },
 
-  // Port in use error with solution
+  // Port in use error
   portInUse(port) {
-    console.log(`
-${c.red}   ✗ Port ${port} is already in use${c.reset}
-
-   ${c.dim}Try one of these solutions:${c.reset}
-   
-   ${c.yellow}1.${c.reset} Kill the process using the port:
-      ${c.cyan}npx kill-port ${port}${c.reset}
-   
-   ${c.yellow}2.${c.reset} Use a different port in ${c.cyan}flexireact.config.js${c.reset}:
-      ${c.dim}server: { port: 3001 }${c.reset}
-   
-   ${c.yellow}3.${c.reset} Set PORT environment variable:
-      ${c.cyan}PORT=3001 npm run dev${c.reset}
-`);
+    this.error(`Port ${port} is already in use.`);
+    this.blank();
+    console.log(`  ${c.dim}Try:${c.reset}`);
+    console.log(`  1. Kill the process on port ${port}`);
+    console.log(`  2. Use a different port via PORT env var`);
+    this.blank();
   },
 
   // Build info
   build(stats) {
-    console.log(`
-   ${c.green}✓${c.reset} Build complete!
-   
-   ${c.dim}├─${c.reset} Pages:    ${c.cyan}${stats.pages}${c.reset}
-   ${c.dim}├─${c.reset} API:      ${c.cyan}${stats.api}${c.reset}
-   ${c.dim}├─${c.reset} Assets:   ${c.cyan}${stats.assets}${c.reset}
-   ${c.dim}└─${c.reset} Time:     ${c.green}${stats.time}ms${c.reset}
-`);
+    this.blank();
+    console.log(`  ${c.green}✔${c.reset} Build completed`);
+    this.blank();
+    console.log(`  ${c.dim}Route${c.reset}                               ${c.dim}Size${c.reset}`);
+    console.log(`  ${c.dim}──────────────────────────────────────────────${c.reset}`);
+    // We expect the caller to list routes individually if needed
+    console.log(`  ${c.dim}Total time:${c.reset} ${c.white}${stats.time}ms${c.reset}`);
+    this.blank();
   },
 };
 

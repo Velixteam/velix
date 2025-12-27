@@ -1,6 +1,6 @@
 {
   "name": "@flexireact/core",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "The Modern React Framework v4 - React 19, SSR, SSG, Islands, Edge Runtime, 50+ UI Components, TypeScript, Tailwind v4",
   "main": "dist/core/index.js",
   "types": "dist/core/index.d.ts",
