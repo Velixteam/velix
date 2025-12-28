@@ -1,5 +1,5 @@
 /**
- * FlexiReact Server v2
+ * FlexiReact Server v4.1.0
  * Production-ready server with SSR, RSC, Islands, and more
  */
 
@@ -60,8 +60,7 @@ export async function createServer(options: CreateServerOptions = {}) {
   const projectRoot = options.projectRoot || process.cwd();
   const isDev = options.mode === 'development';
 
-  // Show logo
-  logger.logo();
+
 
   // Load configuration
   const rawConfig = await loadConfig(projectRoot);
@@ -90,7 +89,7 @@ export async function createServer(options: CreateServerOptions = {}) {
     const startTime = Date.now();
 
     // Parse URL early so it's available in finally block
-    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
     const pathname = url.pathname;
 
     try {
@@ -106,7 +105,7 @@ export async function createServer(options: CreateServerOptions = {}) {
 
       // Handle rewritten URL
       const effectivePath = middlewareResult.rewritten
-        ? new URL(req.url, `http://${req.headers.host}`).pathname
+        ? new URL(req.url || '/', `http://${req.headers.host}`).pathname
         : pathname;
 
       // Serve static files from public directory
@@ -204,7 +203,7 @@ export async function createServer(options: CreateServerOptions = {}) {
         const routeType = pathname.startsWith('/api/') ? 'api' :
           pathname.startsWith('/_flexi/') ? 'asset' :
             pathname.match(/\.(js|css|png|jpg|svg|ico)$/) ? 'asset' : 'dynamic';
-        logger.request(req.method, pathname, res.statusCode, duration, { type: routeType });
+        logger.request(req.method || 'GET', pathname, res.statusCode, duration, { type: routeType });
       }
 
       // Run response hook
@@ -250,8 +249,8 @@ export async function createServer(options: CreateServerOptions = {}) {
 /**
  * Creates a module loader with optional cache busting
  */
-function createModuleLoader(isDev) {
-  return async (filePath) => {
+function createModuleLoader(isDev: boolean) {
+  return async (filePath: string) => {
     const url = pathToFileURL(filePath).href;
     const cacheBuster = isDev ? `?t=${Date.now()}` : '';
     return import(`${url}${cacheBuster}`);
@@ -261,7 +260,7 @@ function createModuleLoader(isDev) {
 /**
  * Serves static files
  */
-async function serveStaticFile(res, baseDir, pathname) {
+async function serveStaticFile(res: any, baseDir: string, pathname: string) {
   // Prevent directory traversal
   const safePath = path.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
   const filePath = path.join(baseDir, safePath);
@@ -277,7 +276,7 @@ async function serveStaticFile(res, baseDir, pathname) {
   }
 
   const ext = path.extname(filePath).toLowerCase();
-  const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+  const contentType = (MIME_TYPES as any)[ext] || 'application/octet-stream';
 
   res.writeHead(200, {
     'Content-Type': contentType,
@@ -292,16 +291,16 @@ async function serveStaticFile(res, baseDir, pathname) {
 /**
  * Handles API route requests
  */
-async function handleApiRoute(req, res, route, loadModule) {
+async function handleApiRoute(req: any, res: any, route: any, loadModule: any) {
   try {
     const module = await loadModule(route.filePath);
-    const method = req.method.toLowerCase();
+    const method = (req.method || 'GET').toLowerCase();
 
     // Parse request body
     const body = await parseBody(req);
 
     // Parse query
-    const url = new URL(req.url, `http://${req.headers.host}`);
+    const url = new URL(req.url || '/', `http://${req.headers.host}`);
     const query = Object.fromEntries(url.searchParams);
 
     // Enhanced request
@@ -317,7 +316,7 @@ async function handleApiRoute(req, res, route, loadModule) {
     const enhancedRes = createApiResponse(res);
 
     // Find handler (check both lowercase and uppercase method names)
-    const handler = module[method] || module[method.toUpperCase()] || module.default;
+    const handler = (module as any)[method] || (module as any)[method.toUpperCase()] || module.default;
 
     if (!handler) {
       enhancedRes.status(405).json({ error: 'Method not allowed' });
@@ -338,7 +337,7 @@ async function handleApiRoute(req, res, route, loadModule) {
 /**
  * Handles server action requests
  */
-async function handleServerAction(req, res) {
+async function handleServerAction(req: import('http').IncomingMessage, res: import('http').ServerResponse) {
   try {
     // Parse request body
     const body: any = await parseBody(req);
@@ -381,48 +380,48 @@ async function handleServerAction(req, res) {
 /**
  * Creates an enhanced API response object
  */
-function createApiResponse(res) {
+function createApiResponse(res: any) {
   return {
     _res: res,
     _status: 200,
     _headers: {},
 
-    status(code) {
+    status(code: number) {
       this._status = code;
       return this;
     },
 
-    setHeader(name, value) {
-      this._headers[name] = value;
+    setHeader(name: string, value: any) {
+      (this._headers as any)[name] = value;
       return this;
     },
 
-    json(data) {
-      this._headers['Content-Type'] = 'application/json';
+    json(data: any) {
+      (this._headers as any)['Content-Type'] = 'application/json';
       this._send(JSON.stringify(data));
     },
 
-    send(data) {
+    send(data: any) {
       if (typeof data === 'object') {
         this.json(data);
       } else {
-        this._headers['Content-Type'] = this._headers['Content-Type'] || 'text/plain';
+        (this._headers as any)['Content-Type'] = (this._headers as any)['Content-Type'] || 'text/plain';
         this._send(String(data));
       }
     },
 
-    html(data) {
-      this._headers['Content-Type'] = 'text/html';
+    html(data: any) {
+      (this._headers as any)['Content-Type'] = 'text/html';
       this._send(data);
     },
 
-    redirect(url, status = 302) {
+    redirect(url: string, status = 302) {
       this._status = status;
-      this._headers['Location'] = url;
+      (this._headers as any)['Location'] = url;
       this._send('');
     },
 
-    _send(body) {
+    _send(body: any) {
       if (!this._res.headersSent) {
         this._res.writeHead(this._status, this._headers);
         this._res.end(body);
@@ -434,7 +433,7 @@ function createApiResponse(res) {
 /**
  * Handles page route requests with SSR
  */
-async function handlePageRoute(req, res, route, routes, config, loadModule, url) {
+async function handlePageRoute(req: any, res: any, route: any, routes: any, config: any, loadModule: any, url: URL) {
   try {
     // Run route-specific middleware if exists
     if (route.middleware) {
@@ -522,7 +521,7 @@ async function handlePageRoute(req, res, route, routes, config, loadModule, url)
     }
 
     // Load layouts (only if layouts directory exists and has layouts)
-    const layouts = [];
+    const layouts: Array<{ Component: any; props: any }> = [];
 
     try {
       const layoutConfigs = findRouteLayouts(route, routes.layouts);
@@ -539,7 +538,7 @@ async function handlePageRoute(req, res, route, routes, config, loadModule, url)
       }
     } catch (layoutError) {
       // Layouts are optional, continue without them
-      console.warn('Layout loading skipped:', layoutError.message);
+      console.warn('Layout loading skipped:', (layoutError as any).message);
     }
 
     // Load loading component if exists
@@ -619,7 +618,7 @@ async function handlePageRoute(req, res, route, routes, config, loadModule, url)
 /**
  * Serves a client component as JavaScript for hydration
  */
-async function serveClientComponent(res, pagesDir, componentName) {
+async function serveClientComponent(res: any, pagesDir: string, componentName: string) {
   const { transformSync } = await import('esbuild');
 
   // Remove .tsx.js or .jsx.js suffix if present
@@ -633,7 +632,7 @@ async function serveClientComponent(res, pagesDir, componentName) {
     path.join(pagesDir, `${cleanName}.js`),
   ];
 
-  let componentPath = null;
+  let componentPath: string | null = null;
   for (const p of possiblePaths) {
     if (fs.existsSync(p)) {
       componentPath = p;
@@ -701,7 +700,7 @@ async function serveClientComponent(res, pagesDir, componentName) {
 /**
  * Generates client hydration script for 'use client' components
  */
-function generateClientHydrationScript(componentPath, props) {
+function generateClientHydrationScript(componentPath: string, props: any) {
   // Create a relative path for the client bundle (handle .tsx, .ts, .jsx, .js)
   const ext = path.extname(componentPath);
   const componentName = path.basename(componentPath, ext);
@@ -749,12 +748,12 @@ function generateClientHydrationScript(componentPath, props) {
 /**
  * Parses request body
  */
-async function parseBody(req) {
+async function parseBody(req: any) {
   return new Promise((resolve) => {
     const contentType = req.headers['content-type'] || '';
     let body = '';
 
-    req.on('data', chunk => {
+    req.on('data', (chunk: any) => {
       body += chunk.toString();
     });
 

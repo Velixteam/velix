@@ -9,15 +9,15 @@ import crypto from 'crypto';
 /**
  * Generates a unique hash for cache busting
  */
-export function generateHash(content) {
+export function generateHash(content: string): string {
   return crypto.createHash('md5').update(content).digest('hex').slice(0, 8);
 }
 
 /**
  * Escapes HTML special characters
  */
-export function escapeHtml(str) {
-  const htmlEntities = {
+export function escapeHtml(str: string): string {
+  const htmlEntities: Record<string, string> = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
@@ -30,7 +30,7 @@ export function escapeHtml(str) {
 /**
  * Recursively finds all files matching a pattern
  */
-export function findFiles(dir, pattern, files = []) {
+export function findFiles(dir: string, pattern: RegExp, files: string[] = []): string[] {
   if (!fs.existsSync(dir)) return files;
   
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -51,7 +51,7 @@ export function findFiles(dir, pattern, files = []) {
 /**
  * Ensures a directory exists
  */
-export function ensureDir(dir) {
+export function ensureDir(dir: string): void {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -60,7 +60,7 @@ export function ensureDir(dir) {
 /**
  * Cleans a directory
  */
-export function cleanDir(dir) {
+export function cleanDir(dir: string): void {
   if (fs.existsSync(dir)) {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -70,7 +70,7 @@ export function cleanDir(dir) {
 /**
  * Copies a directory recursively
  */
-export function copyDir(src, dest) {
+export function copyDir(src: string, dest: string): void {
   ensureDir(dest);
   
   const entries = fs.readdirSync(src, { withFileTypes: true });
@@ -90,9 +90,9 @@ export function copyDir(src, dest) {
 /**
  * Debounce function for file watching
  */
-export function debounce(fn, delay) {
-  let timeout;
-  return (...args) => {
+export function debounce<T extends (...args: any[]) => any>(fn: T, delay: number): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => fn(...args), delay);
   };
@@ -101,7 +101,7 @@ export function debounce(fn, delay) {
 /**
  * Formats bytes to human readable string
  */
-export function formatBytes(bytes) {
+export function formatBytes(bytes: number): string {
   if (bytes === 0) return '0 B';
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB'];
@@ -112,7 +112,7 @@ export function formatBytes(bytes) {
 /**
  * Formats milliseconds to human readable string
  */
-export function formatTime(ms) {
+export function formatTime(ms: number): string {
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(2)}s`;
 }
@@ -132,14 +132,14 @@ export function createDeferred() {
 /**
  * Sleep utility
  */
-export function sleep(ms) {
+export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
  * Check if a file is a server component (has 'use server' directive)
  */
-export function isServerComponent(filePath) {
+export function isServerComponent(filePath: string): boolean {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const firstLine = content.split('\n')[0].trim();
@@ -152,7 +152,7 @@ export function isServerComponent(filePath) {
 /**
  * Check if a file is a client component (has 'use client' directive)
  */
-export function isClientComponent(filePath) {
+export function isClientComponent(filePath: string): boolean {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const firstLine = content.split('\n')[0].trim();
@@ -165,7 +165,7 @@ export function isClientComponent(filePath) {
 /**
  * Check if a component is an island (has 'use island' directive)
  */
-export function isIsland(filePath) {
+export function isIsland(filePath: string): boolean {
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     const firstLine = content.split('\n')[0].trim();

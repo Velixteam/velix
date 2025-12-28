@@ -34,7 +34,7 @@ export function defaultTemplate(projectName: string, options: { styling?: 'tailw
         react: '^19.0.0',
         'react-dom': '^19.0.0',
         '@flexireact/core': '^4.1.0',
-        'lucide-react': '^0.344.0',
+        'lucide-react': '^0.468.0',
         clsx: '^2.1.0',
         'tailwind-merge': '^2.2.0',
       },
@@ -197,8 +197,10 @@ export function Card({ className, variant = 'default', children, ...props }: Car
       className={cn(
         ${isTailwind ? "'rounded-xl border border-border p-6 transition-all hover:border-primary/50'" : "'card'"},
         {
-          ${isTailwind ? "'bg-card': variant === 'default'," : ""},
-          ${isTailwind ? "'bg-white/5 backdrop-blur-xl': variant === 'glass'," : ""},
+          ...(isTailwind ? {
+            'bg-card': variant === 'default',
+            'bg-white/5 backdrop-blur-xl': variant === 'glass',
+          } : {})
         },
         className
       )}

@@ -27,7 +27,7 @@ export const RouteType = {
 /**
  * Builds the complete route tree from all routing directories
  */
-export function buildRouteTree(pagesDir, layoutsDir, appDir = null, routesDir = null) {
+export function buildRouteTree(pagesDir: string, layoutsDir: string, appDir: string | null = null, routesDir: string | null = null) {
   const projectRoot = path.dirname(pagesDir);
 
   const routes: {
@@ -96,7 +96,7 @@ export function buildRouteTree(pagesDir, layoutsDir, appDir = null, routesDir = 
  * - api/hello.ts → /api/hello (API route)
  * - dashboard/layout.tsx → layout for /dashboard/*
  */
-function scanRoutesDirectory(baseDir, currentDir, routes, parentSegments = [], parentLayout = null, parentMiddleware = null) {
+function scanRoutesDirectory(baseDir: string, currentDir: string, routes: any, parentSegments: string[] = [], parentLayout: string | null = null, parentMiddleware: string | null = null) {
   const entries = fs.readdirSync(currentDir, { withFileTypes: true });
 
   // Find special files in current directory
@@ -219,7 +219,7 @@ function scanRoutesDirectory(baseDir, currentDir, routes, parentSegments = [], p
  * Scans app directory for Next.js style routing
  * Supports: page.tsx, layout.tsx, loading.tsx, error.tsx, not-found.tsx
  */
-function scanAppDirectory(baseDir, currentDir, routes, parentSegments = [], parentLayout = null, parentMiddleware = null) {
+function scanAppDirectory(baseDir: string, currentDir: string, routes: any, parentSegments: string[] = [], parentLayout: string | null = null, parentMiddleware: string | null = null) {
   const entries = fs.readdirSync(currentDir, { withFileTypes: true });
 
   // Find special files in current directory
@@ -306,11 +306,11 @@ function scanAppDirectory(baseDir, currentDir, routes, parentSegments = [], pare
 /**
  * Scans directory recursively for route files
  */
-function scanDirectory(baseDir, currentDir, routes, parentSegments = []) {
+function scanDirectory(baseDir: string, currentDir: string, routes: any, parentSegments: string[] = []) {
   const entries = fs.readdirSync(currentDir, { withFileTypes: true });
 
   // First, find special files in current directory
-  const specialFiles = {
+  const specialFiles: Record<string, string | null> = {
     layout: null,
     loading: null,
     error: null,
@@ -364,7 +364,7 @@ function scanDirectory(baseDir, currentDir, routes, parentSegments = []) {
 /**
  * Creates a route object from file path
  */
-function createRoute(filePath, baseDir, specialFiles, type) {
+function createRoute(filePath: string, baseDir: string, specialFiles: Record<string, string | null>, type: string) {
   const relativePath = path.relative(baseDir, filePath);
   const routePath = filePathToRoute(relativePath);
 
@@ -387,7 +387,7 @@ function createRoute(filePath, baseDir, specialFiles, type) {
 /**
  * Scans layouts directory
  */
-function scanLayouts(layoutsDir, layoutsMap) {
+function scanLayouts(layoutsDir: string, layoutsMap: Map<string, string>) {
   const entries = fs.readdirSync(layoutsDir, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -401,7 +401,7 @@ function scanLayouts(layoutsDir, layoutsMap) {
 /**
  * Converts file path to route path
  */
-function filePathToRoute(filePath) {
+function filePathToRoute(filePath: string): string {
   let route = filePath.replace(/\\/g, '/');
 
   // Remove extension
@@ -433,7 +433,7 @@ function filePathToRoute(filePath) {
 /**
  * Creates regex pattern for route matching
  */
-function createRoutePattern(routePath) {
+function createRoutePattern(routePath: string): RegExp {
   let pattern = routePath
     .replace(/\*[^/]*/g, '(.*)') // Catch-all
     .replace(/:[^/]+/g, '([^/]+)') // Dynamic segments
@@ -445,8 +445,8 @@ function createRoutePattern(routePath) {
 /**
  * Builds a tree structure for nested routes
  */
-function buildTree(routes) {
-  const tree = { children: {}, routes: [] };
+function buildTree(routes: any[]): any {
+  const tree: any = { children: {}, routes: [] };
 
   for (const route of routes) {
     let current = tree;
@@ -467,7 +467,7 @@ function buildTree(routes) {
 /**
  * Matches URL path against routes
  */
-export function matchRoute(urlPath, routes) {
+export function matchRoute(urlPath: string, routes: any[]) {
   const normalizedPath = urlPath === '' ? '/' : urlPath.split('?')[0];
 
   for (const route of routes) {
@@ -485,8 +485,8 @@ export function matchRoute(urlPath, routes) {
 /**
  * Extracts parameters from route match
  */
-function extractParams(routePath, match) {
-  const params = {};
+function extractParams(routePath: string, match: RegExpMatchArray): Record<string, string> {
+  const params: Record<string, string> = {};
   const paramNames = [];
 
   // Extract param names from route path
@@ -507,8 +507,8 @@ function extractParams(routePath, match) {
 /**
  * Finds all layouts that apply to a route
  */
-export function findRouteLayouts(route, layoutsMap) {
-  const layouts = [];
+export function findRouteLayouts(route: any, layoutsMap: Map<string, string>): Array<{ name: string; filePath: string | undefined }> {
+  const layouts: Array<{ name: string; filePath: string | undefined }> = [];
 
   // Check for segment-based layouts
   let currentPath = '';

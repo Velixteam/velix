@@ -30,7 +30,7 @@ export function fullstackTemplate(projectName: string, options: { styling?: 'tai
         '@flexireact/flexiguard': '^1.0.0',
         'drizzle-orm': '^0.30.0',
         'better-sqlite3': '^9.4.0',
-        'lucide-react': '^0.344.0',
+        'lucide-react': '^0.468.0',
         clsx: '^2.1.0',
         'tailwind-merge': '^2.2.0',
       },

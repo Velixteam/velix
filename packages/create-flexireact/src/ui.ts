@@ -6,7 +6,7 @@ export const colors = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
   dim: '\x1b[2m',
-  
+
   // Neon Emerald theme
   primary: '\x1b[38;2;0;255;156m',
   green: '\x1b[38;2;0;255;156m',
@@ -29,7 +29,7 @@ ${c.primary}║${c.reset}   ${c.primary}██╔══╝  ${c.reset}${c.cyan}�
 ${c.primary}║${c.reset}   ${c.primary}██║     ${c.reset}${c.cyan}███████╗${c.reset}${c.primary}███████╗${c.reset}${c.cyan}██╔╝ ██╗${c.reset}${c.primary}██║${c.reset}                      ${c.primary}║${c.reset}
 ${c.primary}║${c.reset}   ${c.primary}╚═╝     ${c.reset}${c.cyan}╚══════╝${c.reset}${c.primary}╚══════╝${c.reset}${c.cyan}╚═╝  ╚═╝${c.reset}${c.primary}╚═╝${c.reset}  ${c.dim}React Framework${c.reset}   ${c.primary}║${c.reset}
 ${c.primary}║${c.reset}                                                               ${c.primary}║${c.reset}
-${c.primary}║${c.reset}   ${c.dim}v3.0${c.reset}  ${c.primary}⚡${c.reset} ${c.white}The Modern React Framework${c.reset}                      ${c.primary}║${c.reset}
+${c.primary}║${c.reset}   ${c.dim}v4.1.0${c.reset}  ${c.primary}⚡${c.reset} ${c.white}The Modern React Framework${c.reset}                      ${c.primary}║${c.reset}
 ${c.primary}║${c.reset}                                                               ${c.primary}║${c.reset}
 ${c.primary}╚═══════════════════════════════════════════════════════════════╝${c.reset}
 `;

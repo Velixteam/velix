@@ -10,7 +10,7 @@ import { escapeHtml } from '../utils.js';
 /**
  * Renders a page with all its layouts and wrappers
  */
-export async function renderPage(options) {
+export async function renderPage(options: any) {
   const {
     Component,
     props = {},
@@ -206,9 +206,9 @@ export async function renderPageStream(options: {
       console.log(`✨ All content ready in ${renderTime}ms`);
       onAllReady?.();
     },
-    onError(err: Error) {
+    onError(err: unknown) {
       console.error('Streaming SSR Error:', err);
-      onError?.(err);
+      onError?.(err as Error);
     }
   });
 
@@ -284,7 +284,7 @@ class ErrorBoundaryWrapper extends React.Component<ErrorBoundaryProps, ErrorBoun
 /**
  * Generates hydration scripts for islands
  */
-function generateIslandScripts(islands) {
+function generateIslandScripts(islands: any[]) {
   if (!islands.length) return [];
 
   const scripts = [];
@@ -331,7 +331,7 @@ function generateDevToolbar(options: DevToolbarOptions = {}) {
   const timeLabel = renderTime < 50 ? 'Fast' : renderTime < 200 ? 'OK' : 'Slow';
 
   return `
-<!-- FlexiReact v4 Dev Toolbar -->
+<!-- FlexiReact v4.1.0 Dev Toolbar -->
 <div id="flexi-dev-toolbar" class="flexi-dev-collapsed">
   <style>
     #flexi-dev-toolbar {
@@ -639,7 +639,7 @@ function generateDevToolbar(options: DevToolbarOptions = {}) {
       <div class="flexi-dev-header-logo">F</div>
       <div class="flexi-dev-header-info">
         <div class="flexi-dev-header-title">FlexiReact</div>
-        <div class="flexi-dev-header-subtitle">v2.0.0 • Development</div>
+        <div class="flexi-dev-header-subtitle">v4.1.0 • Development</div>
       </div>
       <button class="flexi-dev-close" onclick="this.closest('#flexi-dev-toolbar').classList.remove('flexi-dev-open')">✕</button>
     </div>
@@ -694,7 +694,7 @@ function generateDevToolbar(options: DevToolbarOptions = {}) {
 <script>
   // FlexiReact v4 DevTools
   window.__FLEXI_DEV__ = {
-    version: '2.0.0',
+    version: '4.1.0',
     renderTime: ${renderTime},
     pageType: '${pageType}',
     route: '${route}',
@@ -729,7 +729,7 @@ function generateDevToolbar(options: DevToolbarOptions = {}) {
   
   // Console branding
   console.log(
-    '%c ⚡ FlexiReact v4 %c ${pageType} %c ${renderTime}ms ',
+    '%c ⚡ FlexiReact v4.1.0 %c ${pageType} %c ${renderTime}ms ',
     'background: #00FF9C; color: #000; font-weight: bold; padding: 2px 6px; border-radius: 4px 0 0 4px;',
     'background: #1e1e1e; color: #fafafa; padding: 2px 6px;',
     'background: ${timeColor}20; color: ${timeColor}; padding: 2px 6px; border-radius: 0 4px 4px 0;'
@@ -741,7 +741,7 @@ function generateDevToolbar(options: DevToolbarOptions = {}) {
 /**
  * Builds complete HTML document
  */
-function buildHtmlDocument(options) {
+function buildHtmlDocument(options: any) {
   const {
     content,
     title,
@@ -759,14 +759,14 @@ function buildHtmlDocument(options) {
   const metaTags = Object.entries(meta)
     .map(([name, content]) => {
       if (name.startsWith('og:')) {
-        return `<meta property="${escapeHtml(name)}" content="${escapeHtml(content)}">`;
+        return `<meta property="${escapeHtml(name)}" content="${escapeHtml(content as string)}">`;
       }
-      return `<meta name="${escapeHtml(name)}" content="${escapeHtml(content)}">`;
+      return `<meta name="${escapeHtml(name)}" content="${escapeHtml(content as string)}">`;
     })
     .join('\n    ');
 
   const styleTags = styles
-    .map(style => {
+    .map((style: any) => {
       if (typeof style === 'string') {
         return `<link rel="stylesheet" href="${escapeHtml(style)}">`;
       }
@@ -775,7 +775,7 @@ function buildHtmlDocument(options) {
     .join('\n    ');
 
   const scriptTags = scripts
-    .map(script => {
+    .map((script: any) => {
       if (typeof script === 'string') {
         return `<script src="${escapeHtml(script)}"></script>`;
       }
@@ -845,7 +845,7 @@ function buildHtmlDocument(options) {
 /**
  * Renders an error page with beautiful styling (FlexiReact v4)
  */
-export function renderError(statusCode, message, stack = null) {
+export function renderError(statusCode: number, message: string, stack: string | null = null) {
   const showStack = process.env.NODE_ENV !== 'production' && stack;
   const isDev = process.env.NODE_ENV !== 'production';
 
@@ -860,11 +860,11 @@ export function renderError(statusCode, message, stack = null) {
     401: { title: 'Unauthorized', icon: 'key', color: '#8b5cf6', desc: 'Please log in to access this page.' },
   };
 
-  const errorInfo = errorMessages[statusCode] || { title: 'Error', icon: 'alert', color: '#ef4444', desc: message };
+  const errorInfo = (errorMessages as Record<number, any>)[statusCode] || { title: 'Error', icon: 'alert', color: '#ef4444', desc: message };
 
   // Generate error frames HTML for dev mode
-  const errorFramesHtml = showStack && errorDetails?.frames?.length > 0
-    ? errorDetails.frames.slice(0, 5).map((frame, i) => `
+  const errorFramesHtml = showStack && errorDetails?.frames?.length && errorDetails.frames.length > 0
+    ? errorDetails.frames.slice(0, 5).map((frame: any, i: number) => `
         <div class="error-frame ${i === 0 ? 'error-frame-first' : ''}">
           <div class="error-frame-fn">${escapeHtml(frame.fn)}</div>
           <div class="error-frame-loc">${escapeHtml(frame.file)}:${frame.line}:${frame.col}</div>
@@ -1166,7 +1166,7 @@ export function renderError(statusCode, message, stack = null) {
     ${isDev ? `
     <div class="dev-badge">
       <div class="dev-badge-dot"></div>
-      FlexiReact v4
+      FlexiReact v4.1.0
     </div>
     ` : ''}
 </body>
@@ -1176,11 +1176,11 @@ export function renderError(statusCode, message, stack = null) {
 /**
  * Parses error stack for better display
  */
-function parseErrorStack(stack) {
+function parseErrorStack(stack: string | null): { message: string; frames: Array<{ fn: string; file: string; line: string; col: string }> } | null {
   if (!stack) return null;
 
   const lines = stack.split('\n');
-  const parsed = {
+  const parsed: { message: string; frames: Array<{ fn: string; file: string; line: string; col: string }> } = {
     message: lines[0] || '',
     frames: []
   };
@@ -1206,7 +1206,7 @@ function parseErrorStack(stack) {
 /**
  * Renders a loading state
  */
-export function renderLoading(LoadingComponent) {
+export function renderLoading(LoadingComponent: React.ComponentType | null) {
   if (!LoadingComponent) {
     return `<div class="flexi-loading">
       <div class="flexi-spinner"></div>

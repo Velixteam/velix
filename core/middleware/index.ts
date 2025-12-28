@@ -62,7 +62,7 @@ export class MiddlewareResponse {
   /**
    * Redirect to a different URL
    */
-  static redirect(url, status = 302) {
+  static redirect(url: string, status: number = 302) {
     return new MiddlewareResponse({
       type: 'redirect',
       url,
@@ -73,7 +73,7 @@ export class MiddlewareResponse {
   /**
    * Rewrite the request to a different URL (internal)
    */
-  static rewrite(url) {
+  static rewrite(url: string) {
     return new MiddlewareResponse({
       type: 'rewrite',
       url
@@ -134,11 +134,11 @@ export class MiddlewareRequest {
     this.cookies = this._parseCookies(req.headers.cookie || '');
   }
 
-  _parseCookies(cookieHeader) {
-    const cookies = new Map();
+  _parseCookies(cookieHeader: string): Map<string, string> {
+    const cookies = new Map<string, string>();
     if (!cookieHeader) return cookies;
     
-    cookieHeader.split(';').forEach(cookie => {
+    cookieHeader.split(';').forEach((cookie: string) => {
       const [name, ...rest] = cookie.split('=');
       if (name) {
         cookies.set(name.trim(), rest.join('=').trim());
@@ -151,21 +151,21 @@ export class MiddlewareRequest {
   /**
    * Get a header value
    */
-  header(name) {
+  header(name: string): string | undefined {
     return this.headers.get(name.toLowerCase());
   }
 
   /**
    * Get a cookie value
    */
-  cookie(name) {
+  cookie(name: string): string | undefined {
     return this.cookies.get(name);
   }
 
   /**
    * Check if request matches a path pattern
    */
-  matches(pattern) {
+  matches(pattern: string): boolean {
     return matchPath(this.pathname, pattern);
   }
 }
@@ -173,7 +173,7 @@ export class MiddlewareRequest {
 /**
  * Loads middleware from project
  */
-export async function loadMiddleware(projectRoot) {
+export async function loadMiddleware(projectRoot: string) {
   const middlewarePath = path.join(projectRoot, 'middleware.js');
   
   if (!fs.existsSync(middlewarePath)) {
@@ -197,7 +197,7 @@ export async function loadMiddleware(projectRoot) {
 /**
  * Runs middleware chain
  */
-export async function runMiddleware(req, res, middleware) {
+export async function runMiddleware(req: any, res: any, middleware: any) {
   if (!middleware) {
     return { continue: true };
   }
@@ -208,7 +208,7 @@ export async function runMiddleware(req, res, middleware) {
   // Check if request matches middleware patterns
   if (config.matcher) {
     const patterns = Array.isArray(config.matcher) ? config.matcher : [config.matcher];
-    const matches = patterns.some(pattern => matchPath(request.pathname, pattern));
+    const matches = patterns.some((pattern: string) => matchPath(request.pathname, pattern));
     
     if (!matches) {
       return { continue: true };
@@ -261,7 +261,7 @@ export async function runMiddleware(req, res, middleware) {
 /**
  * Matches a path against a pattern
  */
-function matchPath(pathname, pattern) {
+function matchPath(pathname: string, pattern: string): boolean {
   // Convert pattern to regex
   let regex = pattern
     .replace(/\*/g, '.*')
@@ -276,8 +276,8 @@ function matchPath(pathname, pattern) {
 /**
  * Compose multiple middleware functions
  */
-export function composeMiddleware(...middlewares) {
-  return async (request) => {
+export function composeMiddleware(...middlewares: Array<(request: MiddlewareRequest) => Promise<MiddlewareResponse | null>>) {
+  return async (request: MiddlewareRequest) => {
     for (const middleware of middlewares) {
       const response = await middleware(request);
       
@@ -305,7 +305,7 @@ export const middlewares = {
       credentials = false
     } = options;
 
-    return (request) => {
+    return (request: MiddlewareRequest) => {
       const response = MiddlewareResponse.next({
         headers: {
           'Access-Control-Allow-Origin': origin,
@@ -327,11 +327,11 @@ export const middlewares = {
   /**
    * Basic auth middleware
    */
-  basicAuth(options) {
+  basicAuth(options: { username: string; password: string; realm?: string }) {
     const { username, password, realm = 'Protected' } = options;
     const expected = Buffer.from(`${username}:${password}`).toString('base64');
 
-    return (request) => {
+    return (request: MiddlewareRequest) => {
       const auth = request.header('authorization');
       
       if (!auth || !auth.startsWith('Basic ')) {
@@ -357,7 +357,7 @@ export const middlewares = {
     const { windowMs = 60000, max = 100 } = options;
     const requests = new Map();
 
-    return (request) => {
+    return (request: MiddlewareRequest) => {
       const ip = request.header('x-forwarded-for') || 'unknown';
       const now = Date.now();
       
@@ -395,7 +395,7 @@ export const middlewares = {
   logger(options: { format?: string } = {}) {
     const { format = 'combined' } = options;
 
-    return (request) => {
+    return (request: MiddlewareRequest) => {
       const start = Date.now();
       const { method, pathname } = request;
       

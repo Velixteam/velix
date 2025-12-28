@@ -20,7 +20,7 @@ const islandRegistry = new Map();
 /**
  * Generates a unique island ID
  */
-function generateIslandId(componentName) {
+function generateIslandId(componentName: string): string {
   const hash = crypto.randomBytes(4).toString('hex');
   return `island-${componentName}-${hash}`;
 }
@@ -28,7 +28,7 @@ function generateIslandId(componentName) {
 /**
  * Island wrapper component for server-side rendering
  */
-export function Island({ component: Component, props = {}, name, clientPath }) {
+export function Island({ component: Component, props = {}, name, clientPath }: { component: React.ComponentType<any>; props?: any; name: string; clientPath: string }) {
   const islandId = generateIslandId(name);
   
   // Register island for hydration
@@ -71,7 +71,7 @@ interface IslandOptions {
 export function createIsland(Component: React.ComponentType<any>, options: IslandOptions = {}) {
   const { name = (Component as any).name || 'Island', clientPath } = options;
 
-  function IslandWrapper(props) {
+  function IslandWrapper(props: any) {
     return Island({
       component: Component,
       props,
@@ -90,10 +90,10 @@ export function createIsland(Component: React.ComponentType<any>, options: Islan
 /**
  * Generates the client-side hydration script
  */
-export function generateHydrationScript(islands) {
+export function generateHydrationScript(islands: any[]): string {
   if (!islands.length) return '';
 
-  const islandData = islands.map(island => ({
+  const islandData = islands.map((island: any) => ({
     id: island.id,
     name: island.name,
     path: island.clientPath,
@@ -168,7 +168,7 @@ export function createLazyIsland(Component: React.ComponentType<any>, options: L
     media = null
   } = options;
 
-  function LazyIslandWrapper(props) {
+  function LazyIslandWrapper(props: any) {
     const islandId = generateIslandId(name);
     const content = renderToString(React.createElement(Component, props));
 
@@ -202,10 +202,10 @@ export function createLazyIsland(Component: React.ComponentType<any>, options: L
 /**
  * Generates advanced hydration script with loading strategies
  */
-export function generateAdvancedHydrationScript(islands) {
+export function generateAdvancedHydrationScript(islands: any[]): string {
   if (!islands.length) return '';
 
-  const islandData = islands.map(island => ({
+  const islandData = islands.map((island: any) => ({
     id: island.id,
     name: island.name,
     path: island.clientPath,

@@ -57,7 +57,7 @@ function formatTime(ms) {
 
 // Minimalist Logo
 const LOGO = `
-  ${c.white}▲${c.reset} ${c.bold}FlexiReact${c.reset} ${c.dim}4.0.0${c.reset}
+  ${c.white}▲${c.reset} ${c.bold}FlexiReact${c.reset} ${c.dim}4.1.0${c.reset}
 `;
 
 export const logger = {
@@ -120,7 +120,7 @@ export const logger = {
   },
 
   // Error message
-  error(msg, err = null) {
+  error(msg: string, err: Error | null = null) {
     console.log(`  ${c.red}✖${c.reset} ${c.red}${msg}${c.reset}`);
     if (err && err.stack) {
       console.log('');

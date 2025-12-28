@@ -23,8 +23,13 @@ export const RSC_CONTENT_TYPE = 'text/x-component';
  * Processes a component tree for RSC
  * Server components are rendered to HTML, client components are serialized
  */
-export async function processServerComponent(Component, props, context) {
-  const componentInfo = {
+export async function processServerComponent(Component: any, props: any, context: any) {
+  const componentInfo: {
+    isServer: boolean;
+    rendered: string | null;
+    clientComponents: any[];
+    serverData: Record<string, any>;
+  } = {
     isServer: true,
     rendered: null,
     clientComponents: [],
@@ -53,7 +58,7 @@ export async function processServerComponent(Component, props, context) {
 /**
  * Creates a client component reference for RSC payload
  */
-export function createClientReference(componentPath, props) {
+export function createClientReference(componentPath: string, props: any) {
   return {
     $$typeof: Symbol.for('react.client.reference'),
     $$id: componentPath,
@@ -64,7 +69,7 @@ export function createClientReference(componentPath, props) {
 /**
  * Serializes RSC payload for streaming
  */
-export function serializeRSCPayload(componentTree) {
+export function serializeRSCPayload(componentTree: any) {
   const payload = {
     type: 'rsc',
     tree: serializeNode(componentTree),
@@ -77,7 +82,7 @@ export function serializeRSCPayload(componentTree) {
 /**
  * Serializes a React node for RSC
  */
-function serializeNode(node) {
+function serializeNode(node: any): any {
   if (node === null || node === undefined) {
     return null;
   }
@@ -99,7 +104,7 @@ function serializeNode(node) {
       return {
         $$type: 'client',
         $$id: typeAny.$$id,
-        props: serializeProps(props)
+        props: serializeProps(props as Record<string, any>)
       };
     }
 
@@ -109,7 +114,7 @@ function serializeNode(node) {
     return {
       $$type: 'element',
       type: typeName,
-      props: serializeProps(props)
+      props: serializeProps(props as Record<string, any>)
     };
   }
 
@@ -144,7 +149,7 @@ function serializeProps(props: Record<string, any>) {
  * Server Actions support
  * Allows calling server functions from client components
  */
-export function createServerAction(fn, actionId) {
+export function createServerAction(fn: any, actionId: string) {
   // Mark function as server action
   fn.$$typeof = Symbol.for('react.server.action');
   fn.$$id = actionId;
@@ -155,7 +160,7 @@ export function createServerAction(fn, actionId) {
 /**
  * Handles server action invocation
  */
-export async function handleServerAction(actionId, args, context) {
+export async function handleServerAction(actionId: string, args: any[], context: any) {
   // Actions are registered during build
   const action = globalThis.__FLEXI_ACTIONS__?.[actionId];
   
@@ -170,7 +175,7 @@ export async function handleServerAction(actionId, args, context) {
  * RSC Boundary component
  * Marks the boundary between server and client rendering
  */
-export function ServerBoundary({ children, fallback }) {
+export function ServerBoundary({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   return children;
 }
 
@@ -178,7 +183,7 @@ export function ServerBoundary({ children, fallback }) {
  * Client Boundary component
  * Marks components that should be hydrated on the client
  */
-export function ClientBoundary({ children, fallback }) {
+export function ClientBoundary({ children, fallback }: { children: React.ReactNode; fallback?: React.ReactNode }) {
   // On server, render children normally
   // On client, this will be hydrated
   return React.createElement('div', {

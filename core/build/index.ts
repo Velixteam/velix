@@ -24,7 +24,7 @@ export const BuildMode = {
 /**
  * Main build function
  */
-export async function build(options) {
+export async function build(options: any) {
   const {
     projectRoot,
     config,
@@ -97,7 +97,7 @@ export async function build(options) {
   console.log('');
 
   // Generate bundle analysis if requested
-  let analysis = null;
+  let analysis: ReturnType<typeof generateBundleAnalysis> | null = null;
   if (analyze) {
     analysis = generateBundleAnalysis(clientResult, serverResult, outDir);
   }
@@ -115,7 +115,7 @@ export async function build(options) {
 /**
  * Generates bundle analysis data
  */
-function generateBundleAnalysis(clientResult, serverResult, outDir) {
+function generateBundleAnalysis(clientResult: any, serverResult: any, outDir: string) {
   const files: Record<string, { size: number; gzipSize?: number }> = {};
   let totalSize = 0;
   let totalGzipSize = 0;
@@ -157,13 +157,13 @@ function generateBundleAnalysis(clientResult, serverResult, outDir) {
     files,
     totalSize,
     totalGzipSize,
-    clientSize: clientResult.outputs?.reduce((sum, o) => {
+    clientSize: clientResult.outputs?.reduce((sum: number, o: any) => {
       if (o.path && fs.existsSync(o.path)) {
         return sum + fs.statSync(o.path).size;
       }
       return sum;
     }, 0) || 0,
-    serverSize: serverResult.outputs?.reduce((sum, o) => {
+    serverSize: serverResult.outputs?.reduce((sum: number, o: any) => {
       if (o.path && fs.existsSync(o.path)) {
         return sum + fs.statSync(o.path).size;
       }
@@ -175,8 +175,8 @@ function generateBundleAnalysis(clientResult, serverResult, outDir) {
 /**
  * Finds all client component entries
  */
-function findClientEntries(pagesDir, layoutsDir) {
-  const entries = [];
+function findClientEntries(pagesDir: string, layoutsDir: string) {
+  const entries: string[] = [];
   const dirs = [pagesDir, layoutsDir].filter(d => fs.existsSync(d));
 
   for (const dir of dirs) {
@@ -195,7 +195,7 @@ function findClientEntries(pagesDir, layoutsDir) {
 /**
  * Builds client-side JavaScript
  */
-async function buildClient(options) {
+async function buildClient(options: any) {
   const { entries, outDir, config, isDev } = options;
 
   if (entries.length === 0) {
@@ -203,7 +203,7 @@ async function buildClient(options) {
   }
 
   // Create entry points map
-  const entryPoints = {};
+  const entryPoints: Record<string, string> = {};
   for (const entry of entries) {
     const name = path.basename(entry, path.extname(entry));
     const hash = generateHash(entry);
@@ -257,10 +257,10 @@ async function buildClient(options) {
 /**
  * Builds server-side modules
  */
-async function buildServer(options) {
+async function buildServer(options: any) {
   const { pagesDir, layoutsDir, outDir, config, isDev } = options;
 
-  const entries = [];
+  const entries: string[] = [];
   
   // Find all page and layout files
   for (const dir of [pagesDir, layoutsDir]) {
@@ -274,7 +274,7 @@ async function buildServer(options) {
   }
 
   // Create entry points
-  const entryPoints = {};
+  const entryPoints: Record<string, string> = {};
   for (const entry of entries) {
     const relativePath = path.relative(pagesDir, entry);
     const name = relativePath.replace(/[\/\\]/g, '_').replace(/\.(jsx|tsx|js|ts)$/, '');
@@ -319,12 +319,12 @@ async function buildServer(options) {
 /**
  * Copies public assets to output directory
  */
-async function copyPublicAssets(publicDir, outDir) {
+async function copyPublicAssets(publicDir: string, outDir: string) {
   if (!fs.existsSync(publicDir)) {
     return;
   }
 
-  const copyRecursive = (src, dest) => {
+  const copyRecursive = (src: string, dest: string) => {
     const entries = fs.readdirSync(src, { withFileTypes: true });
     
     ensureDir(dest);
@@ -347,21 +347,21 @@ async function copyPublicAssets(publicDir, outDir) {
 /**
  * Generates build manifest
  */
-function generateManifest(options) {
+function generateManifest(options: any) {
   const { routes, clientResult, serverResult, config } = options;
 
   return {
-    version: '2.0.0',
+    version: '4.1.0',
     generatedAt: new Date().toISOString(),
     routes: {
-      pages: routes.pages.map(r => ({
+      pages: routes.pages.map((r: any) => ({
         path: r.path,
         file: r.filePath,
         hasLayout: !!r.layout,
         hasLoading: !!r.loading,
         hasError: !!r.error
       })),
-      api: routes.api.map(r => ({
+      api: routes.api.map((r: any) => ({
         path: r.path,
         file: r.filePath
       }))
@@ -382,7 +382,7 @@ function generateManifest(options) {
 /**
  * Development build with watch mode
  */
-export async function buildDev(options) {
+export async function buildDev(options: any) {
   const { projectRoot, config, onChange } = options;
 
   const outDir = config.outDir;

@@ -88,7 +88,7 @@ export async function loadConfig(projectRoot: string) {
 /**
  * Deep merge two objects
  */
-function deepMerge(target, source) {
+function deepMerge(target: Record<string, any>, source: Record<string, any>): Record<string, any> {
   const result = { ...target };
   
   for (const key in source) {
@@ -105,7 +105,7 @@ function deepMerge(target, source) {
 /**
  * Resolves all paths in config relative to project root
  */
-export function resolvePaths(config, projectRoot) {
+export function resolvePaths(config: any, projectRoot: string): any {
   return {
     ...config,
     pagesDir: path.resolve(projectRoot, config.pagesDir),

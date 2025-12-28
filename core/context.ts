@@ -5,19 +5,26 @@
 
 import React from 'react';
 
+// Route context type
+interface RouteContextType {
+  params: Record<string, string>;
+  query: Record<string, string>;
+  pathname: string;
+}
+
 // Server-side request context
-export const RequestContext = React.createContext(null);
+export const RequestContext = React.createContext<any>(null);
 
 // Route context for nested routes
-export const RouteContext = React.createContext(null);
+export const RouteContext = React.createContext<RouteContextType | null>(null);
 
 // Layout context
-export const LayoutContext = React.createContext(null);
+export const LayoutContext = React.createContext<any>(null);
 
 /**
  * Creates a request context value
  */
-export function createRequestContext(req, res, params = {}, query = {}) {
+export function createRequestContext(req: import('http').IncomingMessage, res: import('http').ServerResponse, params: Record<string, string> = {}, query: Record<string, string> = {}) {
   return {
     req,
     res,
@@ -33,11 +40,11 @@ export function createRequestContext(req, res, params = {}, query = {}) {
 /**
  * Parse cookies from header string
  */
-function parseCookies(cookieHeader) {
-  const cookies = {};
+function parseCookies(cookieHeader: string): Record<string, string> {
+  const cookies: Record<string, string> = {};
   if (!cookieHeader) return cookies;
   
-  cookieHeader.split(';').forEach(cookie => {
+  cookieHeader.split(';').forEach((cookie: string) => {
     const [name, ...rest] = cookie.split('=');
     if (name) {
       cookies[name.trim()] = rest.join('=').trim();

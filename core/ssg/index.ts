@@ -61,7 +61,7 @@ export class SSGResult {
 /**
  * Generates static pages for all routes
  */
-export async function generateStaticSite(options) {
+export async function generateStaticSite(options: any) {
   const {
     routes,
     outDir,
@@ -81,9 +81,9 @@ export async function generateStaticSite(options) {
   for (const route of routes) {
     try {
       await generateRoutePage(route, staticDir, loadModule, result, config);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`  ✗ ${route.path}: ${error.message}`);
-      result.addError(route.path, error);
+      result.addError(route.path, error as Error);
     }
   }
 
@@ -103,7 +103,7 @@ export async function generateStaticSite(options) {
 /**
  * Generates a single route's static page(s)
  */
-async function generateRoutePage(route, outDir, loadModule, result, config) {
+async function generateRoutePage(route: any, outDir: string, loadModule: any, result: SSGResult, config: any) {
   const module = await loadModule(route.filePath);
   const Component = module.default;
 
@@ -174,8 +174,8 @@ async function generateRoutePage(route, outDir, loadModule, result, config) {
       
       console.log(`  ✓ ${actualPath} (${formatSize(size)})`);
 
-    } catch (error) {
-      result.addError(actualPath, error);
+    } catch (error: any) {
+      result.addError(actualPath, error as Error);
       console.error(`  ✗ ${actualPath}: ${error.message}`);
     }
   }
@@ -184,7 +184,7 @@ async function generateRoutePage(route, outDir, loadModule, result, config) {
 /**
  * Generates a redirect page
  */
-async function generateRedirectPage(fromPath, redirect, outDir, result) {
+async function generateRedirectPage(fromPath: string, redirect: any, outDir: string, result: SSGResult) {
   const { destination, permanent = false } = redirect;
   const statusCode = permanent ? 301 : 302;
 
@@ -215,7 +215,7 @@ async function generateRedirectPage(fromPath, redirect, outDir, result) {
 /**
  * Substitutes route params into path
  */
-function substituteParams(routePath, params) {
+function substituteParams(routePath: string, params: Record<string, any>): string {
   let result = routePath;
   
   for (const [key, value] of Object.entries(params)) {
@@ -229,7 +229,7 @@ function substituteParams(routePath, params) {
 /**
  * Gets the output file path for a route
  */
-function getOutputPath(routePath, outDir) {
+function getOutputPath(routePath: string, outDir: string): string {
   if (routePath === '/') {
     return path.join(outDir, 'index.html');
   }
@@ -242,7 +242,7 @@ function getOutputPath(routePath, outDir) {
 /**
  * Formats file size
  */
-function formatSize(bytes) {
+function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
@@ -272,7 +272,7 @@ export class ISRManager {
   /**
    * Gets a cached page or regenerates it
    */
-  async getPage(routePath, generator) {
+  async getPage(routePath: string, generator: () => Promise<{ html: string; revalidate?: number }>) {
     const cached = this.cache.get(routePath);
     const now = Date.now();
 
@@ -301,7 +301,7 @@ export class ISRManager {
   /**
    * Revalidates a page in the background
    */
-  async revalidateInBackground(routePath, generator) {
+  async revalidateInBackground(routePath: string, generator: () => Promise<{ html: string; revalidate?: number }>) {
     if (this.revalidating.has(routePath)) return;
 
     this.revalidating.add(routePath);
@@ -327,7 +327,7 @@ export class ISRManager {
   /**
    * Invalidates a cached page
    */
-  invalidate(routePath) {
+  invalidate(routePath: string) {
     this.cache.delete(routePath);
   }
 
