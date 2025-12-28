@@ -1,38 +1,22 @@
-<p align="center">
-  <img src="./assets/flexireact.webp" alt="FlexiReact Logo" width="360" />
-</p>
+<div align="center">
 
-<h1 align="center">⚡ FlexiReact v4</h1>
+<img src="./assets/flexireact.webp" alt="FlexiReact Logo" width="280" />
 
-<p align="center">
-  <strong>An Edge-First React Framework</strong>
-</p>
+# ⚡ FlexiReact v4.1
 
-<p align="center">
-  A modern React framework focused on <b>performance</b>, <b>clarity</b> and <b>modern React APIs</b>.<br/>
-  Inspired by Next.js, Remix and Astro — but simpler, lighter and edge-native.
-</p>
+### The Edge-First React Framework
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/@flexireact/core">
-    <img src="https://img.shields.io/npm/v/@flexireact/core.svg?color=00FF9C" alt="npm version" />
-  </a>
-  <a href="https://www.npmjs.com/package/@flexireact/core">
-    <img src="https://img.shields.io/npm/dm/@flexireact/core.svg?color=00FF9C" alt="npm downloads" />
-  </a>
-  <a href="https://opensource.org/licenses/MIT">
-    <img src="https://img.shields.io/badge/License-MIT-00FF9C.svg" alt="License: MIT" />
-  </a>
-  <img src="https://img.shields.io/badge/TypeScript-Native-blue.svg" alt="TypeScript Native" />
-</p>
+[![npm version](https://img.shields.io/npm/v/@flexireact/core.svg?style=flat-square&color=00FF9C&labelColor=0a0a0a)](https://www.npmjs.com/package/@flexireact/core)
+[![npm downloads](https://img.shields.io/npm/dm/@flexireact/core.svg?style=flat-square&color=00FF9C&labelColor=0a0a0a)](https://www.npmjs.com/package/@flexireact/core)
+[![License](https://img.shields.io/badge/license-MIT-00FF9C.svg?style=flat-square&labelColor=0a0a0a)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-native-3178c6.svg?style=flat-square&labelColor=0a0a0a)](https://www.typescriptlang.org/)
 
-<p align="center">
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-features">Features</a> •
-  <a href="#-cli">CLI</a> •
-  <a href="#-architecture">Architecture</a> •
-  <a href="#-roadmap">Roadmap</a>
-</p>
+A modern React framework focused on **performance**, **clarity** and **modern React APIs**.  
+Inspired by Next.js, Remix and Astro — but simpler, lighter and edge-native.
+
+[Quick Start](#-quick-start) · [Features](#-features) · [Documentation](#-documentation) · [Roadmap](#-roadmap)
+
+</div>
 
 ---
 
@@ -42,210 +26,225 @@
 npx create-flexireact my-app
 cd my-app
 npm run dev
-Open http://localhost:3000 🎉
+```
 
-✨ What is FlexiReact?
-FlexiReact is a full-stack React framework designed for developers who want:
+Open [http://localhost:3000](http://localhost:3000) and start building! 🎉
 
-modern React APIs (React 19, Actions, Suspense)
+---
 
-explicit and predictable behavior
+## ✨ Why FlexiReact?
 
-partial hydration with Islands
+FlexiReact is for developers who want:
 
-edge-first deployment
+| Feature | Description |
+|---------|-------------|
+| ⚛️ **Modern React** | React 19, Server Components, Server Actions, Suspense |
+| 🏝️ **Islands** | Partial hydration — zero JS for static content |
+| ⚡ **Edge-First** | Runs on Node, Bun, Deno, Cloudflare Workers |
+| 📁 **File Routing** | Three conventions: `routes/`, `app/`, `pages/` |
+| 🎯 **Explicit** | No hidden caching, no magic behavior |
 
-minimal tooling complexity
+---
 
-It does not try to replace Next.js —
-it offers an alternative focused on simplicity and performance.
+## 🧩 Features
 
-🧩 Core Features
-⚛️ Modern React First
-Native React 19 support
+### ⚛️ React 19 Native
 
-Server Components ('use server')
+```tsx
+// Server Component (default)
+export default async function Page() {
+  const data = await db.query('SELECT * FROM posts');
+  return <PostList posts={data} />;
+}
+```
 
-Client Components ('use client')
+```tsx
+'use client';
+// Client Component
+export function LikeButton() {
+  const [liked, setLiked] = useState(false);
+  return <button onClick={() => setLiked(!liked)}>❤️</button>;
+}
+```
 
-Server Actions (React 19 primitives)
+### 🏝️ Islands Architecture
 
-Suspense & streaming
+Only hydrate what needs interactivity:
 
-🏝️ Islands Architecture
-Partial hydration by default
-
-Zero JS for static content
-
-Explicit interactive boundaries
-
-tsx
-Copier le code
+```tsx
 'use island';
 
 export function Counter() {
   const [count, setCount] = useState(0);
-  return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
+  return (
+    <button onClick={() => setCount(c => c + 1)}>
+      Count: {count}
+    </button>
+  );
 }
-🖥️ Rendering Modes
-SSR — server-side rendering
+```
 
-SSG — static generation
+### 📁 File-Based Routing
 
-ISR — incremental regeneration (explicit)
-
-Streaming SSR — progressive HTML
-
-ts
-Copier le code
-export const revalidate = 60;
-📁 File-Based Routing
-Supports three conventions (in priority order):
-
-routes/ (recommended)
-
-app/ (Next-style)
-
-pages/ (legacy)
-
-txt
-Copier le code
+```
 routes/
-  (public)/
-    home.tsx      → /
-    about.tsx     → /about
-  blog/
-    [slug].tsx    → /blog/:slug
-  api/
-    users.ts      → /api/users
-🔌 API Routes & Middleware
-ts
-Copier le code
-export function GET() {
-  return Response.json({ ok: true });
-}
-Middleware support (global or per-route):
+├── home.tsx           → /
+├── about.tsx          → /about
+├── blog/
+│   ├── index.tsx      → /blog
+│   └── [slug].tsx     → /blog/:slug
+└── api/
+    └── users.ts       → /api/users
+```
 
-ts
-Copier le code
-export default function middleware(req) {
-  if (!req.headers.get('auth')) {
+### 🔌 API Routes
+
+```ts
+// routes/api/users.ts
+export async function GET() {
+  return Response.json({ users: await getUsers() });
+}
+
+export async function POST(req: Request) {
+  const body = await req.json();
+  return Response.json({ created: true });
+}
+```
+
+### 🛡️ Middleware
+
+```ts
+// middleware.ts
+export default function middleware(request) {
+  if (!request.headers.get('authorization')) {
     return Response.redirect('/login');
   }
 }
-⚡ Edge-First Runtime
-FlexiReact runs on:
 
-Node.js
+export const config = {
+  matcher: ['/dashboard/:path*']
+};
+```
 
-Bun
+---
 
-Deno
+## 🖥️ Rendering Modes
 
-Cloudflare Workers
+| Mode | Description |
+|------|-------------|
+| **SSR** | Server-side rendering (default) |
+| **SSG** | Static generation at build time |
+| **ISR** | Incremental Static Regeneration |
+| **Streaming** | Progressive HTML rendering |
 
-Vercel / Netlify Edge
+```tsx
+// Enable ISR with revalidation
+export const revalidate = 60; // seconds
 
-Same API everywhere — no Node-only assumptions.
+export default function Page() {
+  return <div>This page revalidates every 60s</div>;
+}
+```
 
-🧠 Architecture Philosophy
-FlexiReact is built around a few strong principles:
+---
 
-Explicit over implicit
-No hidden caching, no magic behavior.
+## 🛠️ CLI
 
-Readable internals
-You should be able to read the framework code.
+```bash
+# Create & Run
+npx create-flexireact my-app    # Create new project
+flexi dev                        # Development server
+flexi build                      # Production build
+flexi start                      # Start production server
 
-Modern only
-No legacy React APIs, no webpack.
+# Scaffolding
+flexi g page dashboard           # Generate page
+flexi g component Button         # Generate component
+flexi g api users                # Generate API route
 
-Edge-native by design
-Not retrofitted later.
+# Utilities
+flexi doctor                     # Diagnose issues
+flexi upgrade                    # Upgrade FlexiReact
+```
 
-🛠️ CLI
-bash
-Copier le code
-flexi create <name>     # Create project
-flexi dev               # Dev server (HMR)
-flexi build             # Production build
-flexi start             # Start server
-flexi doctor            # Diagnose issues
-Scaffolding:
+---
 
-bash
-Copier le code
-flexi g page dashboard
-flexi g component Button
-flexi g api users
-flexi g middleware auth
-🎨 UI Components (Optional)
-FlexiReact provides an optional UI library:
+## ⚙️ Configuration
 
-bash
-Copier le code
-npm install @flexireact/flexi-ui
-50+ accessible components
-
-Tailwind CSS
-
-shadcn/ui compatible
-
-Tree-shakable
-
-🔧 Configuration
-ts
-Copier le code
+```ts
 // flexireact.config.ts
 import { defineConfig } from '@flexireact/core';
 
 export default defineConfig({
+  // Runtime
   runtime: 'edge',
+  
+  // Features
   islands: true,
-  cache: {
-    strategy: 'lru',
-    ttl: 60
+  rsc: true,
+  
+  // Server
+  server: {
+    port: 3000,
+    host: 'localhost'
+  },
+  
+  // Build
+  build: {
+    minify: true,
+    sourcemap: true
   }
 });
-🧪 Experimental Features
-The following features are experimental and evolving:
+```
 
-Partial Prerendering (PPR)
+---
 
-Advanced DevTools overlay
+## 📦 Packages
 
-Image optimization
+| Package | Description |
+|---------|-------------|
+| [`@flexireact/core`](https://www.npmjs.com/package/@flexireact/core) | Core framework |
+| [`create-flexireact`](https://www.npmjs.com/package/create-flexireact) | Project scaffolding CLI |
+| `@flexireact/flexi-ui` | UI component library (coming soon) |
 
-Built-in analytics
+---
 
-They are opt-in and documented clearly.
+## 🛣️ Roadmap
 
-🛣️ Roadmap
-v4.x
-Stability & DX improvements
+### v4.x (Current)
+- [x] React 19 support
+- [x] Islands architecture
+- [x] File-based routing (3 conventions)
+- [x] SSR / SSG / ISR
+- [x] Middleware system
+- [ ] Plugin system v1
+- [ ] Image optimization
 
-Plugin system v1
+### v5 (Future)
+- [ ] Unified compiler pipeline
+- [ ] First-class plugin ecosystem
+- [ ] Advanced DevTools
+- [ ] Partial Prerendering (PPR)
 
-Better Edge ISR
+---
 
-v5
-Unified compiler pipeline
+## 🤝 Contributing
 
-First-class plugins ecosystem
+FlexiReact is open-source and community-driven.  
+Contributions, feedback and discussions are welcome!
 
-Advanced DevTools
+---
 
-📦 Packages
-Package	Description
-@flexireact/core	Core framework
-create-flexireact	Project scaffolding
-@flexireact/flexi-ui	UI components
+## 📄 License
 
-🤝 Contributing
-FlexiReact is open-source and community-driven.
-Contributions, feedback and discussions are welcome.
-
-📄 License
 MIT © FlexiReact Team
 
-<p align="center"> Built with ❤️ for developers who value clarity and performance. </p>
+---
+
+<div align="center">
+
+**Built with ❤️ for developers who value clarity and performance.**
+
+[⬆ Back to top](#-flexireact-v41)
+
+</div>

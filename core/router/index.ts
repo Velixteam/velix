@@ -100,10 +100,10 @@ function scanRoutesDirectory(baseDir: string, currentDir: string, routes: any, p
   const entries = fs.readdirSync(currentDir, { withFileTypes: true });
 
   // Find special files in current directory
-  let layoutFile = null;
-  let loadingFile = null;
-  let errorFile = null;
-  let middlewareFile = null;
+  let layoutFile: string | null = null;
+  let loadingFile: string | null = null;
+  let errorFile: string | null = null;
+  let middlewareFile: string | null = null;
 
   for (const entry of entries) {
     if (entry.isFile()) {
@@ -487,7 +487,7 @@ export function matchRoute(urlPath: string, routes: any[]) {
  */
 function extractParams(routePath: string, match: RegExpMatchArray): Record<string, string> {
   const params: Record<string, string> = {};
-  const paramNames = [];
+  const paramNames: string[] = [];
 
   // Extract param names from route path
   const paramRegex = /:([^/]+)|\*([^/]*)/g;
