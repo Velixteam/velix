@@ -25,44 +25,97 @@ export async function renderPage(options: any) {
     favicon = null,
     isSSG = false,
     route = '/',
-    needsHydration = false
+    needsHydration = false,
+    componentPath = ''
   } = options;
 
   const renderStart = Date.now();
 
   try {
     // Build the component tree - start with the page component
-    let element: any = React.createElement(Component, props);
+    let element: any;
+    let content: string;
+    let isClientOnly = false;
 
-    // Wrap with error boundary if error component exists
-    if (error) {
-      element = React.createElement(ErrorBoundaryWrapper as any, {
-        fallback: error,
-        children: element
-      });
-    }
+    // Try to render the component - if it uses hooks, catch and render placeholder
+    try {
+      element = React.createElement(Component, props);
 
-    // Wrap with Suspense if loading component exists (for streaming/async)
-    if (loading) {
-      element = React.createElement(React.Suspense as any, {
-        fallback: React.createElement(loading),
-        children: element
-      });
-    }
+      // Wrap with error boundary if error component exists
+      if (error) {
+        element = React.createElement(ErrorBoundaryWrapper as any, {
+          fallback: error,
+          children: element
+        });
+      }
 
-    // Wrap with layouts (innermost to outermost)
-    // Each layout receives children as a prop
-    for (const layout of [...layouts].reverse()) {
-      if (layout.Component) {
-        const LayoutComponent = layout.Component;
-        element = React.createElement(LayoutComponent, {
-          ...layout.props
-        }, element);
+      // Wrap with Suspense if loading component exists (for streaming/async)
+      if (loading) {
+        element = React.createElement(React.Suspense as any, {
+          fallback: React.createElement(loading),
+          children: element
+        });
+      }
+
+      // Wrap with layouts (innermost to outermost)
+      for (const layout of [...layouts].reverse()) {
+        if (layout.Component) {
+          const LayoutComponent = layout.Component;
+          element = React.createElement(LayoutComponent, {
+            ...layout.props
+          }, element);
+        }
+      }
+
+      // Render to string
+      content = renderToString(element);
+    } catch (renderErr: any) {
+      // Check if error is due to hooks being called on server (client component)
+      const isHookError = renderErr.message?.includes('useState') ||
+        renderErr.message?.includes('useEffect') ||
+        renderErr.message?.includes('useContext') ||
+        renderErr.message?.includes('useReducer') ||
+        renderErr.message?.includes('useRef') ||
+        renderErr.message?.includes('Invalid hook call');
+
+      if (isHookError || needsHydration) {
+        // This is a client component - render placeholder for hydration
+        isClientOnly = true;
+        const placeholderHtml = `
+          <div id="flexi-root" data-client-component="true" data-component-path="${escapeHtml(componentPath)}">
+            <div class="flexi-loading" style="display:flex;align-items:center;justify-content:center;min-height:200px;color:#666;">
+              <div style="text-align:center;">
+                <div style="width:40px;height:40px;border:3px solid #e0e0e0;border-top-color:#3b82f6;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px;"></div>
+                <div>Loading...</div>
+              </div>
+            </div>
+            <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+          </div>
+        `;
+
+        // Wrap placeholder with layouts if any
+        let wrappedContent = placeholderHtml;
+        for (const layout of [...layouts].reverse()) {
+          if (layout.Component) {
+            try {
+              const layoutElement = React.createElement(layout.Component, {
+                ...layout.props,
+                children: React.createElement('div', { 
+                  dangerouslySetInnerHTML: { __html: wrappedContent } 
+                })
+              });
+              wrappedContent = renderToString(layoutElement);
+            } catch {
+              // Layout also has hooks, skip it
+            }
+          }
+        }
+        content = wrappedContent;
+      } else {
+        // Re-throw non-hook errors
+        throw renderErr;
       }
     }
-
-    // Render to string
-    const content = renderToString(element);
 
     // Calculate render time
     const renderTime = Date.now() - renderStart;
@@ -82,7 +135,8 @@ export async function renderPage(options: any) {
       isSSG,
       renderTime,
       route,
-      isClientComponent: needsHydration
+      isClientComponent: needsHydration || isClientOnly,
+      componentPath
     });
 
   } catch (err) {
@@ -284,10 +338,10 @@ class ErrorBoundaryWrapper extends React.Component<ErrorBoundaryProps, ErrorBoun
 /**
  * Generates hydration scripts for islands
  */
-function generateIslandScripts(islands: any[]) {
+function generateIslandScripts(islands: any[]): Array<{ type: string; content: string }> {
   if (!islands.length) return [];
 
-  const scripts = [];
+  const scripts: Array<{ type: string; content: string }> = [];
 
   for (const island of islands) {
     scripts.push({

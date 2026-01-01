@@ -1,75 +1,107 @@
 /**
  * FlexiReact Configuration System
- * Handles loading and merging of configuration from flexireact.config.js
+ * Handles loading, validation, and merging of configuration
  */
 
 import fs from 'fs';
 import path from 'path';
 import { pathToFileURL } from 'url';
-
-// Default configuration
-export const defaultConfig = {
-  // Directories
-  pagesDir: 'pages',
-  layoutsDir: 'layouts',
-  publicDir: 'public',
-  outDir: '.flexi',
-  
-  // Build options
-  build: {
-    target: 'es2022',
-    minify: true,
-    sourcemap: true,
-    splitting: true
-  },
-  
-  // Server options
-  server: {
-    port: 3000,
-    host: 'localhost'
-  },
-  
-  // SSG options
-  ssg: {
-    enabled: false,
-    paths: []
-  },
-  
-  // Islands (partial hydration)
-  islands: {
-    enabled: true
-  },
-  
-  // RSC options
-  rsc: {
-    enabled: true
-  },
-  
-  // Plugins
-  plugins: [],
-  
-  // Styles (CSS files to include)
-  styles: [],
-  
-  // Scripts (JS files to include)
-  scripts: [],
-  
-  // Favicon path
-  favicon: null
-};
+import { z } from 'zod';
+import pc from 'picocolors';
 
 /**
- * Loads configuration from the project root
- * @param {string} projectRoot - Path to project root
- * @returns {Object} Merged configuration
+ * Configuration Schema (Zod validation)
  */
-export async function loadConfig(projectRoot: string) {
-  // Try .ts first, then .js
+const BuildConfigSchema = z.object({
+  target: z.string().default('es2022'),
+  minify: z.boolean().default(true),
+  sourcemap: z.boolean().default(true),
+  splitting: z.boolean().default(true)
+}).default({});
+
+const ServerConfigSchema = z.object({
+  port: z.number().min(1).max(65535).default(3000),
+  host: z.string().default('localhost')
+}).default({});
+
+const SSGConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  paths: z.array(z.string()).default([])
+}).default({});
+
+const IslandsConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  directive: z.string().default('use island')
+}).default({});
+
+const RSCConfigSchema = z.object({
+  enabled: z.boolean().default(true)
+}).default({});
+
+const PluginSchema = z.object({
+  name: z.string(),
+  setup: z.function().optional()
+}).passthrough();
+
+export const FlexiReactConfigSchema = z.object({
+  // Directories
+  pagesDir: z.string().default('pages'),
+  layoutsDir: z.string().default('layouts'),
+  publicDir: z.string().default('public'),
+  outDir: z.string().default('.flexi'),
+  
+  // Build options
+  build: BuildConfigSchema,
+  
+  // Server options
+  server: ServerConfigSchema,
+  
+  // SSG options
+  ssg: SSGConfigSchema,
+  
+  // Islands (partial hydration)
+  islands: IslandsConfigSchema,
+  
+  // RSC options
+  rsc: RSCConfigSchema,
+  
+  // Plugins
+  plugins: z.array(PluginSchema).default([]),
+  
+  // Styles (CSS files to include)
+  styles: z.array(z.string()).default([]),
+  
+  // Scripts (JS files to include)
+  scripts: z.array(z.string()).default([]),
+  
+  // Favicon path
+  favicon: z.string().nullable().default(null)
+});
+
+export type FlexiReactConfig = z.infer<typeof FlexiReactConfigSchema>;
+
+/**
+ * Default configuration
+ */
+export const defaultConfig: FlexiReactConfig = FlexiReactConfigSchema.parse({});
+
+/**
+ * Helper function to define configuration with full type support
+ * Use this in your flexireact.config.ts file
+ */
+export function defineConfig(config: Partial<FlexiReactConfig>): Partial<FlexiReactConfig> {
+  return config;
+}
+
+/**
+ * Loads and validates configuration from the project root
+ */
+export async function loadConfig(projectRoot: string): Promise<FlexiReactConfig> {
   const configPathTs = path.join(projectRoot, 'flexireact.config.ts');
   const configPathJs = path.join(projectRoot, 'flexireact.config.js');
   const configPath = fs.existsSync(configPathTs) ? configPathTs : configPathJs;
   
-  let userConfig = {};
+  let userConfig: Partial<FlexiReactConfig> = {};
   
   if (fs.existsSync(configPath)) {
     try {
@@ -77,12 +109,25 @@ export async function loadConfig(projectRoot: string) {
       const module = await import(`${configUrl}?t=${Date.now()}`);
       userConfig = module.default || module;
     } catch (error: any) {
-      console.warn('Warning: Failed to load flexireact config:', error.message);
+      console.warn(pc.yellow(`⚠ Failed to load config: ${error.message}`));
     }
   }
   
-  // Deep merge configs
-  return deepMerge(defaultConfig, userConfig);
+  // Merge and validate with Zod
+  const merged = deepMerge(defaultConfig, userConfig);
+  
+  try {
+    return FlexiReactConfigSchema.parse(merged);
+  } catch (err: unknown) {
+    if (err instanceof z.ZodError) {
+      console.error(pc.red('✖ Configuration validation failed:'));
+      for (const issue of err.issues) {
+        console.error(pc.dim(`  - ${issue.path.join('.')}: ${issue.message}`));
+      }
+      process.exit(1);
+    }
+    throw err;
+  }
 }
 
 /**

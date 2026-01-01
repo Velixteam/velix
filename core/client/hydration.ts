@@ -87,6 +87,8 @@ export async function hydrateAllIslands(islandModules) {
     const islandName = element.getAttribute('data-island-name');
     const propsJson = element.getAttribute('data-island-props');
 
+    if (!islandId || !islandName) continue;
+
     try {
       const props = propsJson ? JSON.parse(propsJson) : {};
       const module = islandModules[islandName];
@@ -115,6 +117,8 @@ export function setupProgressiveHydration(islandModules) {
         const islandName = element.getAttribute('data-island-name');
         const islandId = element.getAttribute('data-island');
         const propsJson = element.getAttribute('data-island-props');
+
+        if (!islandId || !islandName) return;
 
         try {
           const props = propsJson ? JSON.parse(propsJson) : {};

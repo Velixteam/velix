@@ -256,19 +256,82 @@ function serializeArgs(args: any[]): any[] {
 }
 
 /**
+ * Security: Allowed types for deserialization (CVE-2025-55182 mitigation)
+ */
+const ALLOWED_SERIALIZED_TYPES = new Set(['FormData', 'Date', 'File']);
+const MAX_PAYLOAD_DEPTH = 10;
+const MAX_STRING_LENGTH = 1_000_000; // 1MB max string
+
+/**
+ * Validate and sanitize input to prevent prototype pollution and injection
+ */
+function validateInput(obj: any, depth = 0): boolean {
+  if (depth > MAX_PAYLOAD_DEPTH) {
+    throw new Error('Payload too deeply nested');
+  }
+
+  if (obj === null || obj === undefined) return true;
+  
+  if (typeof obj === 'string') {
+    if (obj.length > MAX_STRING_LENGTH) {
+      throw new Error('String value too long');
+    }
+    return true;
+  }
+
+  if (typeof obj !== 'object') return true;
+
+  // Prevent prototype pollution
+  if ('__proto__' in obj || 'constructor' in obj || 'prototype' in obj) {
+    throw new Error('Invalid payload: prototype pollution attempt detected');
+  }
+
+  // Validate $$type if present
+  if ('$$type' in obj) {
+    if (!ALLOWED_SERIALIZED_TYPES.has(obj.$$type)) {
+      throw new Error(`Invalid serialized type: ${obj.$$type}`);
+    }
+  }
+
+  // Recursively validate
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      validateInput(item, depth + 1);
+    }
+  } else {
+    for (const value of Object.values(obj)) {
+      validateInput(value, depth + 1);
+    }
+  }
+
+  return true;
+}
+
+/**
  * Deserialize action arguments on the server
+ * Includes security validation (CVE-2025-55182 mitigation)
  */
 export function deserializeArgs(args: any[]): any[] {
+  // Validate input first
+  validateInput(args);
+
   return args.map(arg => {
     if (arg && typeof arg === 'object') {
       // Handle FormData
       if (arg.$$type === 'FormData') {
         const formData = new FormData();
-        for (const [key, value] of Object.entries(arg.data)) {
+        for (const [key, value] of Object.entries(arg.data || {})) {
+          // Validate key is a safe string
+          if (typeof key !== 'string' || key.startsWith('__')) continue;
+          
           if (Array.isArray(value)) {
-            value.forEach(v => formData.append(key, v as string));
-          } else {
-            formData.append(key, value as string);
+            value.forEach(v => {
+              if (typeof v === 'string' || typeof v === 'number') {
+                formData.append(key, String(v));
+              }
+            });
+          } else if (typeof value === 'string' || typeof value === 'number') {
+            formData.append(key, String(value));
           }
         }
         return formData;
@@ -276,7 +339,17 @@ export function deserializeArgs(args: any[]): any[] {
 
       // Handle Date
       if (arg.$$type === 'Date') {
-        return new Date(arg.value);
+        const date = new Date(arg.value);
+        // Validate it's a valid date
+        if (isNaN(date.getTime())) {
+          throw new Error('Invalid date value');
+        }
+        return date;
+      }
+
+      // Handle File (metadata only - actual file upload handled separately)
+      if (arg.$$type === 'File') {
+        return { name: String(arg.name || ''), type: String(arg.type || ''), size: Number(arg.size || 0) };
       }
     }
 

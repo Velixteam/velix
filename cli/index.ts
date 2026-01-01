@@ -120,37 +120,11 @@ export async function createProject(projectName?: string): Promise<void> {
       name: 'template',
       message: 'Select a template:',
       choices: [
-        { title: `⚡ Default ${pc.dim('(Components + Routing)')}`, value: 'default' },
-        { title: `📦 Minimal ${pc.dim('(Clean slate)')}`, value: 'minimal' },
-        { title: `📂 App Router ${pc.dim('(Next.js style)')}`, value: 'app-router' }
+        { title: `⚡ Default ${pc.dim('(Pages routing)')}`, value: 'default' },
+        { title: `📂 App Router ${pc.dim('(Next.js style)')}`, value: 'app-router' },
+        { title: `📦 Minimal ${pc.dim('(Bare starter)')}`, value: 'minimal' }
       ],
       initial: 0
-    },
-    {
-      type: 'select',
-      name: 'mode',
-      message: 'Initialize as Fullstack App?',
-      choices: [
-        { title: 'No (Standard)', value: 'standard' },
-        { title: 'Yes (Add FlexiGuard Auth + Drizzle ORM)', value: 'fullstack' }
-      ],
-      initial: 0
-    },
-    {
-      type: 'toggle',
-      name: 'tailwind',
-      message: 'Use Tailwind CSS?',
-      initial: true,
-      active: 'Yes',
-      inactive: 'No'
-    },
-    {
-      type: 'toggle',
-      name: 'typescript',
-      message: 'Use TypeScript?',
-      initial: true,
-      active: 'Yes',
-      inactive: 'No'
     }
   ]);
 
@@ -171,11 +145,7 @@ export async function createProject(projectName?: string): Promise<void> {
   log.step('Generating files...');
 
   try {
-    // Derive options
-    const styling = options.tailwind ? 'tailwind' : 'css';
-    const templateKey = options.mode === 'fullstack' ? 'fullstack' : options.template;
-
-    const files = getTemplateFiles(templateKey, name, { styling });
+    const files = getTemplateFiles(options.template, name, {});
 
     for (const [filePath, content] of Object.entries(files)) {
       const fullPath = path.join(projectPath, filePath);

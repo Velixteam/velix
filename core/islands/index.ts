@@ -27,6 +27,7 @@ function generateIslandId(componentName: string): string {
 
 /**
  * Island wrapper component for server-side rendering
+ * Islands render a placeholder on the server and hydrate on the client
  */
 export function Island({ component: Component, props = {}, name, clientPath }: { component: React.ComponentType<any>; props?: any; name: string; clientPath: string }) {
   const islandId = generateIslandId(name);
@@ -39,15 +40,16 @@ export function Island({ component: Component, props = {}, name, clientPath }: {
     props
   });
 
-  // Render the component
-  const content = renderToString(React.createElement(Component, props));
+  // On server, render a placeholder - component will hydrate on client
+  // This avoids running hooks on the server
+  const placeholder = `<div class="island-loading" data-island-placeholder="${name}">Loading...</div>`;
 
   // Return wrapper with hydration marker
   return React.createElement('div', {
     'data-island': islandId,
     'data-island-name': name,
     'data-island-props': JSON.stringify(props),
-    dangerouslySetInnerHTML: { __html: content }
+    dangerouslySetInnerHTML: { __html: placeholder }
   });
 }
 

@@ -127,6 +127,29 @@ export async function createServer(options: CreateServerOptions = {}) {
         return await serveClientComponent(res, config.pagesDir, componentName);
       }
 
+      // Serve client components (alternative path)
+      if (effectivePath.startsWith('/_flexi/client/')) {
+        const componentName = effectivePath.slice(15).replace('.js', '');
+        // Search in multiple directories for the component
+        const searchDirs = [
+          config.pagesDir,
+          path.join(process.cwd(), 'app', 'components'),
+          path.join(process.cwd(), 'routes'),
+          path.join(process.cwd(), 'routes', '(public)'),
+        ];
+        for (const dir of searchDirs) {
+          try {
+            await serveClientComponent(res, dir, componentName);
+            return;
+          } catch {
+            continue;
+          }
+        }
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Component not found: ' + componentName);
+        return;
+      }
+
       // Handle server actions
       if (effectivePath === '/_flexi/action' && req.method === 'POST') {
         return await handleServerAction(req, res);
@@ -336,20 +359,45 @@ async function handleApiRoute(req: any, res: any, route: any, loadModule: any) {
 
 /**
  * Handles server action requests
+ * Includes security measures for CVE-2025-55182 (React2Shell) mitigation
  */
 async function handleServerAction(req: import('http').IncomingMessage, res: import('http').ServerResponse) {
   try {
+    // Security: Validate content type
+    const contentType = req.headers['content-type'];
+    if (!contentType?.includes('application/json')) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Invalid content type' }));
+      return;
+    }
+
+    // Security: Check content length (max 10MB)
+    const contentLength = parseInt(req.headers['content-length'] || '0', 10);
+    if (contentLength > 10 * 1024 * 1024) {
+      res.writeHead(413, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Payload too large' }));
+      return;
+    }
+
     // Parse request body
     const body: any = await parseBody(req);
     const { actionId, args } = body;
 
-    if (!actionId) {
+    // Security: Validate actionId format (alphanumeric with underscores only)
+    if (!actionId || typeof actionId !== 'string' || !/^[a-zA-Z0-9_]+$/.test(actionId)) {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ success: false, error: 'Missing actionId' }));
+      res.end(JSON.stringify({ success: false, error: 'Invalid actionId format' }));
       return;
     }
 
-    // Deserialize arguments
+    // Security: Validate args is an array
+    if (args !== undefined && !Array.isArray(args)) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Invalid args format' }));
+      return;
+    }
+
+    // Deserialize arguments (includes security validation)
     const deserializedArgs = deserializeArgs(args || []);
 
     // Execute the action
@@ -369,10 +417,12 @@ async function handleServerAction(req: import('http').IncomingMessage, res: impo
 
   } catch (error: any) {
     console.error('Server Action Error:', error);
+    // Security: Don't expose internal error details in production
+    const isDev = process.env.NODE_ENV !== 'production';
     res.writeHead(500, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({
       success: false,
-      error: error.message || 'Action execution failed'
+      error: isDev ? error.message : 'Action execution failed'
     }));
   }
 }
@@ -672,6 +722,8 @@ async function serveClientComponent(res: any, pagesDir: string, componentName: s
         const useCallback = window.useCallback;
         const useMemo = window.useMemo;
         const useRef = window.useRef;
+        const useContext = window.useContext;
+        const useReducer = window.useReducer;
       `
     });
 
@@ -701,45 +753,56 @@ async function serveClientComponent(res: any, pagesDir: string, componentName: s
  * Generates client hydration script for 'use client' components
  */
 function generateClientHydrationScript(componentPath: string, props: any) {
-  // Create a relative path for the client bundle (handle .tsx, .ts, .jsx, .js)
   const ext = path.extname(componentPath);
   const componentName = path.basename(componentPath, ext);
+  const propsJson = JSON.stringify(props);
 
   return `
 <script type="module">
-  // FlexiReact Client Hydration
+  // FlexiReact Client Hydration v4.1
+  import React, { useState, useEffect, useCallback, useMemo, useRef, useContext, useReducer } from 'https://esm.sh/react@19.0.0';
+  import { createRoot, hydrateRoot } from 'https://esm.sh/react-dom@19.0.0/client';
+  
+  // Make React hooks available globally
+  window.React = React;
+  window.useState = useState;
+  window.useEffect = useEffect;
+  window.useCallback = useCallback;
+  window.useMemo = useMemo;
+  window.useRef = useRef;
+  window.useContext = useContext;
+  window.useReducer = useReducer;
+
   (async function() {
     try {
-      const React = await import('https://esm.sh/react@18.3.1');
-      const ReactDOM = await import('https://esm.sh/react-dom@18.3.1/client');
+      // Fetch and execute the component
+      const response = await fetch('/_flexi/client/${componentName}.js');
+      if (!response.ok) throw new Error('Failed to load component: ' + response.status);
       
-      // Make React available globally for the component
-      window.React = React.default || React;
-      window.useState = React.useState;
-      window.useEffect = React.useEffect;
-      window.useCallback = React.useCallback;
-      window.useMemo = React.useMemo;
-      window.useRef = React.useRef;
-      
-      // Fetch the component code
-      const response = await fetch('/_flexi/component/${componentName}.js');
       const code = await response.text();
-      
-      // Create and import the module
       const blob = new Blob([code], { type: 'application/javascript' });
       const moduleUrl = URL.createObjectURL(blob);
       const module = await import(moduleUrl);
       
       const Component = module.default;
-      const props = ${JSON.stringify(props)};
+      if (!Component) throw new Error('No default export found');
       
-      // Hydrate the root
-      const root = document.getElementById('root');
-      ReactDOM.hydrateRoot(root, window.React.createElement(Component, props));
+      const props = ${propsJson};
+      const container = document.getElementById('flexi-root') || document.getElementById('root');
       
-      console.log('⚡ FlexiReact: Component hydrated successfully');
+      if (container) {
+        // Use createRoot for client components (not hydrate since we rendered placeholder)
+        const root = createRoot(container);
+        root.render(React.createElement(Component, props));
+        console.log('%c⚡ FlexiReact', 'color: #00FF9C; font-weight: bold', 'Component mounted');
+      }
     } catch (error) {
-      console.error('⚡ FlexiReact: Hydration failed', error);
+      console.error('%c⚡ FlexiReact', 'color: #ef4444; font-weight: bold', 'Hydration failed:', error);
+      // Show error in UI
+      const container = document.getElementById('flexi-root');
+      if (container) {
+        container.innerHTML = '<div style="color:#ef4444;padding:20px;text-align:center;">Failed to load component: ' + error.message + '</div>';
+      }
     }
   })();
 </script>`;

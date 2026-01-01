@@ -128,9 +128,9 @@ export class PluginManager {
   /**
    * Runs a hook with all registered handlers
    */
-  async runHook(hookName, ...args) {
+  async runHook(hookName: string, ...args: unknown[]): Promise<Array<{ plugin: string; result?: unknown; error?: unknown }>> {
     const handlers = this.hooks.get(hookName) || [];
-    const results = [];
+    const results: Array<{ plugin: string; result?: unknown; error?: unknown }> = [];
 
     for (const { plugin, handler } of handlers) {
       try {

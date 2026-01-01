@@ -171,31 +171,47 @@ flexi upgrade                    # Upgrade FlexiReact
 
 ## ⚙️ Configuration
 
+Create a `flexireact.config.ts` in your project root:
+
 ```ts
 // flexireact.config.ts
-import { defineConfig } from '@flexireact/core';
+import { defineConfig } from '@flexireact/core/config';
 
 export default defineConfig({
-  // Runtime
-  runtime: 'edge',
-  
-  // Features
-  islands: true,
-  rsc: true,
-  
+  // Directories
+  pagesDir: 'pages',
+  layoutsDir: 'layouts',
+  publicDir: 'public',
+  outDir: '.flexi',
+
   // Server
   server: {
     port: 3000,
     host: 'localhost'
   },
-  
+
   // Build
   build: {
+    target: 'es2022',
     minify: true,
     sourcemap: true
+  },
+
+  // Features
+  islands: {
+    enabled: true
+  },
+  rsc: {
+    enabled: true
+  },
+  ssg: {
+    enabled: false,
+    paths: []
   }
 });
 ```
+
+Configuration is validated with Zod. Invalid options will show clear error messages.
 
 ---
 

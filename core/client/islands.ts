@@ -80,9 +80,9 @@ export function createClientIsland(loader: () => Promise<any>, options: LazyIsla
  * Island with interaction trigger
  * Only hydrates when user interacts
  */
-export function InteractiveIsland({ children, trigger = 'click', fallback }) {
+export function InteractiveIsland({ children, trigger = 'click', fallback }: { children: React.ReactNode; trigger?: string; fallback?: React.ReactNode }) {
   const [shouldHydrate, setShouldHydrate] = React.useState(false);
-  const ref = React.useRef(null);
+  const ref = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     const element = ref.current;

@@ -29,9 +29,23 @@ export async function load(url, context, nextLoad) {
     // Read the source file
     let source = readFileSync(filePath, 'utf-8');
     
-    // Remove 'use client', 'use server', 'use island' directives
-    // These are handled at build time, not runtime
+    // Check for directives
+    const firstLine = source.split('\n')[0].trim();
+    const isIsland = firstLine === "'use island'" || firstLine === '"use island"' || firstLine === "'use island';" || firstLine === '"use island";';
+    const isClient = firstLine === "'use client'" || firstLine === '"use client"' || firstLine === "'use client';" || firstLine === '"use client";';
+    
+    // Remove directives
     source = source.replace(/^['"]use (client|server|island)['"];?\s*/m, '');
+    
+    // For island components, wrap the default export to skip SSR hooks
+    if (isIsland || isClient) {
+      // Add a wrapper that makes the component client-only
+      source = `
+const _FLEXI_IS_ISLAND = true;
+const _FLEXI_IS_CLIENT = ${isClient};
+${source}
+`;
+    }
     
     // Determine the loader based on file extension
     const loader = isTsx ? 'tsx' : isTs ? 'ts' : 'jsx';
