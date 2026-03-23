@@ -19,4 +19,5 @@ export default defineConfig({
   platform: 'node',
   splitting: false,
   shims: true,
+  external: ['sharp', 'react', 'react-dom'],
 });

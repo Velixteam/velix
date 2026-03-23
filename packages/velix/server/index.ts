@@ -134,6 +134,12 @@ export async function createServer(options: {
       }
 
       // ── Velix internal assets ──
+      if (pathname === '/__velix/image') {
+        const { handleImageOptimization } = await import('./image-optimizer.js');
+        await handleImageOptimization(req, res, projectRoot);
+        return;
+      }
+
       if (pathname.startsWith('/__velix/')) {
         await serveVelixInternal(pathname, req, res, projectRoot);
         return;
@@ -178,6 +184,8 @@ export async function createServer(options: {
         p { color: #94A3B8; font-size: 18px; line-height: 1.6; margin-bottom: 30px; }
         .btn { display: inline-block; background: #2563EB; color: white; text-decoration: none; padding: 12px 32px; border-radius: 12px; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4); }
         .btn:hover { background: #1D4ED8; transform: translateY(-2px); }
+        .btn-outline { display: inline-block; background: transparent; color: #22D3EE; border: 1px solid #22D3EE; text-decoration: none; padding: 12px 32px; border-radius: 12px; font-weight: 600; transition: all 0.2s; margin-left: 16px; }
+        .btn-outline:hover { background: rgba(34, 211, 238, 0.1); transform: translateY(-2px); }
         code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #22D3EE; }
     </style>
 </head>
@@ -186,7 +194,10 @@ export async function createServer(options: {
         <h1>404</h1>
         <h2>Oops! Page not found</h2>
         <p>The page <code>${pathname}</code> is currently floating in deep space. It might have been moved or deleted.</p>
-        <a href="/" class="btn">Return Home</a>
+        <div style="display:flex;justify-content:center;">
+          <a href="/" class="btn">Return Home</a>
+          <a href="https://velix.vercel.app" target="_blank" rel="noreferrer" class="btn-outline">Documentation</a>
+        </div>
     </div>
 </body>
 </html>`);
@@ -232,14 +243,17 @@ export async function createServer(options: {
             </div>
             <div class="footer">
                 <div class="brand"><img src="/__velix/logo.webp" alt=""/> Velix v5.0.0</div>
-                <div>App Runtime (Development Mode)</div>
+                <div style="display:flex;gap:16px;">
+                  <a href="https://velix.vercel.app" target="_blank" rel="noreferrer" style="color:#60A5FA;text-decoration:none;font-weight:600;">Documentation &rarr;</a>
+                  <span>App Runtime (Development Mode)</span>
+                </div>
             </div>
         </div>
     </div>
 </body>
 </html>`);
         } else {
-          res.end(`<!DOCTYPE html><html><head><title>500 - Server Error</title></head><body style="background:#0F172A;color:white;text-align:center;padding:100px;font-family:sans-serif;"><h1>500 - Internal Server Error</h1><p>Something went wrong on our end.</p></body></html>`);
+          res.end(`<!DOCTYPE html><html><head><title>500 - Server Error</title></head><body style="background:#0F172A;color:white;text-align:center;padding:100px;font-family:sans-serif;"><h1>500 - Internal Server Error</h1><p>Something went wrong on our end.</p><a href="https://velix.vercel.app" style="color:#22D3EE;text-decoration:none;display:block;margin-top:20px;font-weight:bold;">Read Documentation</a></body></html>`);
         }
       }
     }
@@ -416,9 +430,20 @@ async function handlePageRoute(
     const hydrationScript = generateAdvancedHydrationScript(islands);
     
     // Developer Tools Injection
-    const devToolsHtml = isDev ? `<script>
+    const devToolsHtml = isDev ? `<style>
+@keyframes velix-pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); } }
+.velix-building { animation: velix-pulse 1.5s infinite !important; border: 1px solid #22D3EE !important; }
+</style>
+    <script>
       const es = new EventSource('/__velix/hmr');
-      es.onmessage = (e) => { if (e.data === 'reload') location.reload(); };
+      es.onmessage = (e) => { 
+        if (e.data === 'reload') location.reload(); 
+        const widget = document.getElementById('__velix-dev-tools');
+        if (widget) {
+          if (e.data === 'building') widget.classList.add('velix-building');
+          if (e.data === 'built') widget.classList.remove('velix-building');
+        }
+      };
     </script>
     <div id="__velix-dev-tools" style="position:fixed;bottom:16px;left:16px;z-index:9999;background:#0f172a;border-radius:50%;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;width:36px;height:36px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="document.getElementById('__velix-dev-panel').style.display='block'" title="Velix DevTools">
       <img src="/__velix/logo.webp" alt="Velix DevTools" style="width:20px;height:20px;" />
@@ -445,12 +470,34 @@ async function handlePageRoute(
     // Extract search params for the component
     const searchParams = Object.fromEntries(url.searchParams.entries());
 
+    // Fix for Async Components (Server Components) in React 19
+    // renderToString does not support async components, so we manually await them
+    let pageElement: any = React.createElement(PageComponent, { params: route.params, searchParams, query: searchParams });
+    if (typeof PageComponent === 'function') {
+      try {
+        const result = PageComponent({ params: route.params, searchParams, query: searchParams });
+        if (result instanceof Promise) {
+          pageElement = await result;
+        }
+      } catch (e) {
+        // Fallback or ignore if it's not a functional component call
+      }
+    }
+
+    let layoutElement = React.createElement(LayoutComponent, { params: layoutParams, searchParams }, pageElement);
+    if (typeof LayoutComponent === 'function') {
+      try {
+        const result = LayoutComponent({ params: layoutParams, searchParams, children: pageElement });
+        if (result instanceof Promise) {
+          layoutElement = await result;
+        }
+      } catch (e) {
+        // Fallback
+      }
+    }
+
     // Render the React Tree (SSR)
-    const ssrContent = renderToString(
-      React.createElement(LayoutComponent, { params: layoutParams, searchParams }, 
-        React.createElement(PageComponent, { params: route.params, searchParams, query: searchParams })
-      )
-    );
+    const ssrContent = renderToString(layoutElement);
 
     // Apply native waterfall hook: after render
     let finalHtml = await pluginManager.runWaterfallHook(PluginHooks.AFTER_RENDER, ssrContent, { route, config, isDev });

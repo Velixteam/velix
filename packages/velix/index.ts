@@ -70,6 +70,9 @@ export { useParams, useQuery, usePathname, useRequest, RequestContext, RouteCont
 // ── Client ──
 export { Link, useRouter, router } from './client/index.js';
 
+// ── Components ──
+export { Image, type ImageProps } from './components/Image.js';
+
 // ── Build ──
 export { build } from './build/index.js';
 

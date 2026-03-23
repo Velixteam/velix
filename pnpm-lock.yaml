@@ -73,17 +73,45 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.19.1)
 
-  demo-app-fresh:
+  packages/create-velix-app:
     dependencies:
+      picocolors:
+        specifier: ^1.1.1
+        version: 1.1.1
+      prompts:
+        specifier: ^2.4.2
+        version: 2.4.2
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.1
+        version: 22.19.1
+      '@types/prompts':
+        specifier: ^2.4.9
+        version: 2.4.9
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/demo-app:
+    dependencies:
+      clsx:
+        specifier: ^2.1.0
+        version: 2.1.1
+      lucide-react:
+        specifier: ^0.359.0
+        version: 0.359.0(react@19.2.3)
       react:
         specifier: ^19.0.0
         version: 19.2.3
       react-dom:
         specifier: ^19.0.0
         version: 19.2.3(react@19.2.3)
+      tailwind-merge:
+        specifier: ^2.2.1
+        version: 2.6.1
       velix:
         specifier: workspace:*
-        version: link:../packages/velix
+        version: link:../velix
     devDependencies:
       '@types/react':
         specifier: ^19.0.0
@@ -105,26 +133,7 @@ importers:
         version: 5.9.3
       velix-cli:
         specifier: workspace:*
-        version: link:../packages/velix-cli
-
-  packages/create-velix-app:
-    dependencies:
-      picocolors:
-        specifier: ^1.1.1
-        version: 1.1.1
-      prompts:
-        specifier: ^2.4.2
-        version: 2.4.2
-    devDependencies:
-      '@types/node':
-        specifier: ^22.10.1
-        version: 22.19.1
-      '@types/prompts':
-        specifier: ^2.4.9
-        version: 2.4.9
-      typescript:
-        specifier: ^5.7.0
-        version: 5.9.3
+        version: link:../velix-cli
 
   packages/velix:
     dependencies:
@@ -961,8 +970,8 @@ packages:
     resolution: {integrity: sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==}
     engines: {node: '>= 6'}
 
-  caniuse-lite@1.0.30001780:
-    resolution: {integrity: sha512-llngX0E7nQci5BPJDqoZSbuZ5Bcs9F5db7EtgfwBerX9XGtkkiO4NwfDDIRzHTTwcYC8vC7bmeUEPGrKlR/TkQ==}
+  caniuse-lite@1.0.30001781:
+    resolution: {integrity: sha512-RdwNCyMsNBftLjW6w01z8bKEvT6e/5tpPVEgtn22TiLGlstHOVecsX2KHFkD5e/vRnIE4EGzpuIODb3mtswtkw==}
 
   chai@5.3.3:
     resolution: {integrity: sha512-4zNhdJD/iOjSH0A05ea+Ke6MU5mmpQcbQsSOkgdaUMJ9zTlDTD/GYlwohmIE2u0gaxHYiVHEn1Fw9mZ/ktJWgw==}
@@ -994,6 +1003,10 @@ packages:
 
   cli-spinners@2.9.2:
     resolution: {integrity: sha512-ywqV+5MmyL4E7ybXgKys4DugZbX0FC6LnwrhjuykIjnK9k8OQacQ7axGKnjDXWNhns0xot3bZI5h55H8yo9cJg==}
+    engines: {node: '>=6'}
+
+  clsx@2.1.1:
+    resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
   color-convert@2.0.1:
@@ -1331,6 +1344,11 @@ packages:
     resolution: {integrity: sha512-B5Y16Jr9LB9dHVkh6ZevG+vAbOsNOYCX+sXvFWFu7B3Iz5mijW3zdbMyhsh8ANd2mSWBYdJgnqi+mL7/LrOPYg==}
     engines: {node: 20 || >=22}
 
+  lucide-react@0.359.0:
+    resolution: {integrity: sha512-bxVL+rM/wacjpT0BKShA6r5IIKb6LCRg+ltFG9pnnIwaRX8kK3hq8v5JwMpT7RC6XeqB5cSaaV6GapPWWmtliw==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0
+
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -1630,6 +1648,9 @@ packages:
   supports-preserve-symlinks-flag@1.0.0:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
+
+  tailwind-merge@2.6.1:
+    resolution: {integrity: sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==}
 
   tailwindcss@3.4.19:
     resolution: {integrity: sha512-3ofp+LL8E+pK/JuPLPggVAIaEuhvIz4qNcf3nA1Xn2o/7fb7s/TYpHhwGDv1ZU3PkBluUVaF8PyCHcm48cKLWQ==}
@@ -2280,7 +2301,7 @@ snapshots:
   autoprefixer@10.4.27(postcss@8.5.6):
     dependencies:
       browserslist: 4.28.1
-      caniuse-lite: 1.0.30001780
+      caniuse-lite: 1.0.30001781
       fraction.js: 5.3.4
       picocolors: 1.1.1
       postcss: 8.5.6
@@ -2304,7 +2325,7 @@ snapshots:
   browserslist@4.28.1:
     dependencies:
       baseline-browser-mapping: 2.10.10
-      caniuse-lite: 1.0.30001780
+      caniuse-lite: 1.0.30001781
       electron-to-chromium: 1.5.321
       node-releases: 2.0.36
       update-browserslist-db: 1.2.3(browserslist@4.28.1)
@@ -2320,7 +2341,7 @@ snapshots:
 
   camelcase-css@2.0.1: {}
 
-  caniuse-lite@1.0.30001780: {}
+  caniuse-lite@1.0.30001781: {}
 
   chai@5.3.3:
     dependencies:
@@ -2360,6 +2381,8 @@ snapshots:
       restore-cursor: 5.1.0
 
   cli-spinners@2.9.2: {}
+
+  clsx@2.1.1: {}
 
   color-convert@2.0.1:
     dependencies:
@@ -2724,6 +2747,10 @@ snapshots:
 
   lru-cache@11.2.4: {}
 
+  lucide-react@0.359.0(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -3003,6 +3030,8 @@ snapshots:
       has-flag: 4.0.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
+
+  tailwind-merge@2.6.1: {}
 
   tailwindcss@3.4.19(tsx@4.21.0):
     dependencies:

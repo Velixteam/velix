@@ -62,6 +62,7 @@ function showHelp() {
   console.log(`    ${pc.cyan('build')}                  Build for production`);
   console.log(`    ${pc.cyan('start')}                  Start production server`);
   console.log(`    ${pc.cyan('g')} <type> <name>        Generate component/page/api/...`);
+  console.log(`    ${pc.cyan('ui')} add <component>   Install Shadcn-style UI components`);
   console.log(`    ${pc.cyan('doctor')}                 Health check & diagnostics`);
   console.log(`    ${pc.cyan('info')}                   Framework & environment info`);
   console.log(`    ${pc.cyan('analyze')}                Bundle analysis`);
@@ -129,6 +130,10 @@ async function main() {
       log.info('Bundle analysis coming soon...');
       break;
 
+    case 'ui':
+      await handleUiCommand(args.slice(1));
+      break;
+
     default:
       log.error(`Unknown command: ${command}`);
       showHelp();
@@ -178,7 +183,6 @@ async function createProject(name?: string) {
         choices: [
           { title: '✨ Default - Full Velix app with examples', value: 'default' },
           { title: '⚡ Minimal', value: 'minimal' },
-          { title: '📝 Blog', value: 'blog' },
         ],
       });
       template = response.template;
@@ -199,6 +203,18 @@ async function createProject(name?: string) {
       useTailwind = twResponse.useTailwind;
     }
 
+    let useShadcn: boolean | undefined = flags.includes('--shadcn') ? true : (flags.includes('--no-shadcn') ? false : undefined);
+    
+    if (useTailwind && useShadcn === undefined) {
+      const shResponse = await prompts({
+        type: 'confirm',
+        name: 'useShadcn',
+        message: 'Use Shadcn UI components?',
+        initial: true
+      });
+      useShadcn = shResponse.useShadcn;
+    }
+
   const { default: ora } = await import('ora');
   const spinner = ora('Creating project...').start();
 
@@ -206,7 +222,7 @@ async function createProject(name?: string) {
     fs.mkdirSync(projectDir, { recursive: true });
 
     // Generate project files based on template
-    generateProjectFiles(projectDir, name, template, useTailwind);
+    generateProjectFiles(projectDir, name, template, useTailwind, useShadcn);
 
     spinner.succeed(`Project ${pc.bold(name)} created!`);
     log.blank();
@@ -223,7 +239,7 @@ async function createProject(name?: string) {
   }
 }
 
-function generateProjectFiles(dir: string, name: string, template: string, useTailwind: boolean = true) {
+function generateProjectFiles(dir: string, name: string, template: string, useTailwind: boolean = true, useShadcn: boolean = false) {
   // package.json
   const pkg: any = {
     name,
@@ -254,6 +270,15 @@ function generateProjectFiles(dir: string, name: string, template: string, useTa
       'tailwindcss': '^3.4.1',
       'postcss': '^8.4.35',
       'autoprefixer': '^10.4.17',
+    };
+  }
+
+  if (useShadcn) {
+    pkg.dependencies = {
+      ...pkg.dependencies,
+      'clsx': '^2.1.0',
+      'tailwind-merge': '^2.2.1',
+      'lucide-react': '^0.359.0'
     };
   }
 
@@ -323,49 +348,85 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 `);
 
   // app/page.tsx
-  writeFile(path.join(dir, 'app', 'page.tsx'), `export const metadata = {
-  title: "Welcome to ${name}",
+  if (template === 'minimal') {
+    writeFile(path.join(dir, 'app', 'page.tsx'), `export const metadata = {\n  title: "${name}",\n};\n\nexport default function MinimalPage() {\n  return (\n    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0F172A] text-slate-100 font-sans">\n      <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Velix</h1>\n      <p className="text-slate-400">Minimal starter.</p>\n    </main>\n  );\n}\n`);
+  } else {
+    // Generate components
+    fs.mkdirSync(path.join(dir, 'components', 'ui'), { recursive: true });
+    
+    // Default Button Component
+    let buttonCode = `import React from 'react';\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className = '', variant = 'primary', ...props }, ref) => {\n    const base = "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-[#22D3EE]/50";\n    const variants = {\n      primary: "bg-[#2563EB] text-white hover:bg-[#1E3A8A] hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]",\n      secondary: "bg-[#1E293B] text-slate-200 border border-slate-700 hover:bg-[#0F172A] hover:border-[#2563EB]"\n    };\n    return <button ref={ref} className={\`\${base} \${variants[variant]} \${className}\`} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
+    
+    // Overwrite with Shadcn baseline if chosen
+    if (useShadcn) {
+      fs.mkdirSync(path.join(dir, 'lib'), { recursive: true });
+      writeFile(path.join(dir, 'lib', 'utils.ts'), `import { clsx, type ClassValue } from "clsx";\nimport { twMerge } from "tailwind-merge";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n`);
+      buttonCode = `import * as React from "react";\nimport { cn } from "../../lib/utils";\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className, variant = 'primary', ...props }, ref) => {\n    const classes = cn(\n      "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-[#22D3EE]/50",\n      variant === 'primary' ? "bg-[#2563EB] text-white hover:bg-[#1E3A8A] shadow-[0_0_15px_rgba(37,99,235,0.2)] hover:shadow-[0_0_25px_rgba(34,211,238,0.4)]" : "bg-[#1E293B] text-slate-200 border border-slate-700 hover:bg-[#0F172A] hover:border-[#2563EB]",\n      className\n    );\n    return <button className={classes} ref={ref} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
+    }
+    writeFile(path.join(dir, 'components', 'ui', 'button.tsx'), buttonCode);
+
+    // Default Card Component
+    const cardCode = `import React from 'react';\n${useShadcn ? 'import { cn } from "../../lib/utils";\n' : ''}\nexport function Card({ title, description, className = '' }: { title: string; description: string; className?: string }) {\n  return (\n    <div className={${useShadcn ? 'cn(' : ''}"group relative p-8 bg-[#162032] border border-slate-800 rounded-2xl hover:border-[#22D3EE]/40 transition-colors duration-300 overflow-hidden"${useShadcn ? ', className)}' : ' + " " + className}'}>\n      <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/0 to-[#22D3EE]/0 group-hover:from-[#2563EB]/5 group-hover:to-[#22D3EE]/5 transition-all duration-500"></div>\n      <h3 className="text-xl font-semibold text-slate-100 mb-3 relative z-10">{title}</h3>\n      <p className="text-sm text-slate-400 leading-relaxed relative z-10">{description}</p>\n    </div>\n  );\n}\n`;
+    writeFile(path.join(dir, 'components', 'ui', 'card.tsx'), cardCode);
+
+    // Default Layout logic
+    writeFile(path.join(dir, 'app', 'page.tsx'), `import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+
+export const metadata = {
+  title: "Welcome to Velix",
+  description: "Build fast. Ship faster.",
 };
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8 ${useTailwind ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-velix-primary/40 via-velix-dark to-velix-dark' : 'bg-slate-950'} text-white relative overflow-hidden">
-      ${useTailwind ? `{/* Background glow effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-velix-accent/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-velix-cyan/10 rounded-full blur-[120px] pointer-events-none"></div>` : ''}
+    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#0F172A] text-slate-100 font-sans relative overflow-hidden">
+      {/* Background glow effects */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -top-40 w-[600px] h-[400px] bg-[#1E3A8A]/30 rounded-full blur-[120px] pointer-events-none delay-1000 animate-pulse"></div>
       
-      <div className="z-10 ${useTailwind ? 'bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl' : 'bg-slate-900/50 border border-slate-800'} p-12 rounded-3xl text-center max-w-2xl w-full">
-        <div className="flex justify-center mb-8">
-          <div className="w-20 h-20 ${useTailwind ? 'bg-gradient-to-br from-velix-accent to-velix-cyan' : 'bg-blue-600'} rounded-2xl flex items-center justify-center shadow-lg rotate-3 transition-transform hover:rotate-0 duration-300">
-            <span className="text-4xl font-black text-white">V</span>
-          </div>
+      <div className="z-10 flex flex-col items-center max-w-5xl w-full text-center mt-12 mb-auto">
+        <div className="mb-10 w-24 h-24 bg-gradient-to-tr from-[#1E3A8A] to-[#2563EB] rounded-2xl shadow-[0_0_40px_rgba(37,99,235,0.4)] flex items-center justify-center relative group">
+          <div className="absolute inset-0 bg-[#22D3EE]/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-500"></div>
+          <span className="text-5xl font-black text-white relative z-10 tracking-tighter">V</span>
         </div>
-        
-        <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight ${useTailwind ? 'bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400' : 'text-white'}">
-          Welcome to <br/><span className="${useTailwind ? 'text-transparent bg-clip-text bg-gradient-to-r from-velix-cyan to-velix-accent' : 'text-blue-400'}">${name}</span>
+
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight text-white">
+          Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#22D3EE] to-[#2563EB]">Velix</span>
         </h1>
         
-        <p className="text-xl text-slate-300 mb-8 max-w-lg mx-auto leading-relaxed">
-          You are running the incredibly fast <strong>Velix v5</strong> framework. Experience the future of React development.
+        <p className="text-xl md:text-2xl text-slate-400 mb-12 tracking-wide font-light">
+          Build fast. Ship faster.
         </p>
-        
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <button className="w-full sm:w-auto px-8 py-3.5 ${useTailwind ? 'bg-velix-accent hover:bg-velix-accent/80 shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all transform hover:-translate-y-1' : 'bg-blue-600 hover:bg-blue-500'} text-white font-semibold rounded-xl">
-            Get Started
-          </button>
-          <button className="w-full sm:w-auto px-8 py-3.5 ${useTailwind ? 'bg-white/5 hover:bg-white/10 text-white font-semibold rounded-xl border border-white/10' : 'bg-slate-800 hover:bg-slate-700'} transition-all">
-            Read Docs
-          </button>
+
+        <div className="flex flex-col sm:flex-row gap-5 mb-24 w-full sm:w-auto">
+          <a href="https://github.com/Velixteam/velix" target="_blank" rel="noreferrer" className="w-full sm:w-auto">
+            <Button variant="primary" className="w-full">
+              Get Started
+            </Button>
+          </a>
+          <a href="https://velix.vercel.app" target="_blank" rel="noreferrer" className="w-full sm:w-auto">
+            <Button variant="secondary" className="w-full">
+              Documentation
+            </Button>
+          </a>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full text-left">
+          <Card title="Routing" description="File-system based routing that feels instantly familiar and snappy." />
+          <Card title="Actions" description="Type-safe server actions mapped seamlessly directly to your client." />
+          <Card title="Plugins" description="Extend the framework capabilities with a simple yet powerful API." />
+          <Card title="Deployment" description="Deploy to any cloud provider or serverless edge with zero config." />
         </div>
       </div>
       
-      <div className="absolute bottom-8 text-sm text-slate-500 font-mono tracking-wider">
-        VELIX &copy; 2026
+      <div className="mt-16 pb-8 text-slate-500 text-sm tracking-widest uppercase opacity-60">
+        Powered by Velix
       </div>
     </main>
   );
 }
 `);
+  }
 
   if (template !== 'minimal') {
     // server/api/hello.ts
@@ -383,85 +444,6 @@ export function POST(request: any) {
     fs.mkdirSync(path.join(dir, 'public'), { recursive: true });
   }
 
-  if (template === 'blog') {
-    // app/blog/page.tsx
-    fs.mkdirSync(path.join(dir, 'app', 'blog'), { recursive: true });
-    writeFile(path.join(dir, 'app', 'blog', 'page.tsx'), `export const metadata = {
-  title: "Blog",
-  description: "Latest articles from our team",
-};
-
-export default function BlogPage() {
-  return (
-    <main className="min-h-screen ${useTailwind ? 'bg-velix-dark text-white' : ''}">
-      <div className="max-w-4xl mx-auto px-6 py-24">
-        <header className="mb-16 border-b border-white/10 pb-12">
-          <h1 className="text-6xl font-black tracking-tighter mb-4 ${useTailwind ? 'text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400' : ''}">Journal</h1>
-          <p className="text-xl text-slate-400 max-w-lg">Thoughts on software, design, and building the future with Velix.</p>
-        </header>
-
-        <div className="grid gap-12">
-          {[
-            { id: "1", slug: "hello-world", title: "The future of React is Velix", date: "Mar 21, 2026", excerpt: "Exploring the seamless synergy between React 19 and the Velix engine." },
-            { id: "2", slug: "modern-styling", title: "Styling with purpose", date: "Mar 18, 2026", excerpt: "How we use Tailwind and CSS variables to create stunning dark mode interfaces." }
-          ].map((post) => (
-            <article key={post.id} className="group relative">
-              <span className="text-sm font-bold text-velix-accent mb-2 block uppercase tracking-widest">{post.date}</span>
-              <h2 className="text-3xl font-bold mb-4 group-hover:text-velix-cyan transition-colors">
-                <a href={"/blog/post/" + post.slug}>{post.title}</a>
-              </h2>
-              <p className="text-slate-400 leading-relaxed mb-6 text-lg">{post.excerpt}</p>
-              <a href={"/blog/id/" + post.id} className="text-sm font-semibold text-slate-500 hover:text-white transition-colors border-b border-white/10 pb-1 inline-block">Read full ID route &rarr;</a>
-            </article>
-          ))}
-        </div>
-      </div>
-    </main>
-  );
-}
-`);
-
-    // app/blog/post/[slug]/page.tsx
-    fs.mkdirSync(path.join(dir, 'app', 'blog', 'post', '[slug]'), { recursive: true });
-    writeFile(path.join(dir, 'app', 'blog', 'post', '[slug]', 'page.tsx'), `export default function BlogPost({ params }: { params: { slug: string } }) {
-  return (
-    <article className="min-h-screen ${useTailwind ? 'bg-velix-dark text-slate-100' : ''}">
-      <div className="max-w-3xl mx-auto px-6 py-24">
-        <a href="/blog" className="text-velix-accent font-bold mb-8 block hover:translate-x-[-4px] transition-transform w-fit">&larr; Back to Journal</a>
-        <header className="mb-12">
-           <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight capitalize">{params.slug.replace(/-/g, ' ')}</h1>
-        </header>
-        <div className="prose prose-invert max-w-none">
-          <p className="text-xl leading-relaxed text-slate-300 mb-8">
-            This article explores <strong>{params.slug}</strong> in depth. In Velix v5, dynamic routing is handled at the edge, providing near-instantaneous page transitions and perfect SEO out of the box.
-          </p>
-          <div className="bg-white/5 p-8 rounded-2xl border border-white/10 italic text-slate-400">
-            "Design is not just what it looks like and feels like. Design is how it works."
-          </div>
-        </div>
-      </div>
-    </article>
-  );
-}
-`);
-
-    // app/blog/id/[id]/page.tsx
-    fs.mkdirSync(path.join(dir, 'app', 'blog', 'id', '[id]'), { recursive: true });
-    writeFile(path.join(dir, 'app', 'blog', 'id', '[id]', 'page.tsx'), `export default function BlogIdPost({ params }: { params: { id: string } }) {
-  return (
-    <main className="min-h-screen ${useTailwind ? 'bg-velix-dark text-white' : ''} flex items-center justify-center">
-      <div className="max-w-xl text-center p-12 bg-white/5 backdrop-blur-3xl rounded-3xl border border-white/10">
-        <span className="bg-velix-accent/20 text-velix-accent px-4 py-1 rounded-full text-sm font-bold mb-6 inline-block">ID ROUTE</span>
-        <h1 className="text-4xl font-black mb-4">Post Reference: #{params.id}</h1>
-        <p className="text-slate-400 mb-8 text-lg">Looking for a specific record? Velix allows you to mix route patterns seamlessly.</p>
-        <a href="/blog" className="text-velix-cyan hover:underline font-semibold">Back to Blog</a>
-      </div>
-    </main>
-  );
-}
-`);
-  }
-
   // Copy favicon
   const logoSrc = path.join(__dirname, '..', 'assets', 'logo.webp');
   if (fs.existsSync(logoSrc)) {
@@ -475,7 +457,7 @@ async function startDev() {
   log.info('Starting development server...');
 
   const { spawn } = await import('child_process');
-  const child = spawn('npx', ['tsx', 'node_modules/velix/runtime/start-dev.ts'], {
+  const child = spawn('npx', ['tsx', '--no-cache', 'node_modules/velix/runtime/start-dev.ts'], {
     stdio: 'inherit', cwd: process.cwd(), shell: true,
   });
 
@@ -680,6 +662,41 @@ function pascalCase(str: string): string {
 function camelCase(str: string): string {
   const pascal = pascalCase(str);
   return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+}
+
+async function handleUiCommand(args: string[]) {
+  const [subCommand, componentName] = args;
+  if (subCommand !== 'add' || !componentName) {
+    log.error('Usage: velix ui add <component>');
+    return;
+  }
+
+  const cwd = process.cwd();
+  const uiDir = path.join(cwd, 'components', 'ui');
+  const utilsDir = path.join(cwd, 'lib');
+
+  if (componentName === 'button') {
+    // Ensure utils.ts exists
+    if (!fs.existsSync(utilsDir)) fs.mkdirSync(utilsDir, { recursive: true });
+    const utilsPath = path.join(utilsDir, 'utils.ts');
+    if (!fs.existsSync(utilsPath)) {
+      writeFile(utilsPath, `import { clsx, type ClassValue } from "clsx";\nimport { twMerge } from "tailwind-merge";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n`);
+      log.info('Created lib/utils.ts (please run in project: npm i clsx tailwind-merge)');
+    }
+
+    // Ensure ui dir exists
+    if (!fs.existsSync(uiDir)) fs.mkdirSync(uiDir, { recursive: true });
+    const buttonPath = path.join(uiDir, 'button.tsx');
+    if (fs.existsSync(buttonPath)) {
+      log.warn('Button component already exists.');
+      return;
+    }
+
+    writeFile(buttonPath, `import * as React from "react";\nimport { cn } from "../../lib/utils";\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';\n  size?: 'default' | 'sm' | 'lg' | 'icon';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className, variant = 'default', size = 'default', ...props }, ref) => {\n    const variants: Record<string, string> = {\n      default: 'bg-slate-900 text-slate-50 hover:bg-slate-900/90',\n      destructive: 'bg-red-500 text-slate-50 hover:bg-red-500/90',\n      outline: 'border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900',\n      secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-100/80',\n      ghost: 'hover:bg-slate-100 hover:text-slate-900',\n      link: 'text-slate-900 underline-offset-4 hover:underline',\n    };\n    const sizes: Record<string, string> = {\n      default: 'h-10 px-4 py-2',\n      sm: 'h-9 rounded-md px-3',\n      lg: 'h-11 rounded-md px-8',\n      icon: 'h-10 w-10',\n    };\n    const classes = cn(\n      'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',\n      variants[variant],\n      sizes[size],\n      className\n    );\n    return <button className={classes} ref={ref} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`);
+    log.success('Installed component: Button (components/ui/button.tsx)');
+  } else {
+    log.error(`Component "${componentName}" is not available yet in the mock registry.`);
+  }
 }
 
 // ============================================================================
