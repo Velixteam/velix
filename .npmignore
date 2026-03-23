@@ -1,32 +1,26 @@
-# Development
-.git
-.github
-.vscode
-.idea
+# Dependencies
+node_modules/
 
-# Test apps
-test-*
-examples
-
-# Build artifacts
-dist
-*.log
-*.tsbuildinfo
-
-# Config files
+# Source files (publish dist only)
+*.ts
+!*.d.ts
 tsconfig.json
 tsup.config.ts
-.eslintrc*
-.prettierrc*
+vitest.config.ts
 
-# Packages (published separately)
-packages
+# IDE
+.vscode/
+.idea/
 
-# Templates (embedded in create-flexireact)
-templates
+# Test
+*.test.*
+*.spec.*
 
-# Misc
-*.md
-!README.md
-.gitignore
-.npmrc
+# Cache
+.velix/
+*.tsbuildinfo
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db

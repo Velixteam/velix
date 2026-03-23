@@ -1,0 +1,58 @@
+{
+  "name": "velix",
+  "version": "5.0.1",
+  "description": "Velix v5 — A modern full-stack React framework",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./client": "./dist/client/index.js",
+    "./server": "./dist/server/index.js",
+    "./render": "./dist/render/index.js",
+    "./config": "./dist/config.js",
+    "./islands": "./dist/islands/index.js",
+    "./types": "./dist/types.js"
+  },
+  "files": [
+    "dist",
+    "assets",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "velix",
+    "react",
+    "framework",
+    "ssr",
+    "ssg",
+    "islands",
+    "seo",
+    "fullstack"
+  ],
+  "author": "velixteam",
+  "publisher": "velixteam",
+  "license": "MIT",
+  "peerDependencies": {
+    "react": ">=19.0.1",
+    "react-dom": ">=19.0.1"
+  },
+  "dependencies": {
+    "esbuild": "0.25.0",
+    "picocolors": "^1.1.1",
+    "zod": "^3.24.1",
+    "lru-cache": "^11.0.2",
+    "chokidar": "^3.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,9 +1,7 @@
 import js from '@eslint/js';
-import prettier from 'eslint-config-prettier';
 
 export default [
   js.configs.recommended,
-  prettier,
   {
     files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
@@ -12,36 +10,38 @@ export default [
       globals: {
         console: 'readonly',
         process: 'readonly',
-        Buffer: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        URL: 'readonly',
+        globalThis: 'readonly',
         setTimeout: 'readonly',
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
-        fetch: 'readonly',
-        Request: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
         Response: 'readonly',
+        Request: 'readonly',
+        FormData: 'readonly',
+        File: 'readonly',
         Headers: 'readonly',
-        document: 'readonly',
+        EventSource: 'readonly',
+        fetch: 'readonly',
         window: 'readonly',
-        globalThis: 'readonly'
+        document: 'readonly',
+        location: 'readonly',
+        requestIdleCallback: 'readonly',
+        IntersectionObserver: 'readonly',
       }
     },
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
-      'no-console': 'off',
-      'prefer-const': 'warn'
+      'no-undef': 'off',
     }
   },
   {
     ignores: [
-      'dist/**',
       'node_modules/**',
-      '.flexi/**',
-      'packages/**/dist/**',
-      'templates/**'
+      'dist/**',
+      '.velix/**',
+      'templates/**',
     ]
   }
 ];

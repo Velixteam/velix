@@ -1,32 +1,13 @@
 {
-  "name": "@flexireact/core",
-  "version": "4.1.0",
-  "description": "The Modern React Framework v4 - React 19, SSR, SSG, Islands, Edge Runtime, 50+ UI Components, TypeScript, Tailwind v4",
-  "main": "dist/core/index.js",
-  "types": "dist/core/index.d.ts",
+  "name": "velix",
+  "version": "5.0.0",
+  "private": true,
+  "description": "Velix v5 — A modern full-stack React framework optimized for performance, SEO, and developer experience",
   "type": "module",
-  "bin": {
-    "flexireact": "./dist/cli/index.js",
-    "flexi": "./dist/cli/index.js"
-  },
-  "exports": {
-    ".": "./dist/core/index.js",
-    "./client": "./dist/core/client/index.js",
-    "./server": "./dist/core/server/index.js",
-    "./render": "./dist/core/render/index.js",
-    "./config": "./dist/core/config.js",
-    "./types": "./dist/core/types.js"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
   "scripts": {
-    "dev": "npx tsx cli/index.ts dev",
-    "build": "npx tsx cli/index.ts build",
-    "start": "npx tsx cli/index.ts start",
-    "build:package": "tsup",
+    "dev": "npx tsx packages/velix/runtime/start-dev.ts",
+    "build": "npx tsx packages/velix/runtime/start-build.ts",
+    "build:packages": "pnpm -r run build",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
@@ -37,25 +18,24 @@
     "react",
     "framework",
     "typescript",
-    "tailwind",
     "ssr",
     "ssg",
-    "rsc",
     "islands",
     "file-based-routing",
-    "nextjs-alternative",
+    "fullstack",
+    "seo",
     "modern"
   ],
-  "author": "FlexiReact Team",
+  "author": "Velix Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/flexireact/flexireact.git"
+    "url": "git+https://github.com/Velixteam/flexireact.git"
   },
   "bugs": {
-    "url": "https://github.com/flexireact/flexireact/issues"
+    "url": "https://github.com/Velixteam/flexireact/issues"
   },
-  "homepage": "https://github.com/flexireact/flexireact#readme",
+  "homepage": "https://velixjs.dev",
   "dependencies": {
     "esbuild": "0.25.0",
     "ora": "^8.1.1",
@@ -87,8 +67,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

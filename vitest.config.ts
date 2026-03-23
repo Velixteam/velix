@@ -5,7 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['**/*.test.ts', '**/*.spec.ts'],
-    exclude: ['node_modules', 'dist', '.flexi'],
+    exclude: ['node_modules', 'dist', '.velix', 'templates'],
     coverage: {
       reporter: ['text', 'json', 'html'],
       exclude: ['node_modules', 'dist', 'templates']

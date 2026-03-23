@@ -1,266 +1,97 @@
-<div align="center">
+# Velix v5
 
-<img src="./assets/flexireact.webp" alt="FlexiReact Logo" width="280" />
+<p align="center">
+  <img src="./assets/velix cover.webp" width="100%" alt="Velix Cover" />
+</p>
 
-# ⚡ FlexiReact v4.1
+> **A modern full-stack React framework** optimized for performance, SEO, simplicity, and developer experience.
 
-### The Edge-First React Framework
+Velix is a lightweight but powerful React 19 framework featuring file-based routing, SSR, SSG, Islands architecture, built-in SEO optimization, and an intuitive CLI.
 
-[![npm version](https://img.shields.io/npm/v/@flexireact/core.svg?style=flat-square&color=00FF9C&labelColor=0a0a0a)](https://www.npmjs.com/package/@flexireact/core)
-[![npm downloads](https://img.shields.io/npm/dm/@flexireact/core.svg?style=flat-square&color=00FF9C&labelColor=0a0a0a)](https://www.npmjs.com/package/@flexireact/core)
-[![License](https://img.shields.io/badge/license-MIT-00FF9C.svg?style=flat-square&labelColor=0a0a0a)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-native-3178c6.svg?style=flat-square&labelColor=0a0a0a)](https://www.typescriptlang.org/)
+## ✨ Features
 
-A modern React framework focused on **performance**, **clarity** and **modern React APIs**.  
-Inspired by Next.js, Remix and Astro — but simpler, lighter and edge-native.
+- ⚡ **React 19** — Latest React with Server Components & Actions
+- 📁 **File-based Routing** — Intuitive `app/` directory convention
+- 🏝️ **Islands Architecture** — Partial hydration for minimal JavaScript
+- 🔍 **SEO First** — Automatic meta tags, Open Graph, sitemaps, robots.txt
+- 🖥️ **SSR + SSG + ISR** — Choose the right rendering for each page
+- 🧩 **Plugin System** — Extend with auth, database, analytics, and more
+- 🛠️ **Powerful CLI** — Scaffold pages, components, APIs, and more
+- 🔧 **DevTools** — Route explorer, hydration inspector, performance metrics
+- 📦 **Edge Ready** — Deploy to any edge platform
+- 🤖 **AI Assistant** — Built-in CLI AI for code generation
 
-[Quick Start](#-quick-start) · [Features](#-features) · [Documentation](#-documentation) · [Roadmap](#-roadmap)
-
-</div>
-
----
-
-## 🚀 Quick Start
+## 📦 Quick Start
 
 ```bash
-npx create-flexireact my-app
+npx create-velix-app my-app
 cd my-app
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and start building! 🎉
-
----
-
-## ✨ Why FlexiReact?
-
-FlexiReact is for developers who want:
-
-| Feature | Description |
-|---------|-------------|
-| ⚛️ **Modern React** | React 19, Server Components, Server Actions, Suspense |
-| 🏝️ **Islands** | Partial hydration — zero JS for static content |
-| ⚡ **Edge-First** | Runs on Node, Bun, Deno, Cloudflare Workers |
-| 📁 **File Routing** | Three conventions: `routes/`, `app/`, `pages/` |
-| 🎯 **Explicit** | No hidden caching, no magic behavior |
-
----
-
-## 🧩 Features
-
-### ⚛️ React 19 Native
-
-```tsx
-// Server Component (default)
-export default async function Page() {
-  const data = await db.query('SELECT * FROM posts');
-  return <PostList posts={data} />;
-}
-```
-
-```tsx
-'use client';
-// Client Component
-export function LikeButton() {
-  const [liked, setLiked] = useState(false);
-  return <button onClick={() => setLiked(!liked)}>❤️</button>;
-}
-```
-
-### 🏝️ Islands Architecture
-
-Only hydrate what needs interactivity:
-
-```tsx
-'use island';
-
-export function Counter() {
-  const [count, setCount] = useState(0);
-  return (
-    <button onClick={() => setCount(c => c + 1)}>
-      Count: {count}
-    </button>
-  );
-}
-```
-
-### 📁 File-Based Routing
+## 📁 Project Structure
 
 ```
-routes/
-├── home.tsx           → /
-├── about.tsx          → /about
-├── blog/
-│   ├── index.tsx      → /blog
-│   └── [slug].tsx     → /blog/:slug
-└── api/
-    └── users.ts       → /api/users
+my-velix-app/
+├── app/
+│   ├── layout.tsx          → Root layout
+│   ├── page.tsx            → Home page (/)
+│   ├── dashboard/
+│   │   ├── layout.tsx      → Dashboard layout
+│   │   ├── page.tsx        → /dashboard
+│   │   └── [id].tsx        → /dashboard/:id
+│   └── blog/
+│       ├── page.tsx        → /blog
+│       └── [slug].tsx      → /blog/:slug
+├── components/
+├── server/
+│   ├── loaders/
+│   └── actions/
+├── styles/
+├── velix.config.ts
+└── package.json
 ```
-
-### 🔌 API Routes
-
-```ts
-// routes/api/users.ts
-export async function GET() {
-  return Response.json({ users: await getUsers() });
-}
-
-export async function POST(req: Request) {
-  const body = await req.json();
-  return Response.json({ created: true });
-}
-```
-
-### 🛡️ Middleware
-
-```ts
-// middleware.ts
-export default function middleware(request) {
-  if (!request.headers.get('authorization')) {
-    return Response.redirect('/login');
-  }
-}
-
-export const config = {
-  matcher: ['/dashboard/:path*']
-};
-```
-
----
-
-## 🖥️ Rendering Modes
-
-| Mode | Description |
-|------|-------------|
-| **SSR** | Server-side rendering (default) |
-| **SSG** | Static generation at build time |
-| **ISR** | Incremental Static Regeneration |
-| **Streaming** | Progressive HTML rendering |
-
-```tsx
-// Enable ISR with revalidation
-export const revalidate = 60; // seconds
-
-export default function Page() {
-  return <div>This page revalidates every 60s</div>;
-}
-```
-
----
-
-## 🛠️ CLI
-
-```bash
-# Create & Run
-npx create-flexireact my-app    # Create new project
-flexi dev                        # Development server
-flexi build                      # Production build
-flexi start                      # Start production server
-
-# Scaffolding
-flexi g page dashboard           # Generate page
-flexi g component Button         # Generate component
-flexi g api users                # Generate API route
-
-# Utilities
-flexi doctor                     # Diagnose issues
-flexi upgrade                    # Upgrade FlexiReact
-```
-
----
 
 ## ⚙️ Configuration
 
-Create a `flexireact.config.ts` in your project root:
-
 ```ts
-// flexireact.config.ts
-import { defineConfig } from '@flexireact/core/config';
+// velix.config.ts
+import { defineConfig } from "velix";
 
 export default defineConfig({
-  // Directories
-  pagesDir: 'pages',
-  layoutsDir: 'layouts',
-  publicDir: 'public',
-  outDir: '.flexi',
-
-  // Server
-  server: {
-    port: 3000,
-    host: 'localhost'
+  app: {
+    name: "My App",
+    url: "https://example.com"
   },
-
-  // Build
-  build: {
-    target: 'es2022',
-    minify: true,
-    sourcemap: true
+  server: { port: 3000 },
+  seo: {
+    sitemap: true,
+    robots: true,
+    openGraph: true
   },
-
-  // Features
-  islands: {
-    enabled: true
-  },
-  rsc: {
-    enabled: true
-  },
-  ssg: {
-    enabled: false,
-    paths: []
-  }
+  plugins: ["velix-auth", "velix-db"]
 });
 ```
 
-Configuration is validated with Zod. Invalid options will show clear error messages.
+## 🛠️ CLI Commands
 
----
+```bash
+velix dev          # Start dev server
+velix build        # Build for production
+velix start        # Start production server
+velix doctor       # Health check
 
-## 📦 Packages
+velix g page <name>        # Generate a page
+velix g component <name>   # Generate a component
+velix g api <name>         # Generate an API route
+velix g layout <name>      # Generate a layout
+velix g middleware <name>  # Generate middleware
 
-| Package | Description |
-|---------|-------------|
-| [`@flexireact/core`](https://www.npmjs.com/package/@flexireact/core) | Core framework |
-| [`create-flexireact`](https://www.npmjs.com/package/create-flexireact) | Project scaffolding CLI |
-| `@flexireact/flexi-ui` | UI component library (coming soon) |
-
----
-
-## 🛣️ Roadmap
-
-### v4.x (Current)
-- [x] React 19 support
-- [x] Islands architecture
-- [x] File-based routing (3 conventions)
-- [x] SSR / SSG / ISR
-- [x] Middleware system
-- [ ] Plugin system v1
-- [ ] Image optimization
-
-### v5 (Future)
-- [ ] Unified compiler pipeline
-- [ ] First-class plugin ecosystem
-- [ ] Advanced DevTools
-- [ ] Partial Prerendering (PPR)
-
----
-
-## 🤝 Contributing
-
-FlexiReact is open-source and community-driven.  
-Contributions, feedback and discussions are welcome!
-
----
+velix ai start     # Launch AI assistant
+velix analyze      # Bundle analysis
+velix info         # Framework info
+```
 
 ## 📄 License
 
-MIT © FlexiReact Team
-
----
-
-<div align="center">
-
-**Built with ❤️ for developers who value clarity and performance.**
-
-[⬆ Back to top](#-flexireact-v41)
-
-</div>
+MIT © Velix Team

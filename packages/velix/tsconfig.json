@@ -18,21 +18,16 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@velix/*": ["./packages/velix/*"],
-      "@velix-cli/*": ["./packages/velix-cli/*"],
-      "@/*": ["./*"]
+      "@velix/*": ["./*"]
     },
     "types": ["node"]
   },
   "include": [
-    "packages/**/*.ts",
-    "packages/**/*.tsx",
-    "plugins/**/*.ts"
+    "**/*.ts",
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "templates",
-    "examples"
+    "dist"
   ]
 }

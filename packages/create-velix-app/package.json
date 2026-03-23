@@ -1,0 +1,45 @@
+{
+  "name": "create-velix-app",
+  "version": "5.0.0",
+  "description": "Create Velix v5 apps with one command",
+  "type": "module",
+  "bin": {
+    "create-velix-app": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "templates",
+    "assets"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "velix",
+    "react",
+    "framework",
+    "create-app",
+    "scaffold"
+  ],
+  "author": "velixteam",
+  "publisher": "velixteam",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

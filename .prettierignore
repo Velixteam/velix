@@ -1,6 +1,8 @@
-dist
 node_modules
-.flexi
-*.min.js
-pnpm-lock.yaml
+dist
+.velix
+public
+*.log
+.DS_Store
 package-lock.json
+pnpm-lock.yaml

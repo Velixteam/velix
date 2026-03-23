@@ -3,7 +3,7 @@ node_modules/
 
 # Build output
 dist/
-.flexi/
+.velix/
 
 # IDE
 .vscode/
@@ -20,6 +20,7 @@ npm-debug.log*
 # Test apps
 test-*/
 my-app/
+
 # Environment
 .env
 .env.local
@@ -29,8 +30,6 @@ my-app/
 *.tsbuildinfo
 .cache/
 
-# React 19 Test
-react19-test/
-
-# Documentation
-flexireact_overview.md
+# Lock files (use pnpm)
+package-lock.json
+yarn.lock
