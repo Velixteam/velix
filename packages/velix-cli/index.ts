@@ -23,7 +23,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.0';
+const VERSION = '5.0.2';
 
 // ============================================================================
 // Logger (shared, single instance)
@@ -252,12 +252,12 @@ function generateProjectFiles(dir: string, name: string, template: string, useTa
       start: 'velix start',
     },
     dependencies: {
-      velix: `^${VERSION}`,
+      '@teamvelix/velix': `^${VERSION}`,
       react: '^19.0.0',
       'react-dom': '^19.0.0',
     },
     devDependencies: {
-      'velix-cli': `^${VERSION}`,
+      '@teamvelix/cli': `^${VERSION}`,
       typescript: '^5.7.0',
       '@types/react': '^19.0.0',
       '@types/react-dom': '^19.0.0',
@@ -285,7 +285,7 @@ function generateProjectFiles(dir: string, name: string, template: string, useTa
   writeFile(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
   // velix.config.ts
-  writeFile(path.join(dir, 'velix.config.ts'), `import { defineConfig${useTailwind ? ', tailwindPlugin' : ''} } from "velix";
+  writeFile(path.join(dir, 'velix.config.ts'), `import { defineConfig${useTailwind ? ', tailwindPlugin' : ''} } from "@teamvelix/velix";
 
 export default defineConfig({
   app: {
@@ -457,7 +457,7 @@ async function startDev() {
   log.info('Starting development server...');
 
   const { spawn } = await import('child_process');
-  const child = spawn('npx', ['tsx', '--no-cache', 'node_modules/velix/runtime/start-dev.ts'], {
+  const child = spawn('npx', ['tsx', '--no-cache', 'node_modules/@teamvelix/velix/dist/runtime/start-dev.js'], {
     stdio: 'inherit', cwd: process.cwd(), shell: true,
   });
 
@@ -478,7 +478,7 @@ async function buildProject() {
   log.info('Building for production...');
 
   const { spawn } = await import('child_process');
-  const child = spawn('npx', ['tsx', 'node_modules/velix/runtime/start-build.ts'], {
+  const child = spawn('npx', ['tsx', 'node_modules/@teamvelix/velix/dist/runtime/start-build.js'], {
     stdio: 'inherit', cwd: process.cwd(), shell: true,
   });
 
@@ -498,7 +498,7 @@ async function startProd() {
   log.info('Starting production server...');
 
   const { spawn } = await import('child_process');
-  const child = spawn('npx', ['tsx', 'node_modules/velix/runtime/start-prod.ts'], {
+  const child = spawn('npx', ['tsx', 'node_modules/@teamvelix/velix/dist/runtime/start-prod.js'], {
     stdio: 'inherit', cwd: process.cwd(), shell: true,
   });
 
