@@ -60,8 +60,15 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
 
         watcher.stdout.on('data', (data) => {
           const msg = data.toString().trim();
-          if (msg && !msg.includes('Rebuilding...')) {
-            // logger.debug(`Tailwind: ${msg}`);
+          if (msg && !msg.includes('Rebuilding...') && !msg.includes('Done in')) {
+            logger.info(`Tailwind: ${msg}`);
+          }
+        });
+
+        watcher.stderr.on('data', (data) => {
+          const msg = data.toString().trim();
+          if (msg) {
+            logger.warn(`Tailwind: ${msg}`);
           }
         });
 
@@ -69,7 +76,15 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
           logger.error('Tailwind watcher error', err);
         });
 
+        watcher.on('exit', (code) => {
+          if (code !== 0 && code !== null) {
+            logger.error(`Tailwind watcher exited with code ${code}`);
+          }
+        });
+
         process.on('exit', () => watcher.kill());
+        process.on('SIGINT', () => watcher.kill());
+        process.on('SIGTERM', () => watcher.kill());
       }
     }
   });
