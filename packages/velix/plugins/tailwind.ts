@@ -1,4 +1,4 @@
-import { execSync, spawn } from 'child_process';
+import { spawnSync, spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { PluginHooks, definePlugin } from './index.js';
@@ -37,7 +37,9 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
       [PluginHooks.BUILD_START]: async () => {
         logger.info('Building Tailwind CSS...');
         try {
-          execSync(`npx tailwindcss -i ${input} -o ${output} ${options.minify !== false ? '--minify' : ''}`, { 
+          const args = ['tailwindcss', '-i', input, '-o', output];
+          if (options.minify !== false) args.push('--minify');
+          spawnSync('npx', args, { 
             stdio: 'inherit',
             cwd: process.cwd()
           });
@@ -52,7 +54,6 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
 
         logger.info('Starting Tailwind CSS watcher...');
         const watcher = spawn('npx', ['tailwindcss', '-i', input, '-o', output, '--watch'], {
-          shell: true,
           stdio: 'pipe',
           cwd: process.cwd()
         });

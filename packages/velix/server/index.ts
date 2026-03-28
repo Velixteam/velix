@@ -21,6 +21,8 @@ import { getRegisteredIslands, generateAdvancedHydrationScript } from '../island
 import { executeAction, deserializeArgs } from '../actions/index.js';
 import logger from '../logger.js';
 import esbuild from 'esbuild';
+import { generateDevToolsHtml } from './devtools.js';
+import { generate404Page, generate500Page } from './error-pages.js';
 
 // ============================================================================
 // MIME Types
@@ -170,91 +172,21 @@ export async function createServer(options: {
 
       // ── 404 ──
       res.writeHead(404, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found | Velix v5</title>
-    <style>
-        body { margin: 0; background: #0F172A; color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-        .container { max-width: 600px; padding: 40px; }
-        h1 { font-size: 150px; font-weight: 900; margin: 0; background: linear-gradient(to right, #2563EB, #22D3EE); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
-        h2 { font-size: 32px; font-weight: 800; margin: 20px 0 10px; }
-        p { color: #94A3B8; font-size: 18px; line-height: 1.6; margin-bottom: 30px; }
-        .btn { display: inline-block; background: #2563EB; color: white; text-decoration: none; padding: 12px 32px; border-radius: 12px; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4); }
-        .btn:hover { background: #1D4ED8; transform: translateY(-2px); }
-        .btn-outline { display: inline-block; background: transparent; color: #22D3EE; border: 1px solid #22D3EE; text-decoration: none; padding: 12px 32px; border-radius: 12px; font-weight: 600; transition: all 0.2s; margin-left: 16px; }
-        .btn-outline:hover { background: rgba(34, 211, 238, 0.1); transform: translateY(-2px); }
-        code { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #22D3EE; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>404</h1>
-        <h2>Oops! Page not found</h2>
-        <p>The page <code>${pathname}</code> is currently floating in deep space. It might have been moved or deleted.</p>
-        <div style="display:flex;justify-content:center;">
-          <a href="/" class="btn">Return Home</a>
-          <a href="https://velix.vercel.app" target="_blank" rel="noreferrer" class="btn-outline">Documentation</a>
-        </div>
-    </div>
-</body>
-</html>`);
+      res.end(generate404Page(pathname));
       if (isDev) logger.request(req.method || 'GET', pathname, 404, Date.now() - requestStart);
 
     } catch (error: any) {
       console.error('Server error:', error);
       if (!res.headersSent) {
         res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
-        if (isDev) {
-          res.end(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Server Error | Velix v5</title>
-    <style>
-        body { margin: 0; background: #0F172A; color: #F8FAFC; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; overflow: hidden; }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
-        .modal { background: #1E293B; width: 100%; max-width: 900px; max-height: 90vh; border-radius: 20px; border: 1px solid #EF4444; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; display: flex; flex-direction: column; }
-        .header { background: #EF4444; color: white; padding: 24px; display: flex; align-items: center; gap: 16px; }
-        .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
-        .header svg { width: 32px; height: 32px; }
-        .content { padding: 32px; overflow-y: auto; }
-        .message { font-size: 18px; font-weight: 600; color: #FCA5A5; margin-bottom: 20px; font-family: monospace; word-break: break-all; }
-        .stack { background: #0F172A; padding: 20px; border-radius: 12px; font-family: 'Fira Code', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #94A3B8; white-space: pre-wrap; border: 1px solid #334155; }
-        .badge { display: inline-block; background: #1E3A8A; color: #60A5FA; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
-        .footer { padding: 16px 32px; background: #0F172A; border-top: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; color: #64748B; font-size: 13px; }
-        .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #CBD5E1; }
-        .brand img { width: 16px; height: 16px; }
-    </style>
-</head>
-<body>
-    <div class="overlay">
-        <div class="modal">
-            <div class="header">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <h1>Unhandled Runtime Error</h1>
-            </div>
-            <div class="content">
-                <div class="badge">Server Error</div>
-                <div class="message">${error.message}</div>
-                <div class="stack">${error.stack || 'No stack trace available.'}</div>
-            </div>
-            <div class="footer">
-                <div class="brand"><img src="/__velix/logo.webp" alt=""/> Velix v5.0.0</div>
-                <div style="display:flex;gap:16px;">
-                  <a href="https://velix.vercel.app" target="_blank" rel="noreferrer" style="color:#60A5FA;text-decoration:none;font-weight:600;">Documentation &rarr;</a>
-                  <span>App Runtime (Development Mode)</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>`);
-        } else {
-          res.end(`<!DOCTYPE html><html><head><title>500 - Server Error</title></head><body style="background:#0F172A;color:white;text-align:center;padding:100px;font-family:sans-serif;"><h1>500 - Internal Server Error</h1><p>Something went wrong on our end.</p><a href="https://velix.vercel.app" style="color:#22D3EE;text-decoration:none;display:block;margin-top:20px;font-weight:bold;">Read Documentation</a></body></html>`);
-        }
+        res.end(generate500Page({
+          statusCode: 500,
+          title: 'Server Error',
+          message: error.message || 'An unexpected error occurred',
+          stack: isDev ? error.stack : undefined,
+          isDev,
+          pathname
+        }));
       }
     }
   });
@@ -430,36 +362,7 @@ async function handlePageRoute(
     const hydrationScript = generateAdvancedHydrationScript(islands);
     
     // Developer Tools Injection
-    const devToolsHtml = isDev ? `<style>
-@keyframes velix-pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(34, 211, 238, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); } }
-.velix-building { animation: velix-pulse 1.5s infinite !important; border: 1px solid #22D3EE !important; }
-</style>
-    <script>
-      const es = new EventSource('/__velix/hmr');
-      es.onmessage = (e) => { 
-        if (e.data === 'reload') location.reload(); 
-        const widget = document.getElementById('__velix-dev-tools');
-        if (widget) {
-          if (e.data === 'building') widget.classList.add('velix-building');
-          if (e.data === 'built') widget.classList.remove('velix-building');
-        }
-      };
-    </script>
-    <div id="__velix-dev-tools" style="position:fixed;bottom:16px;left:16px;z-index:9999;background:#0f172a;border-radius:50%;padding:4px;box-shadow:0 4px 12px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;width:36px;height:36px;cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="document.getElementById('__velix-dev-panel').style.display='block'" title="Velix DevTools">
-      <img src="/__velix/logo.webp" alt="Velix DevTools" style="width:20px;height:20px;" />
-    </div>
-    <div id="__velix-dev-panel" style="display:none;position:fixed;bottom:60px;left:16px;width:300px;background:#0f172a;color:white;border-radius:12px;padding:16px;font-family:sans-serif;box-shadow:0 10px 30px rgba(0,0,0,0.3);z-index:10000;border:1px solid #1e293b;">
-       <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #334155;padding-bottom:12px;margin-bottom:12px;">
-          <h3 style="margin:0;font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px;"><img src="/__velix/logo.webp" style="width:16px;height:16px;"/> Velix DevTools</h3>
-          <button onclick="document.getElementById('__velix-dev-panel').style.display='none'" style="background:transparent;border:none;color:#94a3b8;cursor:pointer;font-size:20px;line-height:1;padding:0;margin:0;">&times;</button>
-       </div>
-       <div style="font-size:13px;color:#cbd5e1;line-height:2;">
-          <div style="display:flex;justify-content:space-between;"><span>Framework</span><strong style="color:white;">v5.0.0</strong></div>
-          <div style="display:flex;justify-content:space-between;"><span>Environment</span><strong style="color:#10b981;">Development</strong></div>
-          <div style="display:flex;justify-content:space-between;"><span>Router</span><strong style="color:white;">App Directory</strong></div>
-          <div style="display:flex;justify-content:space-between;"><span>Rendering</span><strong style="color:#60a5fa;">Streaming SSR</strong></div>
-       </div>
-    </div>` : '';
+    const devToolsHtml = generateDevToolsHtml(isDev);
 
     const headInjections = `
     <meta charset="utf-8">
@@ -551,51 +454,14 @@ async function handlePageRoute(
   } catch (err: any) {
     logger.error(`Render error: ${route.path}`, err);
     res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
-    if (isDev) {
-      res.end(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Render Error | Velix v5</title>
-    <style>
-        body { margin: 0; background: #0F172A; color: #F8FAFC; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; overflow: hidden; }
-        .overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px; }
-        .modal { background: #1E293B; width: 100%; max-width: 900px; max-height: 90vh; border-radius: 20px; border: 1px solid #EF4444; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden; display: flex; flex-direction: column; }
-        .header { background: #EF4444; color: white; padding: 24px; display: flex; align-items: center; gap: 16px; }
-        .header h1 { margin: 0; font-size: 20px; font-weight: 700; }
-        .header svg { width: 32px; height: 32px; }
-        .content { padding: 32px; overflow-y: auto; }
-        .message { font-size: 18px; font-weight: 600; color: #FCA5A5; margin-bottom: 20px; font-family: monospace; word-break: break-all; }
-        .stack { background: #0F172A; padding: 20px; border-radius: 12px; font-family: 'Fira Code', 'Courier New', monospace; font-size: 14px; line-height: 1.6; color: #94A3B8; white-space: pre-wrap; border: 1px solid #334155; }
-        .badge { display: inline-block; background: #1E3A8A; color: #60A5FA; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
-        .footer { padding: 16px 32px; background: #0F172A; border-top: 1px solid #1E293B; display: flex; justify-content: space-between; align-items: center; color: #64748B; font-size: 13px; }
-        .brand { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #CBD5E1; }
-        .brand img { width: 16px; height: 16px; }
-    </style>
-</head>
-<body>
-    <div class="overlay">
-        <div class="modal">
-            <div class="header">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <h1>Unhandled Runtime Error</h1>
-            </div>
-            <div class="content">
-                <div class="badge">Render Error</div>
-                <div class="message">${err.message}</div>
-                <div class="stack">${err.stack || 'No stack trace available.'}</div>
-            </div>
-            <div class="footer">
-                <div class="brand"><img src="/__velix/logo.webp" alt=""/> Velix v5.0.0</div>
-                <div>App Runtime (Development Mode)</div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>`);
-    } else {
-      res.end(`<!DOCTYPE html><html><head><title>500 - Server Error</title></head><body style="background:#0F172A;color:white;text-align:center;padding:100px;font-family:sans-serif;"><h1>500 - Internal Server Error</h1><p>Something went wrong on our end.</p></body></html>`);
-    }
+    res.end(generate500Page({
+      statusCode: 500,
+      title: 'Render Error',
+      message: err.message || 'Failed to render page',
+      stack: isDev ? err.stack : undefined,
+      isDev,
+      pathname: route.path
+    }));
   }
 }
 

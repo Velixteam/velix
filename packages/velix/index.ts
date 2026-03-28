@@ -61,6 +61,9 @@ export {
   useActionState, useOptimistic, useFormStatus,
 } from './actions/index.js';
 
+// ── Revalidation & Cache ──
+export { revalidatePath, revalidateTag, unstable_cache, cacheManager } from './actions/revalidation.js';
+
 // ── Hooks ──
 export { useAsyncData, useOptimisticMutation, preloadResource, use } from './hooks/index.js';
 
@@ -68,7 +71,7 @@ export { useAsyncData, useOptimisticMutation, preloadResource, use } from './hoo
 export { useParams, useQuery, usePathname, useRequest, RequestContext, RouteContext, LayoutContext, createRequestContext } from './context.js';
 
 // ── Client ──
-export { Link, useRouter, router } from './client/index.js';
+export { Link, useRouter, router, hydrate } from './client/index.js';
 
 // ── Components ──
 export { Image, type ImageProps } from './components/Image.js';

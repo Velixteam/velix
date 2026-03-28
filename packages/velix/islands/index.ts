@@ -31,14 +31,11 @@ export function Island({ component: Component, props = {}, name, clientPath }: {
 
   islandRegistry.set(islandId, { id: islandId, name, clientPath, props });
 
-  const placeholder = `<div class="island-loading" data-island-placeholder="${name}">Loading...</div>`;
-
   return React.createElement('div', {
     'data-island': islandId,
     'data-island-name': name,
     'data-island-props': JSON.stringify(props),
-    dangerouslySetInnerHTML: { __html: placeholder }
-  });
+  }, React.createElement(Component, props));
 }
 
 /**

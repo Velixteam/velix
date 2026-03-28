@@ -1,5 +1,5 @@
 {
-  "name": "velix",
+  "name": "@teamvelix/velix",
   "version": "5.0.1",
   "description": "Velix v5 — A modern full-stack React framework",
   "main": "dist/index.js",

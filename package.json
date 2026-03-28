@@ -30,10 +30,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Velixteam/flexireact.git"
+    "url": "git+https://github.com/Velixteam/velix.git"
   },
   "bugs": {
-    "url": "https://github.com/Velixteam/flexireact/issues"
+    "url": "https://github.com/Velixteam/velix/issues"
   },
   "homepage": "https://velixjs.dev",
   "dependencies": {

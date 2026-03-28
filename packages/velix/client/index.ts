@@ -93,8 +93,10 @@ import React from 'react';
 
 interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
-  prefetch?: boolean;
+  prefetch?: boolean | 'hover' | 'visible';
   replace?: boolean;
+  scroll?: boolean;
+  shallow?: boolean;
   children: React.ReactNode;
 }
 
@@ -109,7 +111,45 @@ interface LinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
  * <Link href="/blog" prefetch>Blog</Link>
  * ```
  */
-export function Link({ href, prefetch = false, replace: shouldReplace = false, children, onClick, ...rest }: LinkProps) {
+export function Link({ href, prefetch = false, replace: shouldReplace = false, scroll = true, shallow = false, children, onClick, onMouseEnter, ...rest }: LinkProps) {
+  const linkRef = React.useRef<HTMLAnchorElement>(null);
+  const [isPrefetched, setIsPrefetched] = React.useState(false);
+
+  // Prefetch on hover
+  const handleMouseEnter = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (prefetch === 'hover' && !isPrefetched) {
+      router.prefetch(href);
+      setIsPrefetched(true);
+    }
+    onMouseEnter?.(e);
+  };
+
+  // Prefetch when visible
+  React.useEffect(() => {
+    if (prefetch === 'visible' && linkRef.current && !isPrefetched) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) {
+            router.prefetch(href);
+            setIsPrefetched(true);
+            observer.disconnect();
+          }
+        },
+        { rootMargin: '100px' }
+      );
+      observer.observe(linkRef.current);
+      return () => observer.disconnect();
+    }
+  }, [href, prefetch, isPrefetched]);
+
+  // Prefetch immediately
+  React.useEffect(() => {
+    if (prefetch === true && !isPrefetched) {
+      router.prefetch(href);
+      setIsPrefetched(true);
+    }
+  }, [href, prefetch, isPrefetched]);
+
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     // Allow default behavior for external links, ctrl/meta clicks, etc.
     if (
@@ -124,14 +164,23 @@ export function Link({ href, prefetch = false, replace: shouldReplace = false, c
     e.preventDefault();
     onClick?.(e);
 
+    // Notify DevTools of navigation start
+    if (typeof window !== 'undefined' && (window as any).__VELIX_DEV_TOOLS__) {
+      (window as any).__VELIX_DEV_TOOLS__.setStatus('navigating');
+    }
+
     if (shouldReplace) {
       router.replace(href);
     } else {
       router.push(href);
     }
+
+    if (scroll) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
-  return React.createElement('a', { href, onClick: handleClick, ...rest }, children);
+  return React.createElement('a', { ref: linkRef, href, onClick: handleClick, onMouseEnter: handleMouseEnter, ...rest }, children);
 }
 
 // ============================================================================
