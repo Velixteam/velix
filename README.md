@@ -24,9 +24,17 @@ Velix is a lightweight but powerful React 19 framework featuring file-based rout
 ## 📦 Quick Start
 
 ```bash
-npx create-velix-app my-app
+npx create-velix-app@latest my-app
 cd my-app
+npm install
 npm run dev
+```
+
+Or install manually:
+
+```bash
+npm install @teamvelix/velix react react-dom
+npm install -D @teamvelix/cli typescript
 ```
 
 ## 📁 Project Structure
@@ -56,7 +64,7 @@ my-velix-app/
 
 ```ts
 // velix.config.ts
-import { defineConfig } from "velix";
+import { defineConfig } from "@teamvelix/velix";
 
 export default defineConfig({
   app: {
@@ -69,7 +77,7 @@ export default defineConfig({
     robots: true,
     openGraph: true
   },
-  plugins: ["velix-auth", "velix-db"]
+  plugins: []
 });
 ```
 

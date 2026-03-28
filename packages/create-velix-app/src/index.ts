@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 
 /**
  * create-velix-app
@@ -16,7 +17,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.0';
+const VERSION = '5.0.1';
 
 async function main() {
   console.log('');
@@ -120,8 +121,8 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
       build: 'velix build', 
       start: 'velix start' 
     },
-    dependencies: { velix: `^${VERSION}`, react: '^19.0.0', 'react-dom': '^19.0.0' },
-    devDependencies: { 'velix-cli': `^${VERSION}`, typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
+    dependencies: { '@teamvelix/velix': `^${VERSION}`, react: '^19.0.0', 'react-dom': '^19.0.0' },
+    devDependencies: { '@teamvelix/cli': `^${VERSION}`, typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
   };
 
   if (useTailwind) {
@@ -134,7 +135,7 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
   write(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
 
   // velix.config.ts
-  write(path.join(dir, 'velix.config.ts'), `import { defineConfig${useTailwind ? ', tailwindPlugin' : ''} } from "velix";\n\nexport default defineConfig({\n  app: { name: "${name}" },\n  server: { port: 3000, host: "localhost" },\n  seo: { sitemap: true, robots: true, openGraph: true },\n  favicon: "/favicon.webp",\n  ${useTailwind ? `plugins: [\n    tailwindPlugin()\n  ],` : 'plugins: [],'}\n});\n`);
+  write(path.join(dir, 'velix.config.ts'), `import { defineConfig${useTailwind ? ', tailwindPlugin' : ''} } from "@teamvelix/velix";\n\nexport default defineConfig({\n  app: { name: "${name}" },\n  server: { port: 3000, host: "localhost" },\n  seo: { sitemap: true, robots: true, openGraph: true },\n  favicon: "/favicon.webp",\n  ${useTailwind ? `plugins: [\n    tailwindPlugin()\n  ],` : 'plugins: [],'}\n});\n`);
 
   // tsconfig.json
   write(path.join(dir, 'tsconfig.json'), JSON.stringify({

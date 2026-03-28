@@ -23,7 +23,7 @@ Welcome to the official Velix v5 documentation! 🚀
 ### Installation
 
 ```bash
-npm create velix@latest my-app
+npx create-velix-app@latest my-app
 cd my-app
 npm install
 npm run dev
@@ -52,7 +52,7 @@ my-velix-app/
 
 **Server Actions** - For mutations and component-related actions:
 ```typescript
-import { serverAction } from 'velix';
+import { serverAction } from '@teamvelix/velix';
 
 export const addTodo = serverAction(async (text: string) => {
   const todo = await db.todos.create({ text });
@@ -135,11 +135,9 @@ export default function TodoList({ initialTodos }) {
 
 ```typescript
 // app/api/posts/route.ts
-import { json } from 'velix';
-
 export function GET(request: Request) {
   const posts = db.posts.findAll();
-  return json(posts);
+  return Response.json(posts);
 }
 
 export async function POST(request: Request) {
@@ -228,5 +226,7 @@ Velix is open-source! Check our [GitHub](https://github.com/velix/velix) to cont
 - **GitHub Issues** : [github.com/velix/velix/issues](https://github.com/velix/velix/issues)
 
 ---
+
+**Velix v5.0.0** - Built with ❤️ by the Velix Team
 
 **Velix v5.0.0** - Built with ❤️ by the Velix Team
