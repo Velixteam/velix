@@ -17,7 +17,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.1';
+const VERSION = '5.0.4';
 
 async function main() {
   console.log('');
@@ -121,14 +121,16 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
       build: 'velix build', 
       start: 'velix start' 
     },
-    dependencies: { '@teamvelix/velix': `^${VERSION}`, react: '^19.0.0', 'react-dom': '^19.0.0' },
-    devDependencies: { '@teamvelix/cli': `^${VERSION}`, typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
+    dependencies: { '@teamvelix/velix': 'latest', react: '^19.0.0', 'react-dom': '^19.0.0' },
+    devDependencies: { '@teamvelix/cli': 'latest', typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
   };
 
   if (useTailwind) {
     pkg.devDependencies = {
       ...pkg.devDependencies,
-      'tailwindcss': '^3.4.1', 'postcss': '^8.4.35', 'autoprefixer': '^10.4.17'
+      'tailwindcss': '^3.4.17',
+      'postcss': '^8.4.35',
+      'autoprefixer': '^10.4.17'
     };
   }
 
@@ -146,12 +148,7 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
 
   // app/
   fs.mkdirSync(path.join(dir, 'app'), { recursive: true });
-  write(path.join(dir, 'app', 'globals.css'), useTailwind ? `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n` : `body { margin: 0; font-family: sans-serif; }\n`);
-  
-  if (useTailwind) {
-    write(path.join(dir, 'tailwind.config.ts'), `import type { Config } from "tailwindcss";\n\nexport default {\n  content: ["./app/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],\n  theme: {\n    extend: {\n      colors: {\n        velix: {\n          primary: "#1E3A8A",\n          accent: "#2563EB",\n          cyan: "#22D3EE",\n          dark: "#0F172A",\n        }\n      }\n    },\n  },\n  plugins: [],\n} satisfies Config;\n`);
-    write(path.join(dir, 'postcss.config.js'), `export default {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n};\n`);
-  }
+  write(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-primary: #1E3A8A;\n  --color-velix-accent: #2563EB;\n  --color-velix-cyan: #22D3EE;\n  --color-velix-dark: #0F172A;\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
 
   write(path.join(dir, 'app', 'layout.tsx'), `import "./globals.css";\n\nexport const metadata = { title: "${name}", description: "Built with Velix v5" };\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return <html lang="en"><body className="${useTailwind ? 'bg-velix-dark text-slate-100' : 'bg-slate-900 text-white'} min-h-screen font-sans antialiased">{children}</body></html>;\n}\n`);
   write(path.join(dir, 'app', 'page.tsx'), `export const metadata = { title: "Welcome to ${name}" };\n\nexport default function HomePage() {\n  return (\n    <main className="min-h-screen flex flex-col items-center justify-center p-8 ${useTailwind ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-velix-primary/40 via-velix-dark to-velix-dark' : 'bg-slate-950'} text-white relative overflow-hidden">\n      ${useTailwind ? `{/* Background glow effects */}\n      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-velix-accent/20 rounded-full blur-[120px] pointer-events-none"></div>\n      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-velix-cyan/10 rounded-full blur-[120px] pointer-events-none"></div>\n      ` : ''}\n      <div className="z-10 ${useTailwind ? 'bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl' : 'bg-slate-900/50 border border-slate-800'} p-12 rounded-3xl text-center max-w-2xl w-full">\n        <div className="flex justify-center mb-8">\n          <div className="w-20 h-20 ${useTailwind ? 'bg-gradient-to-br from-velix-accent to-velix-cyan shadow-velix-accent/50 rotate-3' : 'bg-blue-600 shadow-blue-500/50'} rounded-2xl flex items-center justify-center shadow-lg transition-transform hover:rotate-0 duration-300">\n            <span className="text-4xl font-black text-white">V</span>\n          </div>\n        </div>\n        \n        <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight ${useTailwind ? 'bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400' : 'text-white'}">\n          Welcome to <br/><span className="${useTailwind ? 'text-transparent bg-clip-text bg-gradient-to-r from-velix-cyan to-velix-accent' : 'text-blue-400'}">${name}</span>\n        </h1>\n        \n        <p className="text-xl text-slate-300 mb-8 max-w-lg mx-auto leading-relaxed">\n          You are running the incredibly fast <strong>Velix v5</strong> framework. Experience the future of React development.\n        </p>\n        \n        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">\n          <button className="w-full sm:w-auto px-8 py-3.5 ${useTailwind ? 'bg-velix-accent hover:bg-velix-accent/80 shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'bg-blue-600 hover:bg-blue-500'} text-white font-semibold rounded-xl transition-all transform hover:-translate-y-1">\n            Get Started\n          </button>\n          <button className="w-full sm:w-auto px-8 py-3.5 ${useTailwind ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-slate-800 hover:bg-slate-700 border border-slate-700'} text-white font-semibold rounded-xl transition-all">\n            Read Docs\n          </button>\n        </div>\n      </div>\n      \n      <div className="absolute bottom-8 text-sm text-slate-500 font-mono tracking-wider">\n        VELIX &copy; 2026\n      </div>\n    </main>\n  );\n}\n`);

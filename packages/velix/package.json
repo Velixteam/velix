@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/velix",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Velix v5 — A modern full-stack React framework",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

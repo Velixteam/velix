@@ -29,7 +29,7 @@ my-app/
 # Cache
 *.tsbuildinfo
 .cache/
-
+my-velix-app/
 # Lock files (use pnpm)
 package-lock.json
 yarn.lock

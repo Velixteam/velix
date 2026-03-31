@@ -1,6 +1,6 @@
 {
   "name": "create-velix-app",
-  "version": "5.0.2",
+  "version": "5.0.4",
   "description": "Create Velix v5 apps with one command",
   "type": "module",
   "bin": {

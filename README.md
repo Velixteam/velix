@@ -235,7 +235,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 
 ## 💬 Community
 
-- **Discord**: [Join our community](https://discord.gg/velix)
+- **Discord**: [Join our community](https://discord.gg/RpGgfcFnFA)
 - **GitHub Discussions**: [Ask questions & share ideas](https://github.com/velix/velix/discussions)
 - **Twitter**: [@VelixFramework](https://twitter.com/VelixFramework)
 
