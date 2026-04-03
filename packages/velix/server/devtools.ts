@@ -119,7 +119,10 @@ export function generateDevToolsHtml(isDev: boolean): string {
   };
 
   es.onerror = () => {
-    window.__VELIX_DEV_TOOLS__.setStatus('error');
+    // EventSource auto-reconnects — only show error if connection is fully closed
+    if (es.readyState === 2) {
+      window.__VELIX_DEV_TOOLS__.setStatus('error');
+    }
   };
 </script>
 
@@ -145,7 +148,7 @@ export function generateDevToolsHtml(isDev: boolean): string {
   <div style="font-size:13px;color:#cbd5e1;line-height:2;">
     <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e293b;">
       <span style="color:#94a3b8;">Framework</span>
-      <strong style="color:white;font-weight:600;">v5.0.0</strong>
+      <strong style="color:white;font-weight:600;">v5.0.4</strong>
     </div>
     <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e293b;">
       <span style="color:#94a3b8;">Environment</span>

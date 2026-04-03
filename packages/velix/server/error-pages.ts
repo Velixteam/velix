@@ -22,6 +22,7 @@ export function generate404Page(pathname: string = '/'): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - Page Not Found | Velix v5</title>
+    <link rel="icon" href="/favicon.webp">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -185,6 +186,7 @@ export function generate500Page(options: ErrorPageOptions): string {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error | Velix v5</title>
+    <link rel="icon" href="/favicon.webp">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
@@ -475,7 +477,7 @@ export function generate500Page(options: ErrorPageOptions): string {
         <div class="footer">
             <div class="brand">
                 <img src="/__velix/logo.webp" alt="Velix" onerror="this.style.display='none'"/>
-                <span>Velix v5.0.0</span>
+                <span>Velix v5.0.4</span>
             </div>
             <div class="footer-links">
                 <a href="/">Home</a>

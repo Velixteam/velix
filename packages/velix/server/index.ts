@@ -488,9 +488,15 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
   if (pathname === '/__velix/logo.webp') {
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = path.dirname(__filename);
-    const fallbackPath = path.join(path.dirname(pathToFileURL(__dirname).pathname), '..', 'assets', 'logo.webp'); // For local dev
-    const logoPath = fs.existsSync(fallbackPath) ? fallbackPath : path.join(process.cwd(), 'node_modules', 'velix', 'assets', 'logo.webp');
-    if (fs.existsSync(logoPath)) {
+    // Check multiple possible locations for the logo
+    const candidates = [
+      path.join(__dirname, '..', 'assets', 'logo.webp'),
+      path.join(process.cwd(), 'node_modules', '@teamvelix', 'velix', 'assets', 'logo.webp'),
+      path.join(process.cwd(), 'node_modules', 'velix', 'assets', 'logo.webp'),
+      path.join(process.cwd(), 'public', 'favicon.webp'),
+    ];
+    const logoPath = candidates.find(p => fs.existsSync(p));
+    if (logoPath) {
       res.writeHead(200, { 'Content-Type': 'image/webp', 'Cache-Control': 'public, max-age=31536000, immutable' });
       res.end(fs.readFileSync(logoPath));
     } else {
