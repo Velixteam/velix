@@ -17,7 +17,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.4';
+const VERSION = '5.0.5';
 
 async function main() {
   console.log('');
@@ -128,9 +128,8 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
   if (useTailwind) {
     pkg.devDependencies = {
       ...pkg.devDependencies,
-      'tailwindcss': '^3.4.17',
-      'postcss': '^8.4.35',
-      'autoprefixer': '^10.4.17'
+      'tailwindcss': '^4.0.0',
+      '@tailwindcss/cli': '^4.0.0',
     };
   }
 

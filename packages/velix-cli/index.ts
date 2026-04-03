@@ -23,7 +23,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.2';
+const VERSION = '5.0.4';
 
 // ============================================================================
 // Logger (shared, single instance)
@@ -267,9 +267,8 @@ function generateProjectFiles(dir: string, name: string, template: string, useTa
   if (useTailwind) {
     pkg.devDependencies = {
       ...pkg.devDependencies,
-      'tailwindcss': '^3.4.1',
-      'postcss': '^8.4.35',
-      'autoprefixer': '^10.4.17',
+      'tailwindcss': '^4.0.0',
+      '@tailwindcss/cli': '^4.0.0',
     };
   }
 
@@ -322,14 +321,13 @@ export default defineConfig({
   }, null, 2));
 
   if (useTailwind) {
-    // Tailwind configuration
-    writeFile(path.join(dir, 'tailwind.config.ts'), `import type { Config } from "tailwindcss";\n\nexport default {\n  content: ["./app/**/*.{js,ts,jsx,tsx}", "./components/**/*.{js,ts,jsx,tsx}"],\n  theme: {\n    extend: {\n      colors: {\n        velix: {\n          primary: "#1E3A8A",\n          accent: "#2563EB",\n          cyan: "#22D3EE",\n          dark: "#0F172A",\n        }\n      }\n    },\n  },\n  plugins: [],\n} satisfies Config;\n`);
-    writeFile(path.join(dir, 'postcss.config.js'), `export default {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n};\n`);
+    // Tailwind v4 configuration (content auto-detection, theme in CSS)
+    writeFile(path.join(dir, 'tailwind.config.ts'), `import type { Config } from "tailwindcss";\n\nexport default {\n  content: [\n    "./index.html",\n    "./app/**/*.{js,ts,jsx,tsx}",\n    "./components/**/*.{js,ts,jsx,tsx}",\n    "./lib/**/*.{js,ts,jsx,tsx}",\n    "./src/**/*.{js,ts,jsx,tsx}",\n  ],\n} satisfies Config;\n`);
   }
   
   // app/layout.tsx
   fs.mkdirSync(path.join(dir, 'app'), { recursive: true });
-  writeFile(path.join(dir, 'app', 'globals.css'), useTailwind ? `@tailwind base;\n@tailwind components;\n@tailwind utilities;\n` : `body { margin: 0; font-family: sans-serif; }\n`);
+  writeFile(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-primary: #1E3A8A;\n  --color-velix-accent: #2563EB;\n  --color-velix-cyan: #22D3EE;\n  --color-velix-dark: #0F172A;\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
   
   writeFile(path.join(dir, 'app', 'layout.tsx'), `import "./globals.css";
 

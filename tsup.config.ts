@@ -17,6 +17,8 @@ export default defineConfig({
   clean: true,
   target: 'node18',
   platform: 'node',
-  splitting: false,
+  splitting: true,
+  treeshake: true,
+  minify: process.env.NODE_ENV === 'production',
   shims: true,
 });

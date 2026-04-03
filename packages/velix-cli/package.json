@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/cli",
-  "version": "5.0.2",
+  "version": "5.0.4",
   "description": "Velix v5 CLI — Create, develop, and build Velix applications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,11 +17,12 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
+    "ora": "^8.1.1",
     "picocolors": "^1.1.1",
-    "prompts": "^2.4.2",
-    "ora": "^8.1.1"
+    "prompts": "^2.4.2"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.2",
     "@types/node": "^22.10.1",
     "@types/prompts": "^2.4.9",
     "tsup": "^8.5.1",

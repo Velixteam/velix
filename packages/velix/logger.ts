@@ -42,7 +42,7 @@ function fmtTime(ms: number) {
   return `${c.red}${ms}ms${c.reset}`;
 }
 
-const VERSION = '5.0.0';
+const VERSION = '5.0.4';
 
 const LOGO = `
   ${c.cyan}▲${c.reset} ${c.bold}Velix${c.reset} ${c.dim}v${VERSION}${c.reset}

@@ -63,6 +63,8 @@ export async function build(options: BuildOptions = {}) {
       sourcemap: options.sourcemap ?? config.build.sourcemap,
       jsx: 'automatic',
       logLevel: 'silent',
+      treeShaking: true,
+      legalComments: 'none',
     });
 
     logger.success('Server bundle built');
@@ -97,6 +99,10 @@ export async function build(options: BuildOptions = {}) {
         jsx: 'automatic',
         logLevel: 'silent',
         external: ['react', 'react-dom'],
+        treeShaking: true,
+        legalComments: 'none',
+        drop: options.minify ?? config.build.minify ? ['console', 'debugger'] : [],
+        chunkNames: 'chunks/[name]-[hash]',
       });
 
       logger.success(`Client bundle built (${clientFiles.length} components)`);

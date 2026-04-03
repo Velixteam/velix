@@ -12,13 +12,36 @@ export interface TailwindPluginOptions {
 }
 
 /**
+ * Detect which Tailwind CLI is available (v4: @tailwindcss/cli, v3: tailwindcss)
+ */
+function detectTailwindCli(): string {
+  // Try v4 CLI first
+  const v4 = spawnSync('npx', ['@tailwindcss/cli', '--help'], {
+    stdio: 'pipe',
+    shell: process.platform === 'win32',
+    timeout: 15000,
+  });
+  if (v4.status === 0) return '@tailwindcss/cli';
+
+  // Fallback to v3 CLI
+  return 'tailwindcss';
+}
+
+/**
  * Native Velix Tailwind CSS Plugin
  * Automatically handles CSS compilation and injection.
+ * Supports both Tailwind CSS v3 and v4.
  */
 export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
   const input = options.input || './app/globals.css';
   const output = options.output || './public/tailwind.css';
   const configPath = options.config || './tailwind.config.ts';
+  let cliCmd: string | null = null;
+
+  function getCli(): string {
+    if (!cliCmd) cliCmd = detectTailwindCli();
+    return cliCmd;
+  }
 
   return definePlugin({
     name: 'velix:tailwind',
@@ -37,11 +60,13 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
       [PluginHooks.BUILD_START]: async () => {
         logger.info('Building Tailwind CSS...');
         try {
-          const args = ['tailwindcss', '-i', input, '-o', output];
+          const cli = getCli();
+          const args = [cli, '-i', input, '-o', output];
           if (options.minify !== false) args.push('--minify');
           spawnSync('npx', args, { 
             stdio: 'inherit',
-            cwd: process.cwd()
+            cwd: process.cwd(),
+            shell: process.platform === 'win32',
           });
           logger.success('Tailwind CSS built successfully');
         } catch (err: any) {
@@ -67,13 +92,15 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
         // Build initial CSS synchronously
         logger.info('Building initial Tailwind CSS...');
         try {
-          const buildResult = spawnSync('npx', ['tailwindcss', '-i', input, '-o', output], {
+          const cli = getCli();
+          const buildResult = spawnSync('npx', [cli, '-i', input, '-o', output], {
             cwd: process.cwd(),
-            stdio: 'pipe'
+            stdio: 'pipe',
+            shell: process.platform === 'win32',
           });
 
           if (buildResult.error) {
-            logger.error('Tailwind CSS not installed. Run: npm install -D tailwindcss');
+            logger.error('Tailwind CSS not installed. Run: npm install -D tailwindcss @tailwindcss/postcss');
             return;
           }
 
@@ -91,10 +118,11 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
 
         // Start watcher
         logger.info('Starting Tailwind CSS watcher...');
-        const watcher = spawn('npx', ['tailwindcss', '-i', input, '-o', output, '--watch'], {
+        const cli = getCli();
+        const watcher = spawn('npx', [cli, '-i', input, '-o', output, '--watch'], {
           stdio: 'pipe',
           cwd: process.cwd(),
-          shell: false
+          shell: process.platform === 'win32',
         });
 
         watcher.stdout.on('data', (data) => {
