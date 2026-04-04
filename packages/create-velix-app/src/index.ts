@@ -147,10 +147,10 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
 
   // app/
   fs.mkdirSync(path.join(dir, 'app'), { recursive: true });
-  write(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-primary: #1E3A8A;\n  --color-velix-accent: #2563EB;\n  --color-velix-cyan: #22D3EE;\n  --color-velix-dark: #0F172A;\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
+  write(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-deep: #0B1120;\n  --color-velix-dark: #0F172A;\n  --color-velix-accent: #2563EB;\n  --color-velix-cyan: #22D3EE;\n  --color-velix-glow: #38BDF8;\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
 
-  write(path.join(dir, 'app', 'layout.tsx'), `import "./globals.css";\n\nexport const metadata = { title: "${name}", description: "Built with Velix v5" };\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return <html lang="en"><body className="${useTailwind ? 'bg-velix-dark text-slate-100' : 'bg-slate-900 text-white'} min-h-screen font-sans antialiased">{children}</body></html>;\n}\n`);
-  write(path.join(dir, 'app', 'page.tsx'), `export const metadata = { title: "Welcome to ${name}" };\n\nexport default function HomePage() {\n  return (\n    <main className="min-h-screen flex flex-col items-center justify-center p-8 ${useTailwind ? 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-velix-primary/40 via-velix-dark to-velix-dark' : 'bg-slate-950'} text-white relative overflow-hidden">\n      ${useTailwind ? `{/* Background glow effects */}\n      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-velix-accent/20 rounded-full blur-[120px] pointer-events-none"></div>\n      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-velix-cyan/10 rounded-full blur-[120px] pointer-events-none"></div>\n      ` : ''}\n      <div className="z-10 ${useTailwind ? 'bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl' : 'bg-slate-900/50 border border-slate-800'} p-12 rounded-3xl text-center max-w-2xl w-full">\n        <div className="flex justify-center mb-8">\n          <div className="w-20 h-20 ${useTailwind ? 'bg-gradient-to-br from-velix-accent to-velix-cyan shadow-velix-accent/50 rotate-3' : 'bg-blue-600 shadow-blue-500/50'} rounded-2xl flex items-center justify-center shadow-lg transition-transform hover:rotate-0 duration-300">\n            <span className="text-4xl font-black text-white">V</span>\n          </div>\n        </div>\n        \n        <h1 className="text-5xl md:text-6xl font-extrabold mb-6 tracking-tight ${useTailwind ? 'bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400' : 'text-white'}">\n          Welcome to <br/><span className="${useTailwind ? 'text-transparent bg-clip-text bg-gradient-to-r from-velix-cyan to-velix-accent' : 'text-blue-400'}">${name}</span>\n        </h1>\n        \n        <p className="text-xl text-slate-300 mb-8 max-w-lg mx-auto leading-relaxed">\n          You are running the incredibly fast <strong>Velix v5</strong> framework. Experience the future of React development.\n        </p>\n        \n        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">\n          <button className="w-full sm:w-auto px-8 py-3.5 ${useTailwind ? 'bg-velix-accent hover:bg-velix-accent/80 shadow-[0_0_20px_rgba(37,99,235,0.4)]' : 'bg-blue-600 hover:bg-blue-500'} text-white font-semibold rounded-xl transition-all transform hover:-translate-y-1">\n            Get Started\n          </button>\n          <button className="w-full sm:w-auto px-8 py-3.5 ${useTailwind ? 'bg-white/5 hover:bg-white/10 border border-white/10' : 'bg-slate-800 hover:bg-slate-700 border border-slate-700'} text-white font-semibold rounded-xl transition-all">\n            Read Docs\n          </button>\n        </div>\n      </div>\n      \n      <div className="absolute bottom-8 text-sm text-slate-500 font-mono tracking-wider">\n        VELIX &copy; 2026\n      </div>\n    </main>\n  );\n}\n`);
+  write(path.join(dir, 'app', 'layout.tsx'), `import "./globals.css";\n\nexport const metadata = { title: "${name}", description: "Built with Velix v5" };\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return <html lang="en"><body className="${useTailwind ? 'bg-velix-deep text-slate-100' : 'bg-slate-900 text-white'} min-h-screen font-sans antialiased">{children}</body></html>;\n}\n`);
+  write(path.join(dir, 'app', 'page.tsx'), generatePageTemplate(name, useTailwind));
 
   // public/
   fs.mkdirSync(path.join(dir, 'public'), { recursive: true });
@@ -246,6 +246,71 @@ export default function BlogPage() {
     fs.mkdirSync(path.join(dir, 'public'), { recursive: true });
     fs.copyFileSync(logoSrc, path.join(dir, 'public', 'favicon.webp'));
   }
+}
+
+function generatePageTemplate(name: string, useTailwind: boolean): string {
+  if (!useTailwind) {
+    return `export const metadata = { title: "Welcome to ${name}" };
+
+export default function HomePage() {
+  return (
+    <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0B1120", color: "#e2e8f0", fontFamily: "system-ui, sans-serif" }}>
+      <h1 style={{ fontSize: "3rem", fontWeight: 800 }}>Welcome to <span style={{ color: "#22D3EE" }}>${name}</span></h1>
+      <p style={{ color: "#94a3b8", marginTop: "0.5rem" }}>Built with Velix v5</p>
+    </main>
+  );
+}
+`;
+  }
+
+  return `export const metadata = { title: "Welcome to ${name}" };
+
+export default function HomePage() {
+  return (
+    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-[#0B1628] via-velix-dark to-velix-deep text-white relative overflow-hidden">
+      {/* Background glow effects */}
+      <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-velix-accent/15 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-velix-cyan/10 rounded-full blur-[120px] pointer-events-none"></div>
+
+      <div className="z-10 flex flex-col items-center max-w-4xl w-full text-center">
+        {/* Logo */}
+        <div className="mb-10 w-24 h-24 bg-gradient-to-br from-velix-accent to-velix-cyan rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.3)] flex items-center justify-center relative group">
+          <div className="absolute inset-0 bg-velix-cyan/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+          <span className="text-5xl font-black text-white relative z-10 tracking-tighter">V</span>
+        </div>
+
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Welcome to</span>
+          <br />
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-velix-cyan via-velix-glow to-velix-accent">${name}</span>
+        </h1>
+
+        <p className="text-xl text-slate-400 mb-10 max-w-lg mx-auto leading-relaxed">
+          You are running the incredibly fast <strong className="text-slate-200">Velix v5</strong> framework.
+          Experience the future of React development.
+        </p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <a href="https://github.com/Velixteam/velix" target="_blank" rel="noreferrer">
+            <button className="px-8 py-3.5 bg-gradient-to-r from-velix-accent to-velix-cyan text-white font-semibold rounded-xl shadow-[0_0_25px_rgba(34,211,238,0.3)] hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] transition-all transform hover:-translate-y-0.5">
+              Get Started
+            </button>
+          </a>
+          <a href="https://velix.vercel.app" target="_blank" rel="noreferrer">
+            <button className="px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-velix-cyan/30 text-white font-semibold rounded-xl transition-all">
+              Read Docs
+            </button>
+          </a>
+        </div>
+      </div>
+
+      <div className="absolute bottom-8 text-sm text-slate-600 font-mono tracking-widest uppercase">
+        Velix &copy; ${new Date().getFullYear()}
+      </div>
+    </main>
+  );
+}
+`;
 }
 
 function write(filePath: string, content: string) {

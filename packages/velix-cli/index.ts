@@ -23,7 +23,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.4';
+const VERSION = '5.0.5';
 
 // ============================================================================
 // Logger (shared, single instance)
@@ -327,7 +327,7 @@ export default defineConfig({
   
   // app/layout.tsx
   fs.mkdirSync(path.join(dir, 'app'), { recursive: true });
-  writeFile(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-primary: #1E3A8A;\n  --color-velix-accent: #2563EB;\n  --color-velix-cyan: #22D3EE;\n  --color-velix-dark: #0F172A;\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
+  writeFile(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-deep: #0B1120;\n  --color-velix-dark: #0F172A;\n  --color-velix-accent: #2563EB;\n  --color-velix-cyan: #22D3EE;\n  --color-velix-glow: #38BDF8;\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
   
   writeFile(path.join(dir, 'app', 'layout.tsx'), `import "./globals.css";
 
@@ -339,7 +339,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="${useTailwind ? 'bg-velix-dark text-slate-100' : 'bg-slate-900 text-white'} min-h-screen font-sans antialiased">{children}</body>
+      <body className="${useTailwind ? 'bg-velix-deep text-slate-100' : 'bg-slate-900 text-white'} min-h-screen font-sans antialiased">{children}</body>
     </html>
   );
 }
@@ -353,18 +353,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     fs.mkdirSync(path.join(dir, 'components', 'ui'), { recursive: true });
     
     // Default Button Component
-    let buttonCode = `import React from 'react';\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className = '', variant = 'primary', ...props }, ref) => {\n    const base = "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-[#22D3EE]/50";\n    const variants = {\n      primary: "bg-[#2563EB] text-white hover:bg-[#1E3A8A] hover:shadow-[0_0_20px_rgba(34,211,238,0.4)]",\n      secondary: "bg-[#1E293B] text-slate-200 border border-slate-700 hover:bg-[#0F172A] hover:border-[#2563EB]"\n    };\n    return <button ref={ref} className={\`\${base} \${variants[variant]} \${className}\`} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
+    let buttonCode = `import React from 'react';\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className = '', variant = 'primary', ...props }, ref) => {\n    const base = "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-velix-cyan/50";\n    const variants = {\n      primary: "bg-gradient-to-r from-velix-accent to-velix-cyan text-white shadow-[0_0_20px_rgba(34,211,238,0.25)] hover:shadow-[0_0_30px_rgba(34,211,238,0.45)]",\n      secondary: "bg-white/5 text-slate-200 border border-white/10 hover:bg-white/10 hover:border-velix-cyan/30"\n    };\n    return <button ref={ref} className={\`\${base} \${variants[variant]} \${className}\`} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
     
     // Overwrite with Shadcn baseline if chosen
     if (useShadcn) {
       fs.mkdirSync(path.join(dir, 'lib'), { recursive: true });
       writeFile(path.join(dir, 'lib', 'utils.ts'), `import { clsx, type ClassValue } from "clsx";\nimport { twMerge } from "tailwind-merge";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n`);
-      buttonCode = `import * as React from "react";\nimport { cn } from "../../lib/utils";\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className, variant = 'primary', ...props }, ref) => {\n    const classes = cn(\n      "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-[#22D3EE]/50",\n      variant === 'primary' ? "bg-[#2563EB] text-white hover:bg-[#1E3A8A] shadow-[0_0_15px_rgba(37,99,235,0.2)] hover:shadow-[0_0_25px_rgba(34,211,238,0.4)]" : "bg-[#1E293B] text-slate-200 border border-slate-700 hover:bg-[#0F172A] hover:border-[#2563EB]",\n      className\n    );\n    return <button className={classes} ref={ref} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
+      buttonCode = `import * as React from "react";\nimport { cn } from "../../lib/utils";\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className, variant = 'primary', ...props }, ref) => {\n    const classes = cn(\n      "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-velix-cyan/50",\n      variant === 'primary' ? "bg-gradient-to-r from-velix-accent to-velix-cyan text-white shadow-[0_0_20px_rgba(34,211,238,0.25)] hover:shadow-[0_0_30px_rgba(34,211,238,0.45)]" : "bg-white/5 text-slate-200 border border-white/10 hover:bg-white/10 hover:border-velix-cyan/30",\n      className\n    );\n    return <button className={classes} ref={ref} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
     }
     writeFile(path.join(dir, 'components', 'ui', 'button.tsx'), buttonCode);
 
     // Default Card Component
-    const cardCode = `import React from 'react';\n${useShadcn ? 'import { cn } from "../../lib/utils";\n' : ''}\nexport function Card({ title, description, className = '' }: { title: string; description: string; className?: string }) {\n  return (\n    <div className={${useShadcn ? 'cn(' : ''}"group relative p-8 bg-[#162032] border border-slate-800 rounded-2xl hover:border-[#22D3EE]/40 transition-colors duration-300 overflow-hidden"${useShadcn ? ', className)}' : ' + " " + className}'}>\n      <div className="absolute inset-0 bg-gradient-to-br from-[#2563EB]/0 to-[#22D3EE]/0 group-hover:from-[#2563EB]/5 group-hover:to-[#22D3EE]/5 transition-all duration-500"></div>\n      <h3 className="text-xl font-semibold text-slate-100 mb-3 relative z-10">{title}</h3>\n      <p className="text-sm text-slate-400 leading-relaxed relative z-10">{description}</p>\n    </div>\n  );\n}\n`;
+    const cardCode = `import React from 'react';\n${useShadcn ? 'import { cn } from "../../lib/utils";\n' : ''}\nexport function Card({ title, description, className = '' }: { title: string; description: string; className?: string }) {\n  return (\n    <div className={${useShadcn ? 'cn(' : ''}"group relative p-8 bg-velix-dark/60 border border-white/5 rounded-2xl hover:border-velix-cyan/20 transition-colors duration-300 overflow-hidden"${useShadcn ? ', className)}' : ' + " " + className}'>\n      <div className="absolute inset-0 bg-gradient-to-br from-velix-accent/0 to-velix-cyan/0 group-hover:from-velix-accent/5 group-hover:to-velix-cyan/5 transition-all duration-500"></div>\n      <h3 className="text-xl font-semibold text-slate-100 mb-3 relative z-10">{title}</h3>\n      <p className="text-sm text-slate-400 leading-relaxed relative z-10">{description}</p>\n    </div>\n  );\n}\n`;
     writeFile(path.join(dir, 'components', 'ui', 'card.tsx'), cardCode);
 
     // Default Layout logic
@@ -378,20 +378,22 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-[#0F172A] text-slate-100 font-sans relative overflow-hidden">
+    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-[#0B1628] via-velix-dark to-velix-deep text-slate-100 font-sans relative overflow-hidden">
       {/* Background glow effects */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -top-40 w-[600px] h-[400px] bg-[#1E3A8A]/30 rounded-full blur-[120px] pointer-events-none delay-1000 animate-pulse"></div>
-      
+      <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-velix-accent/15 rounded-full blur-[140px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-velix-cyan/10 rounded-full blur-[120px] pointer-events-none"></div>
+
       <div className="z-10 flex flex-col items-center max-w-5xl w-full text-center mt-12 mb-auto">
-        <div className="mb-10 w-24 h-24 bg-gradient-to-tr from-[#1E3A8A] to-[#2563EB] rounded-2xl shadow-[0_0_40px_rgba(37,99,235,0.4)] flex items-center justify-center relative group">
-          <div className="absolute inset-0 bg-[#22D3EE]/20 rounded-2xl blur-lg group-hover:blur-xl transition-all duration-500"></div>
+        <div className="mb-10 w-24 h-24 bg-gradient-to-br from-velix-accent to-velix-cyan rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.3)] flex items-center justify-center relative group">
+          <div className="absolute inset-0 bg-velix-cyan/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
           <span className="text-5xl font-black text-white relative z-10 tracking-tighter">V</span>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight text-white">
-          Welcome to <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#22D3EE] to-[#2563EB]">Velix</span>
+        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Welcome to</span>{" "}
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-velix-cyan via-velix-glow to-velix-accent">Velix</span>
         </h1>
-        
+
         <p className="text-xl md:text-2xl text-slate-400 mb-12 tracking-wide font-light">
           Build fast. Ship faster.
         </p>
@@ -416,9 +418,9 @@ export default function HomePage() {
           <Card title="Deployment" description="Deploy to any cloud provider or serverless edge with zero config." />
         </div>
       </div>
-      
-      <div className="mt-16 pb-8 text-slate-500 text-sm tracking-widest uppercase opacity-60">
-        Powered by Velix
+
+      <div className="mt-16 pb-8 text-slate-600 text-sm tracking-widest uppercase font-mono">
+        Velix &copy; ${new Date().getFullYear()}
       </div>
     </main>
   );
