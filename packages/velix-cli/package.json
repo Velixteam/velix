@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/cli",
-  "version": "5.0.5",
+  "version": "5.0.6",
   "description": "Velix v5 CLI — Create, develop, and build Velix applications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

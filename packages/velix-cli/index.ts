@@ -23,7 +23,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.5';
+const VERSION = '5.0.6';
 
 // ============================================================================
 // Logger (shared, single instance)
@@ -364,7 +364,41 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     writeFile(path.join(dir, 'components', 'ui', 'button.tsx'), buttonCode);
 
     // Default Card Component
-    const cardCode = `import React from 'react';\n${useShadcn ? 'import { cn } from "../../lib/utils";\n' : ''}\nexport function Card({ title, description, className = '' }: { title: string; description: string; className?: string }) {\n  return (\n    <div className={${useShadcn ? 'cn(' : ''}"group relative p-8 bg-velix-dark/60 border border-white/5 rounded-2xl hover:border-velix-cyan/20 transition-colors duration-300 overflow-hidden"${useShadcn ? ', className)}' : ' + " " + className}'>\n      <div className="absolute inset-0 bg-gradient-to-br from-velix-accent/0 to-velix-cyan/0 group-hover:from-velix-accent/5 group-hover:to-velix-cyan/5 transition-all duration-500"></div>\n      <h3 className="text-xl font-semibold text-slate-100 mb-3 relative z-10">{title}</h3>\n      <p className="text-sm text-slate-400 leading-relaxed relative z-10">{description}</p>\n    </div>\n  );\n}\n`;
+    const cardClasses = "group relative p-8 bg-velix-dark/60 border border-white/5 rounded-2xl hover:border-velix-cyan/20 transition-colors duration-300 overflow-hidden";
+    const cardGradient = "absolute inset-0 bg-gradient-to-br from-velix-accent/0 to-velix-cyan/0 group-hover:from-velix-accent/5 group-hover:to-velix-cyan/5 transition-all duration-500";
+    let cardCode: string;
+    if (useShadcn) {
+      cardCode = [
+        'import React from "react";',
+        'import { cn } from "../../lib/utils";',
+        '',
+        "export function Card({ title, description, className = '' }: { title: string; description: string; className?: string }) {",
+        '  return (',
+        '    <div className={cn("' + cardClasses + '", className)}>',
+        '      <div className="' + cardGradient + '"></div>',
+        '      <h3 className="text-xl font-semibold text-slate-100 mb-3 relative z-10">{title}</h3>',
+        '      <p className="text-sm text-slate-400 leading-relaxed relative z-10">{description}</p>',
+        '    </div>',
+        '  );',
+        '}',
+        '',
+      ].join('\n');
+    } else {
+      cardCode = [
+        'import React from "react";',
+        '',
+        "export function Card({ title, description, className = '' }: { title: string; description: string; className?: string }) {",
+        '  return (',
+        '    <div className={"' + cardClasses + ' " + className}>',
+        '      <div className="' + cardGradient + '"></div>',
+        '      <h3 className="text-xl font-semibold text-slate-100 mb-3 relative z-10">{title}</h3>',
+        '      <p className="text-sm text-slate-400 leading-relaxed relative z-10">{description}</p>',
+        '    </div>',
+        '  );',
+        '}',
+        '',
+      ].join('\n');
+    }
     writeFile(path.join(dir, 'components', 'ui', 'card.tsx'), cardCode);
 
     // Default Layout logic
