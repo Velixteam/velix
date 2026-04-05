@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node ./node_modules/@teamvelix/cli/dist/index.js dev",
-    "build": "node build-static.js",
+    "build": "npx tsx build-render.ts",
     "start": "node ./node_modules/@teamvelix/cli/dist/index.js start"
   },
   "dependencies": {
