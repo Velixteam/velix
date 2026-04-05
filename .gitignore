@@ -21,6 +21,7 @@ npm-debug.log*
 test-*/
 my-app/
 my-velix-app/
+website/
 
 # Environment
 .env
