@@ -8,6 +8,7 @@ export default defineConfig({
     'config.ts',
     'runtime/start-dev.ts',
     'runtime/start-prod.ts',
+    'runtime/start-build.ts',
     'build/index.ts',
     'islands/index.ts',
   ],

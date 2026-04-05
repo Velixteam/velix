@@ -4,17 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "velix dev",
-    "build": "velix build",
-    "start": "velix start"
+    "dev": "node ./node_modules/@teamvelix/cli/dist/index.js dev",
+    "build": "node build-static.js",
+    "start": "node ./node_modules/@teamvelix/cli/dist/index.js start"
   },
   "dependencies": {
-    "@teamvelix/velix": "latest",
+    "@teamvelix/velix": "^5.0.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@teamvelix/cli": "latest",
+    "@teamvelix/cli": "^5.0.8",
     "typescript": "^5.7.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
