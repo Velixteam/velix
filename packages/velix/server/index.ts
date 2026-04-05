@@ -231,6 +231,76 @@ export async function createServer(options: {
 }
 
 // ============================================================================
+// SSR Module Import (handles CSS imports gracefully)
+// ============================================================================
+
+async function importModuleSSR(filePath: string): Promise<any> {
+  const fileUrl = pathToFileURL(filePath).href;
+  try {
+    return await import(`${fileUrl}?t=${Date.now()}`);
+  } catch (err) {
+    // Check if this might be a CSS import issue
+    const source = fs.readFileSync(filePath, 'utf-8');
+    if (source.match(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/m)) {
+      const stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '// [velix:ssr] css import stripped');
+      const ext = path.extname(filePath);
+      const tmpPath = filePath.replace(ext, `.__velix_ssr${ext}`);
+      fs.writeFileSync(tmpPath, stripped);
+      try {
+        const mod = await import(`${pathToFileURL(tmpPath).href}?t=${Date.now()}`);
+        try { fs.unlinkSync(tmpPath); } catch {}
+        return mod;
+      } catch (e2) {
+        try { fs.unlinkSync(tmpPath); } catch {}
+        throw e2;
+      }
+    }
+    throw err;
+  }
+}
+
+// ============================================================================
+// Layout Resolution (Next.js-style: root layout wraps all pages)
+// ============================================================================
+
+function collectLayouts(pageFilePath: string, appDir: string): string[] {
+  const layouts: string[] = [];
+  const normalizedAppDir = path.resolve(appDir);
+  let current = path.dirname(path.resolve(pageFilePath));
+
+  while (true) {
+    for (const ext of ['.tsx', '.jsx', '.ts', '.js']) {
+      const layoutPath = path.join(current, `layout${ext}`);
+      if (fs.existsSync(layoutPath)) {
+        layouts.unshift(layoutPath); // root-first order
+        break;
+      }
+    }
+    if (path.resolve(current) === normalizedAppDir) break;
+    const parent = path.dirname(current);
+    if (parent === current) break; // filesystem root
+    current = parent;
+  }
+
+  return layouts;
+}
+
+async function renderComponentAsync(Component: any, props: any): Promise<any> {
+  let element = React.createElement(Component, props);
+  if (typeof Component === 'function') {
+    try {
+      const result = Component(props);
+      if (result instanceof Promise) {
+        element = await result;
+      }
+    } catch (e) {
+      // Fallback to createElement result
+    }
+  }
+  return element;
+}
+
+// ============================================================================
 // Handlers
 // ============================================================================
 
@@ -333,21 +403,24 @@ async function handlePageRoute(
     const PageComponent = mod.default;
     let metadata = mod.metadata || mod.generateMetadata?.(route.params) || {};
 
-    // Attempt to merge layout metadata and get LayoutComponent
-    let LayoutComponent = ({ children }: any) => React.createElement(React.Fragment, null, children);
-    let layoutParams = route.params;
-    try {
-      const layoutPath = path.join(path.dirname(route.filePath), 'layout.tsx');
-      if (fs.existsSync(layoutPath)) {
-        const layoutMod = await import(`${pathToFileURL(layoutPath).href}?t=${Date.now()}`);
+    // ── Layout Resolution (Next.js-style: walk up to root) ──
+    const appDir = (config as any).resolvedAppDir || path.join(projectRoot, 'app');
+    const layoutPaths = collectLayouts(route.filePath, appDir);
+
+    // Load all layouts and merge metadata (root-first)
+    const layoutModules: { default?: any; metadata?: any }[] = [];
+    for (const lp of layoutPaths) {
+      try {
+        const layoutMod = await importModuleSSR(lp);
+        layoutModules.push(layoutMod);
         if (layoutMod.metadata) {
           metadata = { ...layoutMod.metadata, ...metadata };
         }
-        if (layoutMod.default) {
-          LayoutComponent = layoutMod.default;
-        }
+      } catch (e) {
+        // Skip broken layouts gracefully
+        logger.warn?.(`Failed to load layout: ${lp}`);
       }
-    } catch(e) {}
+    }
 
     // Generate metadata tags
     const baseUrl = config.app.url || `http://${config.server.host}:${config.server.port}`;
@@ -373,29 +446,19 @@ async function handlePageRoute(
     // Extract search params for the component
     const searchParams = Object.fromEntries(url.searchParams.entries());
 
-    // Fix for Async Components (Server Components) in React 19
-    // renderToString does not support async components, so we manually await them
-    let pageElement: any = React.createElement(PageComponent, { params: route.params, searchParams, query: searchParams });
-    if (typeof PageComponent === 'function') {
-      try {
-        const result = PageComponent({ params: route.params, searchParams, query: searchParams });
-        if (result instanceof Promise) {
-          pageElement = await result;
-        }
-      } catch (e) {
-        // Fallback or ignore if it's not a functional component call
-      }
-    }
+    // Render the page component (supports async/server components)
+    let pageElement = await renderComponentAsync(PageComponent, { params: route.params, searchParams, query: searchParams });
 
-    let layoutElement = React.createElement(LayoutComponent, { params: layoutParams, searchParams }, pageElement);
-    if (typeof LayoutComponent === 'function') {
-      try {
-        const result = LayoutComponent({ params: layoutParams, searchParams, children: pageElement });
-        if (result instanceof Promise) {
-          layoutElement = await result;
-        }
-      } catch (e) {
-        // Fallback
+    // Nest layouts around page: innermost first, then wrap outward (root is first in array)
+    let layoutElement = pageElement;
+    for (let i = layoutModules.length - 1; i >= 0; i--) {
+      const layoutMod = layoutModules[i];
+      if (layoutMod.default) {
+        layoutElement = await renderComponentAsync(layoutMod.default, {
+          params: route.params,
+          searchParams,
+          children: layoutElement,
+        });
       }
     }
 
