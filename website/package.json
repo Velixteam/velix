@@ -9,7 +9,7 @@
     "start": "velix start"
   },
   "dependencies": {
-    "@teamvelix/velix": "latest",
+    "@teamvelix/velix": "^5.0.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
