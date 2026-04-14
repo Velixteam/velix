@@ -23,7 +23,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.7';
+const VERSION = '5.0.9';
 
 // ============================================================================
 // Logger (shared, single instance)
