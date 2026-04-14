@@ -74,22 +74,17 @@ export default function HomePage() {
               </div>
               {/* Code Content */}
               <div className="p-6 font-mono text-sm text-left">
-                <div className="text-slate-500 mb-3">
-                  <span className="text-purple-400">import</span> {"{ "}
-                  <span className="text-velix-cyan">createApp</span> {"}"} 
-                  <span className="text-purple-400"> from</span> 
-                  <span className="text-green-400"> 'velix'</span>
+                <div className="flex items-center gap-2 text-slate-400 mb-2">
+                  <span className="text-green-400">$</span>
+                  <span className="text-slate-300">npx create-velix-app my-app</span>
                 </div>
-                <div className="text-slate-300 mb-1">
-                  <span className="text-purple-400">export default</span> 
-                  <span className="text-velix-cyan"> createApp</span>
-                  <span className="text-yellow-300">({"{"}</span>
+                <div className="flex items-center gap-2 text-slate-400 mb-2">
+                  <span className="text-green-400">$</span>
+                  <span className="text-slate-300">cd my-app</span>
                 </div>
-                <div className="text-slate-300 pl-4">
-                  <span className="text-velix-glow">routes</span>
-                  <span className="text-slate-400">:</span> 
-                  <span className="text-green-400"> './routes'</span>
-                  <span className="text-slate-400">,</span>
+                <div className="flex items-center gap-2 text-slate-400">
+                  <span className="text-green-400">$</span>
+                  <span className="text-slate-300">npm run dev</span>
                 </div>
               </div>
             </div>
