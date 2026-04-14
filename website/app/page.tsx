@@ -17,45 +17,83 @@ export default function HomePage() {
   return (
     <>
       {/* ─── Hero ─── */}
-      <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 text-center overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center overflow-hidden pt-20">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-velix-accent/10 rounded-full blur-[180px]"></div>
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-velix-cyan/8 rounded-full blur-[160px]"></div>
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-velix-cyan/5 to-transparent blur-[100px]"></div>
         </div>
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)", backgroundSize: "60px 60px" }}></div>
 
-        <div className="relative z-10 max-w-5xl mx-auto">
-          <div className="animate-fade-in-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-velix-cyan/5 border border-velix-cyan/15 mb-8">
-            <span className="w-2 h-2 rounded-full bg-velix-cyan animate-pulse"></span>
-            <span className="text-xs font-medium text-velix-cyan tracking-wide">v5.0 — Now with Islands Architecture</span>
+        <div className="relative z-10 max-w-6xl mx-auto">
+          {/* Beta Badge */}
+          <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
+            <span className="text-xs font-medium text-slate-300">Now in public beta</span>
           </div>
-          <h1 className="animate-fade-in-up animate-delay-100 text-5xl sm:text-6xl md:text-8xl font-extrabold tracking-tight leading-[0.95] mb-8">
-            <span className="text-white">Build </span><span className="gradient-text">fast</span><span className="text-white">.</span>
+
+          {/* Main Heading */}
+          <h1 className="animate-fade-in-up animate-delay-100 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1] mb-8">
+            <span className="text-white">Build fullstack apps</span>
             <br />
-            <span className="text-white">Ship </span><span className="gradient-text">faster</span><span className="text-white">.</span>
+            <span className="text-velix-accent">faster</span>
           </h1>
-          <p className="animate-fade-in-up animate-delay-200 text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-            Velix is a blazing-fast full-stack React framework with file-based routing,
-            server actions, API routes, and Islands architecture. Everything you need to
-            build modern web applications.
+
+          {/* Description */}
+          <p className="animate-fade-in-up animate-delay-200 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Velix is a modern fullstack framework with server-first architecture, file-based
+            routing, and end-to-end type safety. Ship production-ready apps in record time.
           </p>
-          <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <a href="/docs#getting-started" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-velix-accent to-velix-cyan text-white font-semibold text-base shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:shadow-[0_0_50px_rgba(34,211,238,0.4)] transition-all hover:-translate-y-0.5">
+
+          {/* CTA Buttons */}
+          <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
+            <a 
+              href="/docs#getting-started" 
+              className="w-full sm:w-auto px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all"
+            >
               Get Started
             </a>
-            <a href="/docs" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-slate-300 font-semibold text-base hover:bg-white/10 hover:border-velix-cyan/20 hover:text-white transition-all">
-              Read the Docs
+            <a 
+              href="https://github.com/Velixteam/velix" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all"
+            >
+              GitHub
             </a>
           </div>
-          <div className="animate-fade-in-up animate-delay-400 inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-velix-dark/80 border border-white/5 font-mono text-sm">
-            <span className="text-velix-cyan">$</span>
-            <span className="text-slate-300">npx create-velix-app my-app</span>
+
+          {/* Code Preview */}
+          <div className="animate-fade-in-up animate-delay-400 max-w-3xl mx-auto">
+            <div className="rounded-xl bg-[#0d1117] border border-white/10 overflow-hidden shadow-2xl">
+              {/* Terminal Header */}
+              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-[#161b22]">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
+                  <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
+                  <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
+                </div>
+              </div>
+              {/* Code Content */}
+              <div className="p-6 font-mono text-sm text-left">
+                <div className="text-slate-500 mb-3">
+                  <span className="text-purple-400">import</span> {"{ "}
+                  <span className="text-velix-cyan">createApp</span> {"}"} 
+                  <span className="text-purple-400"> from</span> 
+                  <span className="text-green-400"> 'velix'</span>
+                </div>
+                <div className="text-slate-300 mb-1">
+                  <span className="text-purple-400">export default</span> 
+                  <span className="text-velix-cyan"> createApp</span>
+                  <span className="text-yellow-300">({"{"}</span>
+                </div>
+                <div className="text-slate-300 pl-4">
+                  <span className="text-velix-glow">routes</span>
+                  <span className="text-slate-400">:</span> 
+                  <span className="text-green-400"> './routes'</span>
+                  <span className="text-slate-400">,</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-600">
-          <span className="text-xs tracking-widest uppercase">Scroll</span>
-          <div className="w-px h-8 bg-gradient-to-b from-slate-600 to-transparent"></div>
         </div>
       </section>
 
