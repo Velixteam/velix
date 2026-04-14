@@ -438,7 +438,7 @@ export default function HomePage() {
               Get Started
             </Button>
           </a>
-          <a href="https://velix.vercel.app" target="_blank" rel="noreferrer" className="w-full sm:w-auto">
+          <a href="https://teamvelix.vercel.app" target="_blank" rel="noreferrer" className="w-full sm:w-auto">
             <Button variant="secondary" className="w-full">
               Documentation
             </Button>

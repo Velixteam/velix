@@ -221,7 +221,7 @@ Velix is open-source! Check our [GitHub](https://github.com/velix/velix) to cont
 
 ## 📞 Support
 
-- **Documentation** : [velix.vercel.app](https://velix.vercel.app)
+- **Documentation** : [teamvelix.vercel.app](https://teamvelix.vercel.app)
 - **Discord** : [discord.gg/velix](https://discord.gg/velix)
 - **GitHub Issues** : [github.com/velix/velix/issues](https://github.com/velix/velix/issues)
 

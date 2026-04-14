@@ -426,7 +426,7 @@ async function handlePageRoute(
     const baseUrl = config.app.url || `http://${config.server.host}:${config.server.port}`;
     const metaTags = generateMetadataTags({
       ...metadata,
-      generator: `Velix v5.0.0`,
+      generator: `Velix v5.0.8`,
       viewport: metadata.viewport || 'width=device-width, initial-scale=1',
     }, baseUrl);
 

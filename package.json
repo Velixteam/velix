@@ -36,7 +36,7 @@
   "bugs": {
     "url": "https://github.com/Velixteam/velix/issues"
   },
-  "homepage": "https://velixjs.dev",
+  "homepage": "https://teamvelix.vercel.app",
   "dependencies": {
     "esbuild": "0.25.0",
     "ora": "^8.1.1",

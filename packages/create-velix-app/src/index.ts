@@ -296,7 +296,7 @@ export default function HomePage() {
               Get Started
             </button>
           </a>
-          <a href="https://velix.vercel.app" target="_blank" rel="noreferrer">
+          <a href="https://teamvelix.vercel.app" target="_blank" rel="noreferrer">
             <button className="px-8 py-3.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-velix-cyan/30 text-white font-semibold rounded-xl transition-all">
               Read Docs
             </button>
