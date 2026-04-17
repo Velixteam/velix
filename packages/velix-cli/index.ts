@@ -490,19 +490,28 @@ async function startDev() {
   log.info('Starting development server...');
 
   const { spawn } = await import('child_process');
-  const child = spawn('npx', ['tsx', '--no-cache', 'node_modules/@teamvelix/velix/dist/runtime/start-dev.js'], {
-    stdio: 'inherit', cwd: process.cwd(),
+
+  // Resolve the runtime script — check multiple possible locations
+  const cwd = process.cwd();
+  const candidates = [
+    path.join(cwd, 'node_modules', '@teamvelix', 'velix', 'dist', 'runtime', 'start-dev.js'),
+    path.join(cwd, 'packages', 'velix', 'dist', 'runtime', 'start-dev.js'),
+    path.join(cwd, 'packages', 'velix', 'runtime', 'start-dev.ts'),
+  ];
+
+  const devScript = candidates.find(c => fs.existsSync(c));
+  if (!devScript) {
+    log.error('Could not find Velix runtime. Run `npm install` first.');
+    process.exit(1);
+  }
+
+  const child = spawn('npx', ['tsx', '--no-cache', devScript], {
+    stdio: 'inherit', cwd, shell: true,
   });
 
-  child.on('error', () => {
-    // Fallback: try running from packages
-    const devScript = path.join(process.cwd(), 'packages', 'velix', 'runtime', 'start-dev.ts');
-    if (fs.existsSync(devScript)) {
-      spawn('npx', ['tsx', devScript], { stdio: 'inherit', cwd: process.cwd() });
-    } else {
-      log.error('Could not find Velix runtime. Run `npm install` first.');
-      process.exit(1);
-    }
+  child.on('error', (err) => {
+    log.error(`Failed to start dev server: ${err.message}`);
+    process.exit(1);
   });
 }
 
@@ -511,18 +520,27 @@ async function buildProject() {
   log.info('Building for production...');
 
   const { spawn } = await import('child_process');
-  const child = spawn('npx', ['tsx', 'node_modules/@teamvelix/velix/dist/runtime/start-build.js'], {
-    stdio: 'inherit', cwd: process.cwd(),
+
+  const cwd = process.cwd();
+  const candidates = [
+    path.join(cwd, 'node_modules', '@teamvelix', 'velix', 'dist', 'runtime', 'start-build.js'),
+    path.join(cwd, 'packages', 'velix', 'dist', 'runtime', 'start-build.js'),
+    path.join(cwd, 'packages', 'velix', 'runtime', 'start-build.ts'),
+  ];
+
+  const buildScript = candidates.find(c => fs.existsSync(c));
+  if (!buildScript) {
+    log.error('Could not find Velix runtime. Run `npm install` first.');
+    process.exit(1);
+  }
+
+  const child = spawn('npx', ['tsx', buildScript], {
+    stdio: 'inherit', cwd, shell: true,
   });
 
-  child.on('error', () => {
-    const buildScript = path.join(process.cwd(), 'packages', 'velix', 'runtime', 'start-build.ts');
-    if (fs.existsSync(buildScript)) {
-      spawn('npx', ['tsx', buildScript], { stdio: 'inherit', cwd: process.cwd() });
-    } else {
-      log.error('Could not find Velix runtime. Run `npm install` first.');
-      process.exit(1);
-    }
+  child.on('error', (err) => {
+    log.error(`Failed to build: ${err.message}`);
+    process.exit(1);
   });
 }
 
@@ -531,12 +549,26 @@ async function startProd() {
   log.info('Starting production server...');
 
   const { spawn } = await import('child_process');
-  const child = spawn('npx', ['tsx', 'node_modules/@teamvelix/velix/dist/runtime/start-prod.js'], {
-    stdio: 'inherit', cwd: process.cwd(),
+
+  const cwd = process.cwd();
+  const candidates = [
+    path.join(cwd, 'node_modules', '@teamvelix', 'velix', 'dist', 'runtime', 'start-prod.js'),
+    path.join(cwd, 'packages', 'velix', 'dist', 'runtime', 'start-prod.js'),
+    path.join(cwd, 'packages', 'velix', 'runtime', 'start-prod.ts'),
+  ];
+
+  const prodScript = candidates.find(c => fs.existsSync(c));
+  if (!prodScript) {
+    log.error('Could not find Velix runtime. Run `npm install` first.');
+    process.exit(1);
+  }
+
+  const child = spawn('npx', ['tsx', prodScript], {
+    stdio: 'inherit', cwd, shell: true,
   });
 
-  child.on('error', () => {
-    log.error('Could not start production server.');
+  child.on('error', (err) => {
+    log.error(`Failed to start production server: ${err.message}`);
     process.exit(1);
   });
 }
