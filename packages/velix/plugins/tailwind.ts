@@ -18,7 +18,6 @@ function detectTailwindCli(): string {
   // Try v4 CLI first
   const v4 = spawnSync('npx', ['@tailwindcss/cli', '--help'], {
     stdio: 'pipe',
-    shell: process.platform === 'win32',
     timeout: 15000,
   });
   if (v4.status === 0) return '@tailwindcss/cli';
@@ -66,7 +65,6 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
           spawnSync('npx', args, { 
             stdio: 'inherit',
             cwd: process.cwd(),
-            shell: process.platform === 'win32',
           });
           logger.success('Tailwind CSS built successfully');
         } catch (err: any) {
@@ -96,7 +94,6 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
           const buildResult = spawnSync('npx', [cli, '-i', input, '-o', output], {
             cwd: process.cwd(),
             stdio: 'pipe',
-            shell: process.platform === 'win32',
           });
 
           if (buildResult.error) {
@@ -122,7 +119,6 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
         const watcher = spawn('npx', [cli, '-i', input, '-o', output, '--watch'], {
           stdio: 'pipe',
           cwd: process.cwd(),
-          shell: process.platform === 'win32',
         });
 
         watcher.stdout.on('data', (data) => {

@@ -19,11 +19,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import pc from 'picocolors';
 import prompts from 'prompts';
+import { VERSION } from './version.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-const VERSION = '5.0.9';
 
 // ============================================================================
 // Logger (shared, single instance)
@@ -492,14 +491,14 @@ async function startDev() {
 
   const { spawn } = await import('child_process');
   const child = spawn('npx', ['tsx', '--no-cache', 'node_modules/@teamvelix/velix/dist/runtime/start-dev.js'], {
-    stdio: 'inherit', cwd: process.cwd(), shell: true,
+    stdio: 'inherit', cwd: process.cwd(),
   });
 
   child.on('error', () => {
     // Fallback: try running from packages
     const devScript = path.join(process.cwd(), 'packages', 'velix', 'runtime', 'start-dev.ts');
     if (fs.existsSync(devScript)) {
-      spawn('npx', ['tsx', devScript], { stdio: 'inherit', cwd: process.cwd(), shell: true });
+      spawn('npx', ['tsx', devScript], { stdio: 'inherit', cwd: process.cwd() });
     } else {
       log.error('Could not find Velix runtime. Run `npm install` first.');
       process.exit(1);
@@ -513,13 +512,13 @@ async function buildProject() {
 
   const { spawn } = await import('child_process');
   const child = spawn('npx', ['tsx', 'node_modules/@teamvelix/velix/dist/runtime/start-build.js'], {
-    stdio: 'inherit', cwd: process.cwd(), shell: true,
+    stdio: 'inherit', cwd: process.cwd(),
   });
 
   child.on('error', () => {
     const buildScript = path.join(process.cwd(), 'packages', 'velix', 'runtime', 'start-build.ts');
     if (fs.existsSync(buildScript)) {
-      spawn('npx', ['tsx', buildScript], { stdio: 'inherit', cwd: process.cwd(), shell: true });
+      spawn('npx', ['tsx', buildScript], { stdio: 'inherit', cwd: process.cwd() });
     } else {
       log.error('Could not find Velix runtime. Run `npm install` first.');
       process.exit(1);
@@ -533,7 +532,7 @@ async function startProd() {
 
   const { spawn } = await import('child_process');
   const child = spawn('npx', ['tsx', 'node_modules/@teamvelix/velix/dist/runtime/start-prod.js'], {
-    stdio: 'inherit', cwd: process.cwd(), shell: true,
+    stdio: 'inherit', cwd: process.cwd(),
   });
 
   child.on('error', () => {

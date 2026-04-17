@@ -3,6 +3,8 @@
  * Minimalist, professional output inspired by modern CLIs
  */
 
+import { VERSION } from './version.js';
+
 const colors = {
   reset: '\x1b[0m',
   bold: '\x1b[1m',
@@ -41,8 +43,6 @@ function fmtTime(ms: number) {
   if (ms < 500) return `${c.yellow}${ms}ms${c.reset}`;
   return `${c.red}${ms}ms${c.reset}`;
 }
-
-const VERSION = '5.0.4';
 
 const LOGO = `
   ${c.cyan}▲${c.reset} ${c.bold}Velix${c.reset} ${c.dim}v${VERSION}${c.reset}

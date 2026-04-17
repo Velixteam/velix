@@ -3,6 +3,8 @@
  * Beautiful error pages inspired by Next.js latest design
  */
 
+import { VERSION } from '../version.js';
+
 export interface ErrorPageOptions {
   statusCode: number;
   title: string;
@@ -477,7 +479,7 @@ export function generate500Page(options: ErrorPageOptions): string {
         <div class="footer">
             <div class="brand">
                 <img src="/__velix/logo.webp" alt="Velix" onerror="this.style.display='none'"/>
-                <span>Velix v5.0.9</span>
+                <span>Velix v${VERSION}</span>
             </div>
             <div class="footer-links">
                 <a href="/">Home</a>

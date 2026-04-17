@@ -22,6 +22,7 @@ import { executeAction, deserializeArgs } from '../actions/index.js';
 import logger from '../logger.js';
 import esbuild from 'esbuild';
 import { generateDevToolsHtml } from './devtools.js';
+import { VERSION } from '../version.js';
 import { generate404Page, generate500Page } from './error-pages.js';
 
 // ============================================================================
@@ -426,7 +427,7 @@ async function handlePageRoute(
     const baseUrl = config.app.url || `http://${config.server.host}:${config.server.port}`;
     const metaTags = generateMetadataTags({
       ...metadata,
-      generator: `Velix v5.0.9`,
+      generator: `Velix v${VERSION}`,
       viewport: metadata.viewport || 'width=device-width, initial-scale=1',
     }, baseUrl);
 
@@ -435,7 +436,12 @@ async function handlePageRoute(
     const hydrationScript = generateAdvancedHydrationScript(islands);
     
     // Developer Tools Injection
-    const devToolsHtml = generateDevToolsHtml(isDev);
+    const devToolsHtml = generateDevToolsHtml(isDev, {
+      version: VERSION,
+      port: config.server.port,
+      host: config.server.host,
+      nodeVersion: process.version.replace('v', ''),
+    });
 
     const headInjections = `
     <meta charset="utf-8">

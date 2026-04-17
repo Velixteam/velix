@@ -10,6 +10,7 @@ import { loadConfig, resolvePaths } from '../config.js';
 import { buildRouteTree } from '../router/index.js';
 import { ensureDir, cleanDir, findFiles, formatBytes, formatTime } from '../utils.js';
 import logger from '../logger.js';
+import { VERSION } from '../version.js';
 
 export interface BuildOptions {
   projectRoot?: string;
@@ -123,7 +124,7 @@ export async function build(options: BuildOptions = {}) {
 
   // Generate build manifest
   const manifest = {
-    version: '5.0.0',
+    version: VERSION,
     buildTime: new Date().toISOString(),
     routes: routes.appRoutes.map(r => ({
       path: r.path,
