@@ -354,20 +354,25 @@ async function handleApiRoute(route: any, req: http.IncomingMessage, res: http.S
       return;
     }
 
-    // Parse body for POST/PUT/PATCH
-    let body: any;
+    let rawBody: string | undefined;
     if (['POST', 'PUT', 'PATCH'].includes(method)) {
-      body = await parseRequestBody(req);
+      rawBody = await parseRawBody(req);
     }
 
-    const request = {
-      method, url: req.url, headers: req.headers,
-      params: route.params || {},
-      query: Object.fromEntries(url.searchParams),
-      body, json: () => body,
-    };
+    const headers = new Headers();
+    for (const [key, val] of Object.entries(req.headers)) {
+      if (Array.isArray(val)) val.forEach(v => headers.append(key, v));
+      else if (val) headers.set(key, val);
+    }
 
-    const response = await handler(request);
+    const reqInit: RequestInit = { method, headers };
+    if (rawBody !== undefined) reqInit.body = rawBody;
+
+    const request = new Request(url.href, reqInit) as Request & { velixUrl: URL };
+    request.velixUrl = url;
+
+    // Call API handler with native Request and Next.js-like context
+    const response = await handler(request, { params: route.params || {} });
 
     if (response instanceof Response) {
       const headers: Record<string, string> = {};
@@ -693,6 +698,15 @@ function parseRequestBody(req: http.IncomingMessage): Promise<unknown> {
         else resolve(body);
       } catch { resolve(body); }
     });
+    req.on('error', reject);
+  });
+}
+
+function parseRawBody(req: http.IncomingMessage): Promise<string> {
+  return new Promise((resolve, reject) => {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => resolve(body));
     req.on('error', reject);
   });
 }

@@ -146,7 +146,7 @@ velix g component <name>   # Generate a component
 velix g api <name>         # Generate an API route
 velix g layout <name>      # Generate a layout
 velix g action <name>      # Generate a server action
-velix g middleware <name>  # Generate middleware
+velix g proxy <name>       # Generate a proxy interceptor
 velix g hook <name>        # Generate a custom hook
 velix g context <name>     # Generate a React context
 ```

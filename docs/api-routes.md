@@ -9,7 +9,7 @@ API Routes allow you to create custom HTTP endpoints in your Velix application.
 - [HTTP Methods](#http-methods)
 - [Request & Response](#request--response)
 - [Dynamic Parameters](#dynamic-parameters)
-- [Middleware](#middleware)
+- [Proxy Interceptor](#proxy-interceptor)
 - [Best Practices](#best-practices)
 
 ---
@@ -233,29 +233,30 @@ export function GET(
 
 ---
 
-## Middleware
+## Proxy Interceptor
 
-### Middleware Global
+### Proxy Global
 
 ```typescript
-// middleware.ts (à la racine du projet)
-import { NextFunction } from 'velix';
+// proxy.ts (à la racine du projet)
+import { NextFunction, MiddlewareRequest, MiddlewareResponse } from 'velix/types';
 
-export default async function middleware(
-  req: Request,
-  res: Response,
+export default async function proxy(
+  req: MiddlewareRequest,
+  res: MiddlewareResponse,
   next: NextFunction
 ) {
   // Logging
   console.log(`${req.method} ${req.url}`);
   
   // CORS
-  res.headers.set('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', '*');
   
   // Authentication
-  const token = req.headers.get('authorization');
+  const token = req.headers.authorization;
   if (!token && req.url.includes('/api/protected')) {
-    return new Response('Unauthorized', { status: 401 });
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
   }
   
   // Continue
@@ -515,5 +516,5 @@ export function DELETE(request: Request, { params }: { params: { id: string } })
 ## Ressources
 
 - [Server Actions](./server-actions.md)
-- [Middleware](./middleware.md)
+- [Proxy Engine](./proxy.md)
 - [Best Practices](./best-practices.md)

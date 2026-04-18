@@ -129,26 +129,27 @@ export const middlewares = {
 // ============================================================================
 
 /**
- * Loads middleware from the project's middleware/ directory
+ * Loads proxy middleware from the project root (proxy.ts or proxy.js)
  */
 export async function loadMiddleware(projectRoot: string): Promise<MiddlewareFunction[]> {
-  const middlewareDir = path.join(projectRoot, 'middleware');
   const fns: MiddlewareFunction[] = [];
+  const possibleFiles = ['proxy.ts', 'proxy.js'];
 
-  if (!fs.existsSync(middlewareDir)) return fns;
+  for (const file of possibleFiles) {
+    const filePath = path.join(projectRoot, file);
+    if (!fs.existsSync(filePath)) continue;
 
-  const files = fs.readdirSync(middlewareDir).filter(f => /\.(ts|js)$/.test(f)).sort();
-
-  for (const file of files) {
     try {
-      const filePath = path.join(middlewareDir, file);
       const { pathToFileURL } = await import('url');
       const url = pathToFileURL(filePath).href;
       const mod = await import(`${url}?t=${Date.now()}`);
-      const fn = mod.default || mod.middleware;
-      if (typeof fn === 'function') fns.push(fn);
+      const fn = mod.default || mod.proxy || mod.middleware;
+      if (typeof fn === 'function') {
+        fns.push(fn);
+        break; // Only load the first found proxy file
+      }
     } catch (err: any) {
-      console.warn(`⚠ Failed to load middleware ${file}: ${err.message}`);
+      console.warn(`⚠ Failed to load proxy ${file}: ${err.message}`);
     }
   }
 

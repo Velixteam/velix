@@ -103,6 +103,8 @@ export type ApiHandler = (
   res: Response
 ) => void | Promise<void>;
 
+export type { MiddlewareRequest, MiddlewareResponse } from './middleware/index.js';
+
 // ============================================================================
 // React 19 Action Types
 // ============================================================================
