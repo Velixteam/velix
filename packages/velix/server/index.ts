@@ -9,6 +9,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { createRequire } from 'module';
 import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { loadConfig, resolvePaths, type VelixConfig } from '../config.js';
@@ -24,6 +25,20 @@ import esbuild from 'esbuild';
 import { generateDevToolsHtml } from './devtools.js';
 import { VERSION } from '../version.js';
 import { generate404Page, generate500Page } from './error-pages.js';
+
+function getProjectVersion(dep: string, projectRoot: string): string {
+  try {
+    const projectRequire = createRequire(pathToFileURL(path.join(projectRoot, 'package.json')).href);
+    return projectRequire(`${dep}/package.json`).version;
+  } catch (e) {
+    try {
+      const selfRequire = createRequire(import.meta.url);
+      return selfRequire(`${dep}/package.json`).version;
+    } catch (e2) {
+      return '—';
+    }
+  }
+}
 
 // ============================================================================
 // MIME Types
@@ -435,12 +450,17 @@ async function handlePageRoute(
     const islands = getRegisteredIslands();
     const hydrationScript = generateAdvancedHydrationScript(islands);
     
+    const reactVersion = getProjectVersion('react', projectRoot);
+    const tsVersion = getProjectVersion('typescript', projectRoot);
+
     // Developer Tools Injection
     const devToolsHtml = generateDevToolsHtml(isDev, {
       version: VERSION,
       port: config.server.port,
       host: config.server.host,
       nodeVersion: process.version.replace('v', ''),
+      reactVersion,
+      tsVersion
     });
 
     const headInjections = `

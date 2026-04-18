@@ -9,6 +9,8 @@ export interface DevToolsContext {
   port?: number;
   host?: string;
   nodeVersion?: string;
+  reactVersion?: string;
+  tsVersion?: string;
 }
 
 export interface DevToolsState {
@@ -30,6 +32,7 @@ const ICON_TS    = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" 
 const ICON_CLOCK = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
 const ICON_TRI   = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 19h20L12 2z"/></svg>`;
 const ICON_TERM  = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>`;
+const ICON_LOGO  = `<img src="/__velix/logo.webp" alt="Velix Logo" width="14" height="14" style="border-radius:2px; object-fit:cover;" onerror="this.style.display='none'" />`;
 
 /**
  * Generate enhanced DevTools HTML — 3-tab panel.
@@ -42,6 +45,8 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
   const port        = ctx.port       ?? 3000;
   const host        = ctx.host       ?? 'localhost';
   const nodeVersion = ctx.nodeVersion ?? process.version.replace('v', '');
+  const reactVersion = ctx.reactVersion ?? '—';
+  const tsVersion   = ctx.tsVersion   ?? '—';
 
   return `
 <style>
@@ -111,7 +116,7 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
 
 <!-- ── Floating button ── -->
 <button id="__vdt-btn" class="vdt-idle" onclick="__vdtOpen()" title="Velix DevTools (${version})">
-  ${ICON_TRI}
+  ${ICON_LOGO}
   <div id="__vdt-dot" class="idle"></div>
 </button>
 
@@ -120,7 +125,7 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
   <!-- Header -->
   <div class="__vdt-header">
     <div class="__vdt-brand">
-      ${ICON_TRI}
+      ${ICON_LOGO}
       Velix
       <span class="__vdt-badge">${version}</span>
     </div>
@@ -186,12 +191,12 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
   <!-- Tab: Info -->
   <div class="__vdt-body" id="__vtab-info" style="display:none;">
     <div class="__vdt-info-row">
-      <div class="__vdt-info-left">${ICON_TRI} <span>Velix</span></div>
+      <div class="__vdt-info-left">${ICON_LOGO} <span>Velix</span></div>
       <span class="__vdt-info-val">${version}</span>
     </div>
     <div class="__vdt-info-row">
       <div class="__vdt-info-left">${ICON_GEAR} <span>React</span></div>
-      <span class="__vdt-info-val" id="__vdt-react-ver">—</span>
+      <span class="__vdt-info-val" id="__vdt-react-ver">${reactVersion}</span>
     </div>
     <div class="__vdt-info-row">
       <div class="__vdt-info-left">${ICON_MON} <span>Node.js</span></div>
@@ -199,7 +204,7 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
     </div>
     <div class="__vdt-info-row">
       <div class="__vdt-info-left">${ICON_TS} <span>TypeScript</span></div>
-      <span class="__vdt-info-val" id="__vdt-ts-ver">—</span>
+      <span class="__vdt-info-val" id="__vdt-ts-ver">${tsVersion}</span>
     </div>
     <div class="__vdt-dev-badge">
       ${ICON_TERM} Development mode active
@@ -297,13 +302,13 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
   var btel = document.getElementById('__vdt-build-time');
   if(btel) btel.textContent = bt ? bt + 'ms' : '—';
 
-  /* React version from window.React */
+  /* React version from window.React or server injection */
   var rv = document.getElementById('__vdt-react-ver');
-  if(rv && window.React) rv.textContent = window.React.version;
+  if(rv && rv.textContent === '—' && window.React) rv.textContent = window.React.version;
 
   /* TypeScript version (injected by server if available) */
   var tsv = document.getElementById('__vdt-ts-ver');
-  if(tsv) tsv.textContent = window.__VELIX_TS_VERSION__ || '—';
+  if(tsv && tsv.textContent === '—') tsv.textContent = window.__VELIX_TS_VERSION__ || '—';
 
   /* ── HMR + Status ── */
   var btn = document.getElementById('__vdt-btn');
