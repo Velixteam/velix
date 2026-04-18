@@ -18,7 +18,8 @@
     "dist",
     "assets",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "assets/*.webp"
   ],
   "scripts": {
     "build": "tsup",

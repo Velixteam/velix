@@ -225,12 +225,12 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
       var btn  = document.getElementById('__vtab-btn-' + t);
       if(!body || !btn) return;
       var active = t === name;
-      body.style.display = active ? '' : 'none';
+      body.style.display = active ? 'block' : 'none';
       btn.classList.toggle('active', active);
     });
   };
 
-  window.__vdtOpen  = function(){ document.getElementById('__vdt').style.display = ''; };
+  window.__vdtOpen  = function(){ document.getElementById('__vdt').style.display = 'block'; };
   window.__vdtClose = function(){ document.getElementById('__vdt').style.display = 'none'; };
 
   /* ── Route info ── */
