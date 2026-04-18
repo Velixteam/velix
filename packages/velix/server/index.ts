@@ -560,7 +560,9 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
     // Check multiple possible locations for the logo
     const candidates = [
       path.join(__dirname, '..', 'assets', 'logo.webp'),
+      path.join(__dirname, '..', '..', 'assets', 'logo.webp'),
       path.join(process.cwd(), 'node_modules', '@teamvelix', 'velix', 'assets', 'logo.webp'),
+      path.join(process.cwd(), 'packages', 'velix', 'assets', 'logo.webp'),
       path.join(process.cwd(), 'node_modules', 'velix', 'assets', 'logo.webp'),
       path.join(process.cwd(), 'public', 'favicon.webp'),
     ];

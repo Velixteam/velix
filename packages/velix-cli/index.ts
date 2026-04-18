@@ -40,6 +40,9 @@ const log = {
 // ASCII Banner
 // ============================================================================
 
+/** Resolve the platform-correct npx binary (npx.cmd on Windows) */
+const NPX = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
 function showBanner() {
   console.log('');
   console.log(`  ${pc.cyan('▲')} ${pc.bold('Velix')} ${pc.dim(`v${VERSION}`)}`);
@@ -505,8 +508,8 @@ async function startDev() {
     process.exit(1);
   }
 
-  const child = spawn('npx', ['tsx', '--no-cache', devScript], {
-    stdio: 'inherit', cwd, shell: true,
+  const child = spawn(NPX, ['tsx', '--no-cache', devScript], {
+    stdio: 'inherit', cwd,
   });
 
   child.on('error', (err) => {
@@ -534,8 +537,8 @@ async function buildProject() {
     process.exit(1);
   }
 
-  const child = spawn('npx', ['tsx', buildScript], {
-    stdio: 'inherit', cwd, shell: true,
+  const child = spawn(NPX, ['tsx', buildScript], {
+    stdio: 'inherit', cwd,
   });
 
   child.on('error', (err) => {
@@ -563,8 +566,8 @@ async function startProd() {
     process.exit(1);
   }
 
-  const child = spawn('npx', ['tsx', prodScript], {
-    stdio: 'inherit', cwd, shell: true,
+  const child = spawn(NPX, ['tsx', prodScript], {
+    stdio: 'inherit', cwd,
   });
 
   child.on('error', (err) => {

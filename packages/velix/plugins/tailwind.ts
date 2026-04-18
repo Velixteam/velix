@@ -4,6 +4,9 @@ import path from 'path';
 import { PluginHooks, definePlugin } from './index.js';
 import logger from '../logger.js';
 
+/** Resolve the platform-correct npx binary (npx.cmd on Windows) */
+const NPX = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
 export interface TailwindPluginOptions {
   input?: string;
   output?: string;
@@ -16,7 +19,7 @@ export interface TailwindPluginOptions {
  */
 function detectTailwindCli(): string {
   // Try v4 CLI first
-  const v4 = spawnSync('npx', ['@tailwindcss/cli', '--help'], {
+  const v4 = spawnSync(NPX, ['@tailwindcss/cli', '--help'], {
     stdio: 'pipe',
     timeout: 15000,
   });
@@ -62,7 +65,7 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
           const cli = getCli();
           const args = [cli, '-i', input, '-o', output];
           if (options.minify !== false) args.push('--minify');
-          spawnSync('npx', args, { 
+          spawnSync(NPX, args, { 
             stdio: 'inherit',
             cwd: process.cwd(),
           });
@@ -91,19 +94,19 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
         logger.info('Building initial Tailwind CSS...');
         try {
           const cli = getCli();
-          const buildResult = spawnSync('npx', [cli, '-i', input, '-o', output], {
+          const buildResult = spawnSync(NPX, [cli, '-i', input, '-o', output], {
             cwd: process.cwd(),
             stdio: 'pipe',
           });
 
-          if (buildResult.error) {
-            logger.error('Tailwind CSS not installed. Run: npm install -D tailwindcss @tailwindcss/postcss');
-            return;
-          }
-
           if (buildResult.status !== 0) {
-            const errorMsg = buildResult.stderr?.toString() || 'Unknown error';
-            logger.error(`Tailwind build failed: ${errorMsg}`);
+            const stderr = buildResult.stderr?.toString() || '';
+            // Only show 'not installed' if we actually can't find the CLI command
+            if (buildResult.error || stderr.includes('not found') || stderr.includes('ENOENT')) {
+              logger.warn('Tailwind CSS CLI not found — skipping. CSS will still be served if pre-built.');
+            } else if (stderr.trim()) {
+              logger.warn(`Tailwind build warning: ${stderr.trim().split('\n')[0]}`);
+            }
             return;
           }
 
@@ -116,7 +119,7 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
         // Start watcher
         logger.info('Starting Tailwind CSS watcher...');
         const cli = getCli();
-        const watcher = spawn('npx', [cli, '-i', input, '-o', output, '--watch'], {
+        const watcher = spawn(NPX, [cli, '-i', input, '-o', output, '--watch'], {
           stdio: 'pipe',
           cwd: process.cwd(),
         });
