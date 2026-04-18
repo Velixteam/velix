@@ -2,6 +2,7 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/Velixteam/velix/main/assets/velix%20cover.webp" width="100%" alt="Velix Cover" />
 </p>
+
 > **A modern full-stack React framework** optimized for performance, SEO, simplicity, and developer experience.
 
 Velix is a lightweight but powerful React 19 framework featuring file-based routing, SSR, SSG, Islands architecture, built-in SEO optimization, and an intuitive CLI.
