@@ -1,3 +1,5 @@
+import { NpmCounter } from "../components/NpmCounter";
+
 export const metadata = { title: "Velix - The Modern React Framework | Build Fast. Ship Faster." };
 
 function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
@@ -24,10 +26,13 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto">
-          {/* Beta Badge */}
-          <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
-            <span className="text-xs font-medium text-slate-300">Now in public beta</span>
+          {/* Badges */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
+            <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
+              <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
+              <span className="text-xs font-medium text-slate-300">Now in public beta</span>
+            </div>
+            <NpmCounter />
           </div>
 
           {/* Main Heading */}
