@@ -26,13 +26,10 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto">
-          {/* Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-            <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-              <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
-              <span className="text-xs font-medium text-slate-300">Now in public beta</span>
-            </div>
-            <NpmCounter />
+          {/* Beta Badge */}
+          <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
+            <span className="text-xs font-medium text-slate-300">Now in public beta</span>
           </div>
 
           {/* Main Heading */}
@@ -49,7 +46,7 @@ export default function HomePage() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
+          <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
             <a 
               href="/docs#getting-started" 
               className="w-full sm:w-auto px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all"
@@ -64,6 +61,10 @@ export default function HomePage() {
             >
               GitHub
             </a>
+          </div>
+
+          <div className="animate-fade-in-up animate-delay-[350ms] flex justify-center mb-16">
+            <NpmCounter />
           </div>
 
           {/* Code Preview */}
