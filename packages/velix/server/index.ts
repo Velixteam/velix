@@ -19,6 +19,7 @@ import { pluginManager, loadPlugins, PluginHooks, builtinPlugins } from '../plug
 import tailwindPlugin from '../plugins/tailwind.js';
 import { generateMetadataTags, generateSitemap, generateRobotsTxt } from '../metadata/index.js';
 import { getRegisteredIslands, generateAdvancedHydrationScript } from '../islands/index.js';
+import type { Route } from '../types.js';
 import { executeAction, deserializeArgs } from '../actions/index.js';
 import logger from '../logger.js';
 import esbuild from 'esbuild';
@@ -85,7 +86,7 @@ export async function createServer(options: {
   mode?: 'development' | 'production';
 } = {}): Promise<VelixServer> {
   const projectRoot = options.projectRoot || process.cwd();
-  const mode = options.mode || (process.env.NODE_ENV as any) || 'development';
+  const mode = options.mode || (process.env.NODE_ENV as 'development' | 'production' | undefined) || 'development';
   const isDev = mode === 'development';
 
   // Load configuration
@@ -102,7 +103,7 @@ export async function createServer(options: {
   const middlewareFns = await loadMiddleware(projectRoot);
 
   // Build route tree
-  const appDir = (config as any).resolvedAppDir || path.join(projectRoot, 'app');
+  const appDir = (config as unknown as { resolvedAppDir?: string }).resolvedAppDir || path.join(projectRoot, 'app');
   const routes = buildRouteTree(appDir);
 
   // Plugin hook: routes loaded
@@ -164,7 +165,7 @@ export async function createServer(options: {
       }
 
       // ── Static files ──
-      const publicDir = (config as any).resolvedPublicDir || path.join(projectRoot, 'public');
+      const publicDir = (config as unknown as { resolvedPublicDir?: string }).resolvedPublicDir || path.join(projectRoot, 'public');
       if (await serveStaticFile(pathname, publicDir, res, isDev)) {
         if (isDev) logger.request(req.method || 'GET', pathname, 200, Date.now() - requestStart, { type: 'static' });
         return;
@@ -191,15 +192,16 @@ export async function createServer(options: {
       res.end(generate404Page(pathname));
       if (isDev) logger.request(req.method || 'GET', pathname, 404, Date.now() - requestStart);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as Error;
       console.error('Server error:', error);
       if (!res.headersSent) {
         res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(generate500Page({
           statusCode: 500,
           title: 'Server Error',
-          message: error.message || 'An unexpected error occurred',
-          stack: isDev ? error.stack : undefined,
+          message: err.message || 'An unexpected error occurred',
+          stack: isDev ? err.stack : undefined,
           isDev,
           pathname
         }));
@@ -208,8 +210,8 @@ export async function createServer(options: {
   });
 
   const __hmrClients = new Set<http.ServerResponse>();
-  (server as any).__hmrClients = __hmrClients;
-  (server as any).broadcastHMR = (msg: string) => {
+  (server as unknown as { __hmrClients: Set<http.ServerResponse> }).__hmrClients = __hmrClients;
+  (server as unknown as { broadcastHMR: (msg: string) => void }).broadcastHMR = (msg: string) => {
     __hmrClients.forEach(c => c.write(`data: ${msg}\n\n`));
   };
 
@@ -231,7 +233,7 @@ export async function createServer(options: {
     }
   });
 
-  server.on('error', (err: any) => {
+  server.on('error', (err: NodeJS.ErrnoException) => {
     if (err.code === 'EADDRINUSE') {
       logger.portInUse(port);
       process.exit(1);
@@ -250,7 +252,7 @@ export async function createServer(options: {
 // SSR Module Import (handles CSS imports gracefully)
 // ============================================================================
 
-async function importModuleSSR(filePath: string): Promise<any> {
+async function importModuleSSR(filePath: string): Promise<unknown> {
   const fileUrl = pathToFileURL(filePath).href;
   try {
     return await import(`${fileUrl}?t=${Date.now()}`);
@@ -301,13 +303,13 @@ function collectLayouts(pageFilePath: string, appDir: string): string[] {
   return layouts;
 }
 
-async function renderComponentAsync(Component: any, props: any): Promise<any> {
-  let element = React.createElement(Component, props);
+async function renderComponentAsync(Component: unknown, props: Record<string, unknown>): Promise<React.ReactElement> {
+  let element = React.createElement(Component as React.ComponentType<Record<string, unknown>>, props);
   if (typeof Component === 'function') {
     try {
-      const result = Component(props);
+      const result = (Component as (props: Record<string, unknown>) => React.ReactElement | Promise<React.ReactElement>)(props);
       if (result instanceof Promise) {
-        element = await result;
+        element = await result as any;
       }
     } catch (e) {
       // Fallback to createElement result
@@ -341,7 +343,7 @@ async function serveStaticFile(pathname: string, publicDir: string, res: http.Se
   return true;
 }
 
-async function handleApiRoute(route: any, req: http.IncomingMessage, res: http.ServerResponse, url: URL) {
+async function handleApiRoute(route: { filePath: string, params?: Record<string, string> }, req: http.IncomingMessage, res: http.ServerResponse, url: URL) {
   try {
     const fileUrl = pathToFileURL(route.filePath).href;
     const mod = await import(`${fileUrl}?t=${Date.now()}`);
@@ -387,34 +389,36 @@ async function handleApiRoute(route: any, req: http.IncomingMessage, res: http.S
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end(String(response));
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error;
     res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: err.message }));
+    res.end(JSON.stringify({ error: error.message }));
   }
 }
 
 async function handleServerAction(req: http.IncomingMessage, res: http.ServerResponse) {
   try {
-    const body = await parseRequestBody(req) as any;
+    const body = await parseRequestBody(req) as { actionId?: string, args?: string };
     if (!body?.actionId || typeof body.actionId !== 'string') {
       res.writeHead(400, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'Missing actionId' }));
       return;
     }
 
-    const args = body.args ? deserializeArgs(body.args) : [];
+    const args = body.args ? deserializeArgs(body.args as any) : [];
     const result = await executeAction(body.actionId, args);
 
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(result));
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const error = err as Error;
     res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: false, error: err.message }));
+    res.end(JSON.stringify({ success: false, error: error.message }));
   }
 }
 
 async function handlePageRoute(
-  route: any, routes: any,
+  route: Route, routes: { appRoutes: { path: string }[] },
   req: http.IncomingMessage, res: http.ServerResponse,
   url: URL, config: VelixConfig, isDev: boolean, projectRoot: string
 ) {
@@ -425,14 +429,14 @@ async function handlePageRoute(
     let metadata = mod.metadata || mod.generateMetadata?.(route.params) || {};
 
     // ── Layout Resolution (Next.js-style: walk up to root) ──
-    const appDir = (config as any).resolvedAppDir || path.join(projectRoot, 'app');
+    const appDir = (config as unknown as { resolvedAppDir?: string }).resolvedAppDir || path.join(projectRoot, 'app');
     const layoutPaths = collectLayouts(route.filePath, appDir);
 
     // Load all layouts and merge metadata (root-first)
-    const layoutModules: { default?: any; metadata?: any }[] = [];
+    const layoutModules: { default?: React.ComponentType<unknown>; metadata?: Record<string, unknown> }[] = [];
     for (const lp of layoutPaths) {
       try {
-        const layoutMod = await importModuleSSR(lp);
+        const layoutMod = await importModuleSSR(lp) as { default?: React.ComponentType<unknown>; metadata?: Record<string, unknown> };
         layoutModules.push(layoutMod);
         if (layoutMod.metadata) {
           metadata = { ...layoutMod.metadata, ...metadata };
@@ -497,7 +501,7 @@ async function handlePageRoute(
     const ssrContent = renderToString(layoutElement);
 
     // Apply native waterfall hook: after render
-    let finalHtml = await pluginManager.runWaterfallHook(PluginHooks.AFTER_RENDER, ssrContent, { route, config, isDev });
+    let finalHtml = await pluginManager.runWaterfallHook(PluginHooks.AFTER_RENDER, ssrContent, { route, config, isDev }) as string;
     
     // Inject Head & Body (Surgical insertion)
     const headInjectionsHtml = `\n    ${headInjections}\n    `;
@@ -545,14 +549,15 @@ async function handlePageRoute(
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(finalHtml);
 
-  } catch (err: any) {
-    logger.error(`Render error: ${route.path}`, err);
+  } catch (err: unknown) {
+    const error = err as Error;
+    logger.error(`Render error: ${route.path}`, error);
     res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(generate500Page({
       statusCode: 500,
       title: 'Render Error',
-      message: err.message || 'Failed to render page',
-      stack: isDev ? err.stack : undefined,
+      message: error.message || 'Failed to render page',
+      stack: isDev ? error.stack : undefined,
       isDev,
       pathname: route.path
     }));
@@ -648,10 +653,11 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
       res.writeHead(200, { 'Content-Type': 'application/javascript' });
       res.end(result.outputFiles[0].text);
       return;
-    } catch (err: any) {
-      logger.error(`Island bundling failed: ${componentName}`, err);
+    } catch (err: unknown) {
+      const error = err as Error;
+      logger.error(`Island bundling failed: ${componentName}`, error);
       res.writeHead(500);
-      res.end(`console.error("Island bundling failed: ${err.message}");`);
+      res.end(`console.error("Island bundling failed: ${error.message}");`);
       return;
     }
   }
@@ -672,14 +678,14 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
       res.writeHead(200, { 'Content-Type': 'application/javascript', 'Cache-Control': 'public, max-age=31536000, immutable' });
       res.end(result.outputFiles[0].text);
       return;
-    } catch (err: any) {
+    } catch (err: unknown) {
       res.writeHead(500);
       res.end();
       return;
     }
   }
 
-  res.writeHead(404);
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('Not found');
 }
 

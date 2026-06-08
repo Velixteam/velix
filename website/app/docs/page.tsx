@@ -163,6 +163,14 @@ npm run dev`}</CodeBlock>
 ├── velix.config.ts          # Velix configuration
 ├── package.json
 └── tsconfig.json`}</CodeBlock>
+
+            <h3 className="text-lg font-semibold text-white mb-4 mt-10">Under the Hood: Core vs React</h3>
+            <P>Starting in Velix v5, the framework is architecturally decoupled into two layers to ensure stability and flexibility:</P>
+            <ul className="list-disc pl-6 mb-6 text-slate-400 space-y-2">
+              <li><strong className="text-white">@teamvelix/velix-core</strong>: A framework-agnostic engine that handles routing, server actions execution, caching, and configuration. It has zero React dependencies.</li>
+              <li><strong className="text-white">@teamvelix/velix-react</strong>: The React adapter that provides hooks, components (<IC>&lt;Link&gt;</IC>, <IC>&lt;Image&gt;</IC>), and SSR rendering logic.</li>
+            </ul>
+            <Callout type="info">When you import from <IC>velix</IC> or <IC>velix/server</IC>, you are using a unified interface that seamlessly bridges these two packages.</Callout>
           </Section>
 
           <Section id="routing" title="Routing">
@@ -241,76 +249,102 @@ export default function HomePage() {
             <P>Server actions let you call server-side functions directly from your React components. No API routes needed — just define a function and call it.</P>
 
             <h3 className="text-lg font-semibold text-white mb-4">Creating an Action</h3>
+            <P>Server actions in Velix v5 are strictly typed using generics. Define the input types (as a tuple) and the return type:</P>
             <CodeBlock filename="server/actions/notes.ts">{`import { serverAction } from "velix/server";
 
-export const createNote = serverAction(async (data) => {
-  const note = await db.notes.create({
-    title: data.title,
-    content: data.content,
-  });
-  return { success: true, note };
-});`}</CodeBlock>
+// serverAction<[inputData], ReturnType>
+export const createNote = serverAction<[{ title: string; content: string }], { id: string }>(
+  async (data) => {
+    const note = await db.notes.create({
+      title: data.title,
+      content: data.content,
+    });
+    return note;
+  }
+);`}</CodeBlock>
 
             <h3 className="text-lg font-semibold text-white mb-4 mt-10">Using in Components</h3>
+            <P>Actions return a strongly typed <IC>ActionResult&lt;T&gt;</IC> which ensures you handle both success and error states.</P>
             <CodeBlock filename="app/notes/page.tsx">{`import { createNote } from "../../server/actions/notes";
 
 export default function NotesPage() {
+  async function handleSubmit(formData: FormData) {
+    const result = await createNote({
+      title: formData.get("title") as string,
+      content: formData.get("content") as string,
+    });
+    
+    if (result.success) {
+      console.log("Created note ID:", result.data.id); // Fully typed!
+    } else {
+      console.error(result.error);
+    }
+  }
+
   return (
-    <form action={createNote}>
+    <form action={handleSubmit}>
       <input name="title" placeholder="Note title" />
       <textarea name="content" placeholder="Content..." />
       <button type="submit">Create Note</button>
     </form>
   );
 }`}</CodeBlock>
-            <Callout type="tip">Server actions are type-safe and run exclusively on the server. They're perfect for form submissions, database mutations, and authenticated operations.</Callout>
+            <Callout type="tip">Server actions run exclusively on the server and are perfect for database mutations or authenticated operations.</Callout>
           </Section>
 
           <Section id="api-routes" title="API Routes">
-            <P>Create API endpoints by exporting HTTP method handlers from files in <IC>server/api/</IC>.</P>
+            <P>Create API endpoints by exporting HTTP method handlers from files in <IC>server/api/</IC>. Velix uses standard Web <IC>Request</IC> and <IC>Response</IC> objects.</P>
             <CodeBlock filename="server/api/users.ts">{`// GET /api/users
-export function GET(req) {
-  const role = req.query?.role;
+export function GET(req: Request) {
+  const url = new URL(req.url);
+  const role = url.searchParams.get("role");
+  
   const users = db.users.findAll({ role });
-  return { users, count: users.length };
+  return Response.json({ users, count: users.length });
 }
 
 // POST /api/users
-export function POST(req) {
-  const user = db.users.create(req.body);
-  return { user, message: "User created" };
+export async function POST(req: Request) {
+  const body = await req.json();
+  const user = db.users.create(body);
+  
+  return Response.json({ user, message: "User created" }, { status: 201 });
 }
 
 // DELETE /api/users
-export function DELETE(req) {
-  const id = req.query?.id;
+export function DELETE(req: Request) {
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
+  
   db.users.delete(id);
-  return { message: "User deleted" };
+  return Response.json({ message: "User deleted" });
 }`}</CodeBlock>
-            <Callout type="info">The <IC>req</IC> object includes <IC>req.query</IC>, <IC>req.body</IC>, <IC>req.params</IC>, and <IC>req.headers</IC>. Return any object and it will be serialized as JSON.</Callout>
+            <Callout type="info">You receive a standard Web <IC>Request</IC>. Return a standard Web <IC>Response</IC> (e.g., using <IC>Response.json()</IC>).</Callout>
           </Section>
 
           <Section id="middleware" title="Middleware">
-            <P>Middleware runs before every request. Use it for logging, authentication, CORS headers, or any request/response transformation.</P>
-            <CodeBlock filename="server/middleware.ts">{`export default async function middleware(req, res, next) {
+            <P>Middleware runs before every request. Use it for logging, authentication, CORS headers, or any request/response transformation. It uses standard Web objects.</P>
+            <CodeBlock filename="server/middleware.ts">{`export default async function middleware(req: Request, res: Response, next: () => Promise<void>) {
   const start = Date.now();
 
   // Authentication check
-  if (req.url.startsWith("/api/admin")) {
-    const token = req.headers.authorization;
+  const url = new URL(req.url);
+  if (url.pathname.startsWith("/api/admin")) {
+    const token = req.headers.get("authorization");
     if (!verifyToken(token)) {
-      res.writeHead(401);
-      res.end(JSON.stringify({ error: "Unauthorized" }));
-      return;
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { 
+        status: 401,
+        headers: { "Content-Type": "application/json" }
+      });
     }
   }
 
-  // Add headers
-  res.setHeader("X-Request-Id", crypto.randomUUID());
+  // Add headers to response
+  res.headers.set("X-Request-Id", crypto.randomUUID());
 
   await next();
 
-  console.log(\`\${req.method} \${req.url} - \${Date.now() - start}ms\`);
+  console.log(\`\${req.method} \${url.pathname} - \${Date.now() - start}ms\`);
 }`}</CodeBlock>
           </Section>
 

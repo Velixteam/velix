@@ -9,14 +9,14 @@ interface CacheEntry {
   path: string;
   tags: Set<string>;
   timestamp: number;
-  data: any;
+  data: unknown;
 }
 
 class CacheManager {
   private cache = new Map<string, CacheEntry>();
   private tagIndex = new Map<string, Set<string>>();
 
-  set(path: string, data: any, tags: string[] = []): void {
+  set(path: string, data: unknown, tags: string[] = []): void {
     const entry: CacheEntry = {
       path,
       tags: new Set(tags),
@@ -35,7 +35,7 @@ class CacheManager {
     });
   }
 
-  get(path: string): any | null {
+  get(path: string): unknown | null {
     const entry = this.cache.get(path);
     return entry ? entry.data : null;
   }
@@ -78,8 +78,8 @@ export function revalidatePath(path: string, type: RevalidationType = 'path'): v
   cacheManager.revalidatePath(path);
   
   // Notify connected clients via HMR
-  if (typeof global !== 'undefined' && (global as any).__VELIX_HMR_SERVER__) {
-    (global as any).__VELIX_HMR_SERVER__.broadcast(JSON.stringify({
+  if (typeof global !== 'undefined' && (global as unknown as { __VELIX_HMR_SERVER__?: { broadcast: (msg: string) => void } }).__VELIX_HMR_SERVER__) {
+    (global as unknown as { __VELIX_HMR_SERVER__: { broadcast: (msg: string) => void } }).__VELIX_HMR_SERVER__.broadcast(JSON.stringify({
       type: 'revalidate',
       path,
       revalidationType: type,
@@ -100,8 +100,8 @@ export function revalidateTag(tag: string): void {
   cacheManager.revalidateTag(tag);
 
   // Notify connected clients
-  if (typeof global !== 'undefined' && (global as any).__VELIX_HMR_SERVER__) {
-    (global as any).__VELIX_HMR_SERVER__.broadcast(JSON.stringify({
+  if (typeof global !== 'undefined' && (global as unknown as { __VELIX_HMR_SERVER__?: { broadcast: (msg: string) => void } }).__VELIX_HMR_SERVER__) {
+    (global as unknown as { __VELIX_HMR_SERVER__: { broadcast: (msg: string) => void } }).__VELIX_HMR_SERVER__.broadcast(JSON.stringify({
       type: 'revalidate',
       tag,
     }));
@@ -120,7 +120,7 @@ export function unstable_cache<T>(
     const cacheKey = keys.join(':');
     
     if (cacheManager.has(cacheKey)) {
-      return cacheManager.get(cacheKey);
+      return cacheManager.get(cacheKey) as T;
     }
 
     const result = await fn();

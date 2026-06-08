@@ -4,7 +4,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 export async function handleImageOptimization(req: http.IncomingMessage, res: http.ServerResponse, projectRoot: string) {
-  let sharp: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let sharp: ((input: Buffer) => Record<string, unknown>) | undefined;
   try {
     // @ts-ignore: sharp is an optional dependency
     sharp = await import('sharp').then(m => m.default || m);
@@ -55,8 +56,9 @@ export async function handleImageOptimization(req: http.IncomingMessage, res: ht
       return;
     }
 
-    // Process with sharp
-    let processor = sharp(imageBuffer);
+    // Process with sharp — typed minimally since it's an optional dependency
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let processor: any = sharp(imageBuffer);
     
     if (width) {
       processor = processor.resize(width);
@@ -72,7 +74,7 @@ export async function handleImageOptimization(req: http.IncomingMessage, res: ht
       'Cache-Control': 'public, max-age=31536000, immutable'
     });
     res.end(optimizedBuffer);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Image optimization error:', error);
     res.writeHead(500);
     res.end('Error processing image');

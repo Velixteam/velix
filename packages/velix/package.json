@@ -44,6 +44,8 @@
     "react-dom": ">=19.0.1"
   },
   "dependencies": {
+    "@teamvelix/velix-core": "workspace:*",
+    "@teamvelix/velix-react": "workspace:*",
     "esbuild": "0.25.0",
     "picocolors": "^1.1.1",
     "zod": "^3.24.1",

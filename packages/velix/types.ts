@@ -63,9 +63,14 @@ export interface RouteTree {
   pages: Route[];
   api: Route[];
   layouts: Map<string, string>;
-  tree: Record<string, unknown>;
+  tree: RouteTreeNode;
   appRoutes: Route[];
   rootLayout?: string;
+}
+
+export interface RouteTreeNode {
+  children: Record<string, RouteTreeNode>;
+  routes: Route[];
 }
 
 export interface RouteMatch {
@@ -133,14 +138,29 @@ export interface TypedActionResult<T> {
 // Component Types
 // ============================================================================
 
-export interface PageProps {
-  params?: Record<string, string>;
+export type InferParams<Path extends string> =
+  Path extends `${infer _Start}/[...${infer Param}]/${infer Rest}`
+    ? { [K in Param]: string } & InferParams<`/${Rest}`>
+    : Path extends `${infer _Start}/[[...${infer Param}]]/${infer Rest}`
+      ? { [K in Param]?: string } & InferParams<`/${Rest}`>
+      : Path extends `${infer _Start}/[${infer Param}]/${infer Rest}`
+        ? { [K in Param]: string } & InferParams<`/${Rest}`>
+        : Path extends `${infer _Start}/[...${infer Param}]`
+          ? { [K in Param]: string }
+          : Path extends `${infer _Start}/[[...${infer Param}]]`
+            ? { [K in Param]?: string }
+            : Path extends `${infer _Start}/[${infer Param}]`
+              ? { [K in Param]: string }
+              : Record<string, string>;
+
+export interface PageProps<TPath extends string = string> {
+  params: InferParams<TPath>;
   searchParams?: Record<string, string>;
 }
 
-export interface LayoutProps {
+export interface LayoutProps<TPath extends string = string> {
   children: ReactNode;
-  params?: Record<string, string>;
+  params: InferParams<TPath>;
 }
 
 export interface ErrorProps {
@@ -152,8 +172,8 @@ export interface LoadingProps {}
 
 export interface NotFoundProps {}
 
-export type PageComponent = ComponentType<PageProps>;
-export type LayoutComponent = ComponentType<LayoutProps>;
+export type PageComponent<TPath extends string = string> = ComponentType<PageProps<TPath>>;
+export type LayoutComponent<TPath extends string = string> = ComponentType<LayoutProps<TPath>>;
 export type ErrorComponent = ComponentType<ErrorProps>;
 export type LoadingComponent = ComponentType<LoadingProps>;
 export type NotFoundComponent = ComponentType<NotFoundProps>;
@@ -216,7 +236,7 @@ export interface StaticProps {
 
 export interface VelixPlugin {
   name: string;
-  setup?: (config: any) => void | Promise<void>;
+  setup?: (config: import('./config.js').VelixConfig) => void | Promise<void>;
   transform?: (code: string, id: string) => string | null | Promise<string | null>;
   buildStart?: () => void | Promise<void>;
   buildEnd?: () => void | Promise<void>;

@@ -65,7 +65,7 @@ export {
 export { revalidatePath, revalidateTag, unstable_cache, cacheManager } from './actions/revalidation.js';
 
 // ── Hooks ──
-export { useAsyncData, useOptimisticMutation, preloadResource, use } from './hooks/index.js';
+export { useAsyncData, useOptimisticMutation, preloadResource, use } from '../velix-react/src/hooks/index.js';
 
 // ── Context ──
 export { useParams, useQuery, usePathname, useRequest, RequestContext, RouteContext, LayoutContext, createRequestContext } from './context.js';
@@ -74,7 +74,7 @@ export { useParams, useQuery, usePathname, useRequest, RequestContext, RouteCont
 export { Link, useRouter, router, hydrate } from './client/index.js';
 
 // ── Components ──
-export { Image, type ImageProps } from './components/Image.js';
+export { Image, type ImageProps } from '../velix-react/src/components/Image.js';
 
 // ── Build ──
 export { build } from './build/index.js';
