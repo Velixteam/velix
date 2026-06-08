@@ -85,14 +85,24 @@ export default function ComparePage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="relative pt-24 pb-16 px-6 text-center overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-velix-accent/8 rounded-full blur-[160px]"></div>
+      <section className="relative pt-32 pb-24 px-6 text-center overflow-hidden">
+        <div 
+          className="absolute inset-0 z-0 opacity-15"
+          style={{
+            backgroundImage: "url('/velix.webp')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat"
+          }}
+        />
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-velix-dark/40 via-velix-dark/80 to-velix-dark" />
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-velix-accent/20 rounded-full blur-[160px]"></div>
         </div>
         <div className="relative z-10 max-w-4xl mx-auto">
-          <span className="text-xs font-semibold tracking-widest uppercase text-velix-cyan mb-4 block">Framework Comparison</span>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6">Velix vs the <span className="gradient-text">competition</span></h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">An honest, detailed comparison of Velix with Next.js, Remix, and Astro. Every framework has trade-offs — here's how they stack up.</p>
+          <span className="text-xs font-semibold tracking-widest uppercase text-velix-cyan mb-4 block drop-shadow-md">Framework Comparison</span>
+          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 drop-shadow-lg">Velix vs the <span className="gradient-text">competition</span></h1>
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto drop-shadow-md">An honest, detailed comparison of Velix with Next.js, Remix, and Astro. Every framework has trade-offs — here's how they stack up.</p>
         </div>
       </section>
 
