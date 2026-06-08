@@ -85,7 +85,7 @@ export default function ComparePage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="relative pt-32 pb-24 px-6 text-center overflow-hidden">
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center overflow-hidden pt-20">
         <div 
           className="absolute inset-0 z-0 opacity-15"
           style={{
