@@ -9,7 +9,11 @@ function FeatureCard({ icon, title, description }: { icon: string; title: string
       <div className="relative z-10">
         <div className="w-12 h-12 rounded-xl bg-velix-cyan/10 flex items-center justify-center text-2xl mb-5">{icon}</div>
         <h3 className="text-lg font-semibold text-white mb-3">{title}</h3>
+
+
         <p className="text-sm text-slate-400 leading-relaxed">{description}</p>
+        <meta name="google-site-verification" content="mguAwrwKCuA9Ex9w0wPe13hKCGnFN-sTFi-4AKvl16g" />
+
       </div>
     </div>
   );
@@ -47,14 +51,14 @@ export default function HomePage() {
 
           {/* CTA Buttons */}
           <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <a 
-              href="/docs#getting-started" 
+            <a
+              href="/docs#getting-started"
               className="w-full sm:w-auto px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all"
             >
               Get Started
             </a>
-            <a 
-              href="https://github.com/Velixteam/velix" 
+            <a
+              href="https://github.com/Velixteam/velix"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all"
