@@ -49,8 +49,13 @@ export default function HomePage() {
             routing, and end-to-end type safety. Ship production-ready apps in record time.
           </p>
 
+          {/* Npm Counter */}
+          <div className="animate-fade-in-up animate-delay-[250ms] flex justify-center mb-8">
+            <NpmCounter />
+          </div>
+
           {/* CTA Buttons */}
-          <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+          <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <a
               href="/docs#getting-started"
               className="w-full sm:w-auto px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all"
@@ -65,10 +70,6 @@ export default function HomePage() {
             >
               GitHub
             </a>
-          </div>
-
-          <div className="animate-fade-in-up animate-delay-[350ms] flex justify-center mb-16">
-            <NpmCounter />
           </div>
 
           {/* Code Preview */}

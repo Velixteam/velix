@@ -11,9 +11,7 @@ function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-velix-deep/80 backdrop-blur-xl border-b border-white/5">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-velix-accent to-velix-cyan flex items-center justify-center">
-            <span className="text-white font-bold text-sm">V</span>
-          </div>
+          <img src="/favicon.webp" alt="Velix Logo" className="w-8 h-8 rounded-lg" />
           <span className="text-white font-bold text-xl tracking-tight">Velix</span>
         </a>
         <div className="flex items-center gap-8">
