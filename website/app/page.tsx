@@ -23,92 +23,71 @@ export default function HomePage() {
   return (
     <>
       {/* ─── Hero ─── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center px-6 text-center overflow-hidden pt-20">
+      <section className="relative min-h-screen flex items-center px-6 overflow-hidden pt-20">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-velix-accent/10 rounded-full blur-[180px]"></div>
+          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-velix-accent/10 rounded-full blur-[180px]"></div>
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-velix-cyan/8 rounded-full blur-[160px]"></div>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-16">
-          {/* Left: Image */}
-          <div className="w-full md:w-1/2 flex justify-center md:justify-end animate-fade-in-up">
-            <img src="/velix-removebg-preview.png" alt="Velix Hero" className="w-full max-w-sm md:max-w-lg object-contain drop-shadow-2xl" />
-          </div>
+        <div className="relative z-10 w-full max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
 
-          {/* Right: Text Content */}
-          <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
-            {/* Beta Badge */}
-            <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
-              <span className="text-xs font-medium text-slate-300">Now in public beta</span>
+            {/* Left: Image */}
+            <div className="w-full md:w-1/2 flex justify-center animate-fade-in-up order-1">
+              <img
+                src="/velix-removebg-preview.png"
+                alt="Velix Hero"
+                className="w-[320px] md:w-full md:max-w-xl object-contain drop-shadow-2xl"
+              />
             </div>
 
-            {/* Main Heading */}
-            <h1 className="animate-fade-in-up animate-delay-100 text-5xl sm:text-6xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-8">
-              <span className="text-white">Build fullstack apps</span>
-              <br />
-              <span className="text-velix-accent">faster</span>
-            </h1>
+            {/* Right: Text Content */}
+            <div className="w-full md:w-1/2 flex flex-col items-start text-left order-2">
+              {/* Beta Badge */}
+              <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
+                <span className="text-xs font-medium text-slate-300">Now in public beta</span>
+              </div>
 
-            {/* Description */}
-            <p className="animate-fade-in-up animate-delay-200 text-base sm:text-lg text-slate-400 max-w-xl mb-10 leading-relaxed">
-              Velix is a modern fullstack framework with server-first architecture, file-based
-              routing, and end-to-end type safety. Ship production-ready apps in record time.
-            </p>
+              {/* Main Heading */}
+              <h1 className="animate-fade-in-up animate-delay-100 text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
+                <span className="text-white">Build fullstack apps</span>
+                <br />
+                <span className="text-velix-accent">faster</span>
+              </h1>
 
-            {/* Npm Counter */}
-            <div className="animate-fade-in-up animate-delay-[250ms] flex justify-center md:justify-start w-full mb-8">
-              <NpmCounter />
+              {/* Description */}
+              <p className="animate-fade-in-up animate-delay-200 text-base sm:text-lg text-slate-400 max-w-lg mb-8 leading-relaxed">
+                Velix is a modern fullstack framework with server-first architecture, file-based
+                routing, and end-to-end type safety. Ship production-ready apps in record time.
+              </p>
+
+              {/* Npm Counter */}
+              <div className="animate-fade-in-up animate-delay-[250ms] mb-8 w-full">
+                <NpmCounter />
+              </div>
+
+              {/* CTA Buttons */}
+              <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4">
+                <a
+                  href="/docs#getting-started"
+                  className="px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center"
+                >
+                  Get Started
+                </a>
+                <a
+                  href="https://github.com/Velixteam/velix"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all text-center"
+                >
+                  GitHub
+                </a>
+              </div>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center md:justify-start w-full mb-16 md:mb-8">
-              <a
-                href="/docs#getting-started"
-                className="w-full sm:w-auto px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center"
-              >
-                Get Started
-              </a>
-              <a
-                href="https://github.com/Velixteam/velix"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all text-center"
-              >
-                GitHub
-              </a>
-            </div>
           </div>
         </div>
-
-          {/* Code Preview */}
-          <div className="animate-fade-in-up animate-delay-400 max-w-3xl mx-auto">
-            <div className="rounded-xl bg-[#0d1117] border border-white/10 overflow-hidden shadow-2xl">
-              {/* Terminal Header */}
-              <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-[#161b22]">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-[#ff5f56]"></div>
-                  <div className="w-3 h-3 rounded-full bg-[#ffbd2e]"></div>
-                  <div className="w-3 h-3 rounded-full bg-[#27c93f]"></div>
-                </div>
-              </div>
-              {/* Code Content */}
-              <div className="p-6 font-mono text-sm text-left">
-                <div className="flex items-center gap-2 text-slate-400 mb-2">
-                  <span className="text-green-400">$</span>
-                  <span className="text-slate-300">npx create-velix-app my-app</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-400 mb-2">
-                  <span className="text-green-400">$</span>
-                  <span className="text-slate-300">cd my-app</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-400">
-                  <span className="text-green-400">$</span>
-                  <span className="text-slate-300">npm run dev</span>
-                </div>
-              </div>
-            </div>
-          </div>
       </section>
 
       {/* ─── Features ─── */}
