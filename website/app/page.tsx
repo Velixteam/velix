@@ -29,20 +29,20 @@ export default function HomePage() {
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-velix-cyan/8 rounded-full blur-[160px]"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16">
+        <div className="relative z-10 w-full max-w-7xl mx-auto py-16">
+          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-12">
 
-            {/* Left: Image */}
-            <div className="w-full md:w-1/2 flex justify-center animate-fade-in-up order-1">
+            {/* LEFT: Image — fixed width so it doesn't push text off */}
+            <div className="shrink-0 w-[280px] md:w-[380px] lg:w-[480px] animate-fade-in-up">
               <img
                 src="/velix-removebg-preview.png"
                 alt="Velix Hero"
-                className="w-[320px] md:w-full md:max-w-xl object-contain drop-shadow-2xl"
+                className="w-full h-full object-contain drop-shadow-2xl"
               />
             </div>
 
-            {/* Right: Text Content */}
-            <div className="w-full md:w-1/2 flex flex-col items-start text-left order-2">
+            {/* RIGHT: Text Content */}
+            <div className="flex-1 flex flex-col items-start text-left min-w-0">
               {/* Beta Badge */}
               <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
@@ -63,7 +63,7 @@ export default function HomePage() {
               </p>
 
               {/* Npm Counter */}
-              <div className="animate-fade-in-up animate-delay-[250ms] mb-8 w-full">
+              <div className="animate-fade-in-up animate-delay-[250ms] mb-8">
                 <NpmCounter />
               </div>
 
