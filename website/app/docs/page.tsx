@@ -13,8 +13,8 @@ function SidebarLink({ href, children, active }: { href: string; children: React
 
 function Sidebar() {
   return (
-    <aside className="hidden lg:block w-64 shrink-0">
-      <nav className="sticky top-24 space-y-6">
+    <aside className="w-full lg:w-64 shrink-0 mb-8 lg:mb-0">
+      <nav className="lg:sticky top-24 grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-col gap-6 lg:gap-6">
         <div>
           <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-widest mb-2 px-3">Getting Started</h4>
           <div className="space-y-0.5">
@@ -56,9 +56,9 @@ function Sidebar() {
 
 function CodeBlock({ filename, children }: { filename?: string; children: string }) {
   return (
-    <div className="code-block my-6">
+    <div className="code-block my-6 overflow-x-auto">
       {filename && <div className="px-4 py-2 border-b border-white/5 text-xs text-slate-500 font-mono">{filename}</div>}
-      <pre className="font-mono text-sm leading-relaxed"><code>{children}</code></pre>
+      <pre className="font-mono text-sm leading-relaxed min-w-max p-4"><code>{children}</code></pre>
     </div>
   );
 }
@@ -77,7 +77,7 @@ function P({ children }: { children: React.ReactNode }) {
 }
 
 function IC({ children }: { children: React.ReactNode }) {
-  return <code className="text-sm px-1.5 py-0.5 rounded bg-velix-dark text-velix-cyan font-mono border border-white/5">{children}</code>;
+  return <code className="text-sm px-1.5 py-0.5 rounded bg-velix-dark text-velix-cyan font-mono border border-white/5 break-words">{children}</code>;
 }
 
 function Callout({ type, children }: { type: "info" | "warning" | "tip"; children: React.ReactNode }) {
@@ -86,7 +86,7 @@ function Callout({ type, children }: { type: "info" | "warning" | "tip"; childre
   return (
     <div className={`border-l-4 ${styles[type]} rounded-r-xl p-4 my-6`}>
       <div className="flex items-start gap-3">
-        <span>{icons[type]}</span>
+        <span className="shrink-0">{icons[type]}</span>
         <div className="text-sm text-slate-300 leading-relaxed">{children}</div>
       </div>
     </div>
@@ -95,18 +95,18 @@ function Callout({ type, children }: { type: "info" | "warning" | "tip"; childre
 
 export default function DocsPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full overflow-x-hidden">
       <div className="border-b border-white/5 bg-velix-deep">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <span className="text-xs font-semibold tracking-widest uppercase text-velix-cyan mb-3 block">Documentation</span>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">Velix Framework Docs</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3 break-words">Velix Framework Docs</h1>
           <p className="text-lg text-slate-400 max-w-2xl">Everything you need to build modern full-stack React applications with Velix v5.</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12 flex gap-12">
+      <div className="max-w-7xl mx-auto px-6 py-12 flex flex-col lg:flex-row gap-8 lg:gap-12">
         <Sidebar />
-        <div className="flex-1 min-w-0 max-w-3xl">
+        <div className="flex-1 min-w-0 max-w-full lg:max-w-3xl">
 
           <Section id="getting-started" title="Getting Started">
             <P>Velix is a modern full-stack React framework designed for speed and developer experience. It combines the best ideas from Next.js, Remix, and Astro into a cohesive package: file-based routing, server actions, API routes, Islands architecture, and zero configuration.</P>
