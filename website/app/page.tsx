@@ -29,14 +29,14 @@ export default function HomePage() {
           <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-velix-cyan/8 rounded-full blur-[160px]"></div>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-16">
           {/* Left: Image */}
-          <div className="w-full lg:w-1/2 flex justify-center lg:justify-end animate-fade-in-up">
-            <img src="/velix-removebg-preview.png" alt="Velix Hero" className="w-full max-w-lg object-contain drop-shadow-2xl" />
+          <div className="w-full md:w-1/2 flex justify-center md:justify-end animate-fade-in-up">
+            <img src="/velix-removebg-preview.png" alt="Velix Hero" className="w-full max-w-sm md:max-w-lg object-contain drop-shadow-2xl" />
           </div>
 
           {/* Right: Text Content */}
-          <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left">
+          <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left">
             {/* Beta Badge */}
             <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-8">
               <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
@@ -44,7 +44,7 @@ export default function HomePage() {
             </div>
 
             {/* Main Heading */}
-            <h1 className="animate-fade-in-up animate-delay-100 text-5xl sm:text-6xl md:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-8">
+            <h1 className="animate-fade-in-up animate-delay-100 text-5xl sm:text-6xl md:text-6xl lg:text-7xl xl:text-8xl font-bold tracking-tight leading-[1.1] mb-8">
               <span className="text-white">Build fullstack apps</span>
               <br />
               <span className="text-velix-accent">faster</span>
@@ -57,12 +57,12 @@ export default function HomePage() {
             </p>
 
             {/* Npm Counter */}
-            <div className="animate-fade-in-up animate-delay-[250ms] flex justify-center lg:justify-start w-full mb-8">
+            <div className="animate-fade-in-up animate-delay-[250ms] flex justify-center md:justify-start w-full mb-8">
               <NpmCounter />
             </div>
 
             {/* CTA Buttons */}
-            <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start w-full mb-16 lg:mb-8">
+            <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 justify-center md:justify-start w-full mb-16 md:mb-8">
               <a
                 href="/docs#getting-started"
                 className="w-full sm:w-auto px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center"
