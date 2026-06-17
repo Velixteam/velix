@@ -30,14 +30,7 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto py-16">
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: "4rem",
-            }}
-          >
+          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "4rem" }}>
             {/* LEFT: Text */}
             <div style={{ flex: 1, minWidth: 0 }} className="flex flex-col items-start text-left">
               <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
