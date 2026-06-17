@@ -1,6 +1,7 @@
 import { NpmCounter } from "../components/NpmCounter";
 
 export const metadata = { title: "Velix - The Modern React Framework | Build Fast. Ship Faster." };
+<meta name="google-site-verification" content="mguAwrwKCuA9Ex9w0wPe13hKCGnFN-sTFi-4AKvl16g" />
 
 function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
   return (
@@ -12,7 +13,6 @@ function FeatureCard({ icon, title, description }: { icon: string; title: string
 
 
         <p className="text-sm text-slate-400 leading-relaxed">{description}</p>
-        <meta name="google-site-verification" content="mguAwrwKCuA9Ex9w0wPe13hKCGnFN-sTFi-4AKvl16g" />
 
       </div>
     </div>
