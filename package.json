@@ -1,6 +1,6 @@
 {
   "name": "velix",
-  "version": "5.0.0",
+  "version": "5.2.0",
   "private": true,
   "description": "Velix v5 — A modern full-stack React framework optimized for performance, SEO, and developer experience",
   "type": "module",

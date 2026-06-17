@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/velix-react",
-  "version": "5.1.7",
+  "version": "5.2.0",
   "description": "React bindings and SSR rendering for Velix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,5 +39,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.3.2",
+    "jsdom": "^29.1.1"
   }
 }

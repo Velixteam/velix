@@ -30,62 +30,55 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto py-16">
-          <div className="flex flex-col md:flex-row items-center gap-10 md:gap-12">
-
-            {/* LEFT: Image — fixed width so it doesn't push text off */}
-            <div className="shrink-0 w-[280px] md:w-[380px] lg:w-[480px] animate-fade-in-up">
-              <img
-                src="/velix-removebg-preview.png"
-                alt="Velix Hero"
-                className="w-full h-full object-contain drop-shadow-2xl"
-              />
-            </div>
-
-            {/* RIGHT: Text Content */}
-            <div className="flex-1 flex flex-col items-start text-left min-w-0">
-              {/* Beta Badge */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: "4rem",
+            }}
+          >
+            {/* LEFT: Text */}
+            <div style={{ flex: 1, minWidth: 0 }} className="flex flex-col items-start text-left">
               <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
                 <span className="text-xs font-medium text-slate-300">Now in public beta</span>
               </div>
 
-              {/* Main Heading */}
               <h1 className="animate-fade-in-up animate-delay-100 text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
                 <span className="text-white">Build fullstack apps</span>
                 <br />
                 <span className="text-velix-accent">faster</span>
               </h1>
 
-              {/* Description */}
               <p className="animate-fade-in-up animate-delay-200 text-base sm:text-lg text-slate-400 max-w-lg mb-8 leading-relaxed">
                 Velix is a modern fullstack framework with server-first architecture, file-based
                 routing, and end-to-end type safety. Ship production-ready apps in record time.
               </p>
 
-              {/* Npm Counter */}
               <div className="animate-fade-in-up animate-delay-[250ms] mb-8">
                 <NpmCounter />
               </div>
 
-              {/* CTA Buttons */}
               <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4">
-                <a
-                  href="/docs#getting-started"
-                  className="px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center"
-                >
+                <a href="/docs#getting-started" className="px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center">
                   Get Started
                 </a>
-                <a
-                  href="https://github.com/Velixteam/velix"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all text-center"
-                >
+                <a href="https://github.com/Velixteam/velix" target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all text-center">
                   GitHub
                 </a>
               </div>
             </div>
 
+            {/* RIGHT: Image */}
+            <div style={{ flexShrink: 0, width: "480px" }}>
+              <img
+                src="/velix-removebg-preview.png"
+                alt="Velix Hero"
+                style={{ width: "100%", height: "auto", objectFit: "contain" }}
+                className="drop-shadow-2xl animate-fade-in-up"
+              />
+            </div>
           </div>
         </div>
       </section>

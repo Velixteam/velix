@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/velix-core",
-  "version": "5.1.7",
+  "version": "5.2.0",
   "description": "Core routing, caching, and agnostic logic for Velix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,15 +27,20 @@
   "publisher": "velixteam",
   "license": "MIT",
   "dependencies": {
-    "picocolors": "^1.1.1",
-    "zod": "^3.24.1",
+    "chokidar": "^3.6.0",
+    "glob": "^13.0.6",
     "lru-cache": "^11.0.2",
-    "chokidar": "^3.6.0"
+    "picocolors": "^1.1.1",
+    "ws": "^8.21.0",
+    "zod": "^3.24.1"
   },
   "engines": {
     "node": ">=18.0.0"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
   }
 }

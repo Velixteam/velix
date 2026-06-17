@@ -27,6 +27,15 @@ import { generateDevToolsHtml } from './devtools.js';
 import { VERSION } from '../version.js';
 import { generate404Page, generate500Page } from './error-pages.js';
 
+export {
+  defineRoute,
+  VelixHttpError,
+  defineLoader,
+  serverAction,
+  buildApiManifest,
+  handleApiRequest
+} from '@teamvelix/velix-core';
+
 function getProjectVersion(dep: string, projectRoot: string): string {
   try {
     const projectRequire = createRequire(pathToFileURL(path.join(projectRoot, 'package.json')).href);
@@ -505,8 +514,8 @@ async function handlePageRoute(
     
     // Inject Head & Body (Surgical insertion)
     const headInjectionsHtml = `\n    ${headInjections}\n    `;
-    const bodyInjectionsHtml = `\n    <div id="__velix-islands"></div>\n    ${hydrationScript}${devToolsHtml}\n    `;
-
+    const hmrScript = isDev ? `\n    <script type="module">\n      import { initHMRClient, VelixDevOverlay } from '/__velix/hmr-client.js';\n      initHMRClient();\n    </script>` : '';
+    const bodyInjectionsHtml = `\n    <div id="__velix-islands"></div>\n    ${hydrationScript}${devToolsHtml}${hmrScript}\n    `;
     if (finalHtml.includes('<html')) {
       // 1. Inject Head
       const headEnd = finalHtml.lastIndexOf('</head>');
@@ -605,6 +614,40 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
       res.end();
     }
     return;
+  }
+
+  // HMR Client Serving
+  if (pathname === '/__velix/hmr-client.js') {
+    try {
+      const candidates = [
+        path.join(process.cwd(), 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+        path.join(process.cwd(), 'node_modules', '@teamvelix', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+        path.join(__dirname, '..', '..', 'velix-react', 'src', 'hmr', 'hmr-client.ts')
+      ];
+      const hmrClientSrc = candidates.find(p => fs.existsSync(p));
+      if (!hmrClientSrc) {
+        res.writeHead(404);
+        res.end();
+        return;
+      }
+      const result = await esbuild.build({
+        entryPoints: [hmrClientSrc],
+        bundle: true,
+        format: 'esm',
+        platform: 'browser',
+        target: ['es2022'],
+        minify: true,
+        write: false,
+      });
+      res.writeHead(200, { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache' });
+      res.end(result.outputFiles[0].text);
+      return;
+    } catch (err) {
+      console.error('HMR Client build failed', err);
+      res.writeHead(500);
+      res.end();
+      return;
+    }
   }
 
   // Dynamic Island Serving

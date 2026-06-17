@@ -4,8 +4,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
-    include: ['**/*.test.ts', '**/*.spec.ts'],
-    exclude: ['node_modules', 'dist', '.velix', 'templates'],
+    include: ['packages/*/src/**/*.test.ts', 'packages/*/src/**/*.spec.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/.velix/**', '**/templates/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],

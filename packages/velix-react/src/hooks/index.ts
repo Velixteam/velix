@@ -56,4 +56,6 @@ export function preloadResource<T>(fetcher: () => Promise<T>): Promise<T> {
   return fetcher();
 }
 
+export * from './use-action.js';
+
 export default { useAsyncData, useOptimisticMutation, preloadResource };

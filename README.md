@@ -1,4 +1,4 @@
-# Velix v5
+# Velix v5.2
 
 <p align="center">
   <img src="./assets/velix cover.webp" width="100%" alt="Velix Cover" />
@@ -22,6 +22,10 @@ Velix is a lightweight but powerful React 19 framework featuring file-based rout
 - 🔧 **DevTools** — Route explorer, hydration inspector, performance metrics
 - 📦 **Edge Ready** — Deploy to any edge platform
 - 🤖 **AI Assistant** — Built-in CLI AI for code generation
+- 🔥 **HMR** — WebSocket-based Hot Module Replacement with Dev Overlay *(v5.2)*
+- 🛤️ **Type-safe API Routes** — `defineRoute` + Zod-powered Server Actions v2 *(v5.2)*
+- 🔄 **Loaders** — Fully-typed server loaders via `defineLoader` *(v5.2)*
+- 🪝 **`useAction` Hook** — Client-side ergonomic hook for server actions *(v5.2)*
 
 ## 📦 Architecture
 
@@ -109,8 +113,15 @@ my-velix-app/
 │       └── [slug].tsx      → /blog/:slug
 ├── components/
 ├── server/
-│   ├── loaders/
-│   └── actions/
+│   ├── api/                → HTTP API routes (v5.2)
+│   │   ├── users.ts        → GET/POST  /api/users
+│   │   ├── users.[id].ts   → GET/PUT/DELETE /api/users/:id
+│   │   └── auth/
+│   │       └── [...slug].ts → catch-all /api/auth/*
+│   ├── loaders/            → Server loaders (v5.2)
+│   │   └── dashboard.loader.ts
+│   └── actions/            → Server Actions v2 (v5.2)
+│       └── post.actions.ts
 ├── styles/
 ├── velix.config.ts
 └── package.json
@@ -188,8 +199,10 @@ velix analyze      # Bundle analysis (coming soon)
 Comprehensive guides and API references:
 
 - **[Getting Started](./docs/README.md)** - Quick start guide and overview
+- **[HMR & Dev Overlay](./docs/hmr.md)** - Hot Module Replacement and error overlay *(v5.2)*
 - **[Server Actions](./docs/server-actions.md)** - Execute server code from components
 - **[API Routes](./docs/api-routes.md)** - Create custom HTTP endpoints
+- **[Loaders](./docs/loaders.md)** - Type-safe server data loading *(v5.2)*
 - **[Best Practices](./docs/best-practices.md)** - Development guidelines
 - **[Roadmap](./docs/roadmap.md)** - Upcoming features and plugins
 

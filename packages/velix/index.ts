@@ -24,6 +24,10 @@ export type {
   BuildOptions, BuildResult, StaticPath, StaticProps,
 } from './types.js';
 
+export type {
+  InferLoaderData, InferActionInput, InferActionOutput
+} from '@teamvelix/velix-core';
+
 // ── Helpers ──
 export {
   redirect, notFound, json, html, text,

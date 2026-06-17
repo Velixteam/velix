@@ -4,6 +4,7 @@
  */
 
 export { useParams, useQuery, usePathname } from '../context.js';
+export { useAction } from '@teamvelix/velix-react';
 
 // ============================================================================
 // Client-side Router
