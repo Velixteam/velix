@@ -4,6 +4,8 @@
  * Inspired by Next.js DevTools design
  */
 
+import { VERSION as VELIX_VERSION } from '../version.js';
+
 export interface DevToolsContext {
   version?: string;
   port?: number;
@@ -41,7 +43,7 @@ const ICON_LOGO  = `<img src="/__velix/logo.webp" alt="Velix Logo" width="14" he
 export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}): string {
   if (!isDev) return '';
 
-  const version     = ctx.version    ?? '5.1.0';
+  const version     = ctx.version    ?? VELIX_VERSION;
   const port        = ctx.port       ?? 3000;
   const host        = ctx.host       ?? 'localhost';
   const nodeVersion = ctx.nodeVersion ?? process.version.replace('v', '');
@@ -327,32 +329,40 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
     if(connText) connText.style.color = ok ? '#10b981' : '#ef4444';
   }
 
-  var es = new EventSource('/__velix/hmr');
+  var ws = new WebSocket('ws://' + window.location.host + '/__velix_hmr');
 
-  es.onopen = function(){ setConn(true); };
+  ws.onopen = function(){ setConn(true); };
 
-  es.onmessage = function(e){
-    var data = e.data;
-    if(data === 'reload'){
+  ws.onmessage = function(e){
+    var data;
+    try {
+      data = JSON.parse(e.data);
+    } catch(err) { return; }
+
+    if(data.type === 'full-reload'){
       setStatus('navigating');
       setTimeout(function(){ location.reload(); }, 120);
-    } else if(data === 'building'){
+    } else if(data.type === 'compile-start'){
       setStatus('compiling');
-    } else if(data === 'built'){
+    } else if(data.type === 'compile-done'){
       setStatus('idle');
-    } else if(data.startsWith('rendering:')){
-      setStatus('rendering');
-      setTimeout(function(){ setStatus('idle'); }, 900);
-    } else if(data.startsWith('error:')){
+      var btel = document.getElementById('__vdt-build-time');
+      if(btel) btel.textContent = data.duration + 'ms';
+    } else if(data.type === 'compile-error'){
       setStatus('error');
     }
   };
 
-  es.onerror = function(){
-    if(es.readyState === 2){
+  ws.onerror = function(){
+    if(ws.readyState === 2 || ws.readyState === 3){
       setStatus('error');
       setConn(false);
     }
+  };
+  
+  ws.onclose = function(){
+    setStatus('error');
+    setConn(false);
   };
 
   setStatus('idle');
