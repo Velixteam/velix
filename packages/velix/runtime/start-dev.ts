@@ -29,8 +29,8 @@ async function startDev() {
   watcher.on('change', (filePath) => {
     const relative = path.relative(projectRoot, filePath);
     logger.hmr(relative);
-    if ((server as unknown as { broadcastHMR?: (msg: string) => void }).broadcastHMR) {
-      (server as unknown as { broadcastHMR: (msg: string) => void }).broadcastHMR('reload');
+    if ((server as unknown as { broadcastHMR?: (msg: any) => void }).broadcastHMR) {
+      (server as unknown as { broadcastHMR: (msg: any) => void }).broadcastHMR({ type: 'full-reload' });
     }
   });
 

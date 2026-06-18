@@ -1175,6 +1175,9 @@
     --tw-duration: 500ms;
     transition-duration: 500ms;
   }
+  .\[velix\:ssr\] {
+    velix: ssr;
+  }
   .group-hover\:from-velix-accent\/5 {
     &:is(:where(.group):hover *) {
       @media (hover: hover) {

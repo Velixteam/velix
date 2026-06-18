@@ -218,11 +218,13 @@ export async function createServer(options: {
     }
   });
 
-  const __hmrClients = new Set<http.ServerResponse>();
-  (server as unknown as { __hmrClients: Set<http.ServerResponse> }).__hmrClients = __hmrClients;
-  (server as unknown as { broadcastHMR: (msg: string) => void }).broadcastHMR = (msg: string) => {
-    __hmrClients.forEach(c => c.write(`data: ${msg}\n\n`));
-  };
+  if (isDev) {
+    const { createHMRServer } = await import('@teamvelix/velix-core');
+    const hmr = createHMRServer(server as any, projectRoot);
+    (server as unknown as { broadcastHMR: (msg: any) => void }).broadcastHMR = (msg) => {
+      hmr.broadcast(msg);
+    };
+  }
 
   // Start listening
   const port = config.server.port;

@@ -1,8 +1,7 @@
 packages:
   - "packages/*"
   - "plugins/*"
-  - "demo-app-fresh"
-  - "demo-app-blog"
+  - "website"
 
 ignoredBuiltDependencies:
   - esbuild
