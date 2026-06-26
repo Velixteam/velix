@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "5.2.3",
+  "version": "5.2.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,7 +14,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@teamvelix/cli": "workspace:*",
+    "@teamvelix/cli": "^5.2.3",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0",
     "@types/react": "^19.0.0",

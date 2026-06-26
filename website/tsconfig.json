@@ -11,6 +11,8 @@
   "include": [
     "app/**/*.ts",
     "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
     "server/**/*.ts"
   ],
   "exclude": [

@@ -1,6 +1,6 @@
 /**
  * Velix v5 Error Pages
- * Beautiful error pages inspired by Next.js latest design
+ * Beautiful error pages inspired by Next.js 15.2 design
  */
 
 import { VERSION } from '../version.js';
@@ -14,6 +14,14 @@ export interface ErrorPageOptions {
   pathname?: string;
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 /**
  * Generate a styled 404 error page
  */
@@ -23,21 +31,21 @@ export function generate404Page(pathname: string = '/'): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found | Velix v5</title>
+    <title>404 - Page Not Found | Velix v${VERSION}</title>
     <link rel="icon" href="/favicon.webp">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
           margin: 0; 
-          background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); 
+          background: #161616;
           color: white; 
-          font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
           display: flex; 
           align-items: center; 
           justify-content: center; 
           min-height: 100vh; 
           text-align: center;
-          overflow: hidden;
+          -webkit-font-smoothing: antialiased;
         }
         .container { 
           max-width: 700px; 
@@ -45,103 +53,80 @@ export function generate404Page(pathname: string = '/'): string {
           position: relative;
           z-index: 10;
         }
-        .bg-pattern {
-          position: absolute;
-          inset: 0;
-          background-image: radial-gradient(circle at 20% 50%, rgba(34, 211, 238, 0.1) 0%, transparent 50%),
-                            radial-gradient(circle at 80% 80%, rgba(37, 99, 235, 0.1) 0%, transparent 50%);
-          z-index: 1;
-        }
         h1 { 
-          font-size: 180px; 
+          font-size: 160px; 
           font-weight: 900; 
           margin: 0; 
-          background: linear-gradient(135deg, #22D3EE 0%, #2563EB 100%); 
+          background: linear-gradient(135deg, #00e87a 0%, #22d3ee 100%); 
           -webkit-background-clip: text; 
           -webkit-text-fill-color: transparent; 
           line-height: 1; 
           letter-spacing: -0.05em;
-          animation: fadeInUp 0.6s ease-out;
+          animation: fadeIn 0.5s ease-out;
         }
         h2 { 
-          font-size: 36px; 
-          font-weight: 800; 
-          margin: 30px 0 15px; 
-          color: #F8FAFC;
-          animation: fadeInUp 0.6s ease-out 0.1s backwards;
+          font-size: 32px; 
+          font-weight: 700; 
+          margin: 24px 0 12px; 
+          color: #ededed;
+          animation: fadeIn 0.5s ease-out 0.1s backwards;
         }
         p { 
-          color: #94A3B8; 
-          font-size: 18px; 
+          color: #888; 
+          font-size: 16px; 
           line-height: 1.7; 
-          margin-bottom: 40px;
-          animation: fadeInUp 0.6s ease-out 0.2s backwards;
+          margin-bottom: 36px;
+          animation: fadeIn 0.5s ease-out 0.2s backwards;
         }
         code { 
-          background: rgba(255,255,255,0.1); 
-          padding: 4px 10px; 
+          background: #222; 
+          padding: 3px 8px; 
           border-radius: 6px; 
-          font-family: 'Fira Code', 'Courier New', monospace; 
-          color: #22D3EE; 
-          font-size: 16px;
-          border: 1px solid rgba(34, 211, 238, 0.2);
+          font-family: 'JetBrains Mono', monospace; 
+          color: #00e87a; 
+          font-size: 14px;
+          border: 1px solid #333;
         }
         .btn-group {
           display: flex;
-          gap: 16px;
+          gap: 12px;
           justify-content: center;
-          flex-wrap: wrap;
-          animation: fadeInUp 0.6s ease-out 0.3s backwards;
+          animation: fadeIn 0.5s ease-out 0.3s backwards;
         }
         .btn { 
           display: inline-block; 
-          background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); 
+          background: #222; 
           color: white; 
           text-decoration: none; 
-          padding: 14px 36px; 
-          border-radius: 12px; 
+          padding: 12px 28px; 
+          border-radius: 10px; 
           font-weight: 600; 
-          font-size: 16px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-          box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
-          border: none;
+          font-size: 14px;
+          transition: all 0.2s; 
+          border: 1px solid #333;
           cursor: pointer;
         }
-        .btn:hover { 
-          transform: translateY(-2px); 
-          box-shadow: 0 15px 40px rgba(37, 99, 235, 0.4);
+        .btn:hover { background: #333; }
+        .btn-accent { 
+          background: #00e87a; 
+          color: #000; 
+          border-color: #00e87a;
         }
-        .btn-outline { 
-          background: transparent; 
-          color: #22D3EE; 
-          border: 2px solid #22D3EE; 
-          box-shadow: none;
-        }
-        .btn-outline:hover { 
-          background: rgba(34, 211, 238, 0.1); 
-          box-shadow: 0 10px 30px rgba(34, 211, 238, 0.2);
-        }
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .btn-accent:hover { background: #00d46e; }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <div class="bg-pattern"></div>
     <div class="container">
         <h1>404</h1>
         <h2>Page Not Found</h2>
         <p>The page <code>${pathname}</code> could not be found.<br>It may have been moved or deleted.</p>
         <div class="btn-group">
-          <a href="/" class="btn">Return Home</a>
-          <a href="javascript:history.back()" class="btn btn-outline">Go Back</a>
+          <a href="/" class="btn btn-accent">Return Home</a>
+          <a href="javascript:history.back()" class="btn">Go Back</a>
         </div>
     </div>
 </body>
@@ -149,388 +134,418 @@ export function generate404Page(pathname: string = '/'): string {
 }
 
 /**
- * Generate a styled 500 error page
+ * Generate a styled 500 error page — inspired by Next.js 15.2.0 error overlay
  */
 export function generate500Page(options: ErrorPageOptions): string {
-  const { title, message, stack, isDev, pathname } = options;
+  const { message, stack, isDev, pathname } = options;
 
-  // Parse stack trace to display as cards like Next.js
-  let callStackCards = '';
-  let frameCount = 0;
+  // Parse stack frames
+  let frames: { funcName: string; file: string; line: string; col: string }[] = [];
+  let sourceSnippet = '';
+  let errorLine = 0;
+  let errorFile = '';
 
   if (isDev && stack) {
-    const stackLines = stack.split('\n').filter(line => line.trim());
-    const frames = stackLines.slice(1).filter(line => line.includes('at '));
-    frameCount = frames.length;
+    const stackLines = stack.split('\\n').filter(line => line.trim());
+    frames = stackLines.slice(1)
+      .filter(line => line.includes('at '))
+      .map(frame => {
+        const match = frame.match(/at\s+(.+?)\s+\((.+?):(\d+):(\d+)\)/) ||
+                      frame.match(/at\s+(.+?):(\d+):(\d+)/);
+        if (match && match.length === 5) {
+          return { funcName: match[1].trim(), file: match[2], line: match[3], col: match[4] };
+        }
+        if (match && match.length === 4) {
+          return { funcName: '(anonymous)', file: match[1].trim(), line: match[2], col: match[3] };
+        }
+        const simpleMatch = frame.match(/at\s+(.+)/);
+        return { funcName: simpleMatch?.[1]?.trim() || 'unknown', file: '', line: '', col: '' };
+      });
 
-    callStackCards = frames.map((frame, index) => {
-      const match = frame.match(/at\s+(.+?)\s+\((.+?)\)/) || frame.match(/at\s+(.+)/);
-      if (match) {
-        const funcName = match[1] || 'anonymous';
-        const location = match[2] || match[1];
-        return `
-          <div class="error-card" data-frame="${index}">
-            <div class="card-header">
-              <div class="card-title">${funcName.trim()}</div>
-              <div class="card-number">${index + 1}</div>
-            </div>
-            <div class="card-location">${location.trim()}</div>
-          </div>
-        `;
+    // Read source file for the first user-land frame
+    if (frames.length > 0) {
+      const firstFrame = frames.find(f => f.file && !f.file.includes('node_modules')) || frames[0];
+      errorFile = firstFrame.file;
+      errorLine = parseInt(firstFrame.line, 10) || 0;
+      if (errorFile && errorLine > 0) {
+        try {
+          const fs = require('fs');
+          if (fs.existsSync(errorFile)) {
+            const src: string[] = fs.readFileSync(errorFile, 'utf-8').split('\\n');
+            const start = Math.max(0, errorLine - 3);
+            const end = Math.min(src.length, errorLine + 3);
+            sourceSnippet = src.slice(start, end).map((l: string, i: number) => {
+              const num = start + i + 1;
+              const isErr = num === errorLine;
+              const prefix = isErr ? '> ' : '  ';
+              const numStr = String(num).padStart(4, ' ');
+              return `<div class="src-line${isErr ? ' src-err' : ''}">${prefix}${numStr} | ${escapeHtml(l)}</div>`;
+            }).join('');
+          }
+        } catch (_) {
+          // fs not available in edge runtime — skip source display
+        }
       }
-      return '';
-    }).join('');
+    }
   }
+
+  const userFrames = frames.filter(f => f.file && !f.file.includes('node_modules'));
+  const ignoredCount = frames.length - userFrames.length;
+
+  // Shorten file path for display
+  const shortFile = errorFile
+    .replace(/\\/g, '/')
+    .replace(/.*\/(?=app\/|server\/|src\/|pages\/)/, '');
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error | Velix v5</title>
+    <title>Error | Velix v${VERSION}</title>
     <link rel="icon" href="/favicon.webp">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-          margin: 0; 
-          background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-          color: #F8FAFC; 
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        body {
+          background: #161616;
+          color: #ededed;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
           min-height: 100vh;
-          overflow-x: hidden;
+          padding: 0;
+          -webkit-font-smoothing: antialiased;
         }
-        .container {
-          max-width: 900px;
+        .overlay {
+          max-width: 960px;
           margin: 0 auto;
-          padding: 40px 20px;
+          padding: 24px 20px;
         }
-        .error-header {
-          background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-          color: white;
-          padding: 20px 28px;
-          border-radius: 16px;
+
+        /* Top bar */
+        .top-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        .page-nav {
           display: flex;
           align-items: center;
-          gap: 14px;
-          margin-bottom: 28px;
-          font-size: 18px;
-          font-weight: 700;
-          box-shadow: 0 10px 40px rgba(239, 68, 68, 0.3);
+          gap: 6px;
         }
-        .error-header svg {
-          width: 24px;
-          height: 24px;
-          flex-shrink: 0;
-        }
-        .error-badge {
-          display: inline-block;
-          background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%);
-          color: #60A5FA;
-          padding: 6px 16px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 700;
-          margin-bottom: 18px;
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-          box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
-        }
-        .route-badge {
-          background: linear-gradient(135deg, #0C4A6E 0%, #075985 100%);
-          color: #22D3EE;
-          padding: 10px 18px;
-          border-radius: 10px;
+        .page-nav button {
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          border: 1px solid #333;
+          background: #222;
+          color: #999;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           font-size: 14px;
-          margin-bottom: 24px;
-          font-family: 'Courier New', monospace;
-          box-shadow: 0 4px 12px rgba(12, 74, 110, 0.3);
-          border: 1px solid rgba(34, 211, 238, 0.2);
+          transition: all .15s;
         }
-        .error-message {
-          background: rgba(239, 68, 68, 0.1);
-          border-left: 4px solid #EF4444;
-          padding: 18px 20px;
-          border-radius: 10px;
-          margin-bottom: 32px;
+        .page-nav button:hover:not(:disabled) { background: #333; color: #fff; }
+        .page-nav button:disabled { opacity: 0.3; cursor: default; }
+        .page-nav span { font-size: 13px; color: #888; font-weight: 500; padding: 0 4px; }
+        .version-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 12px;
+          border-radius: 999px;
+          background: #1a1a1a;
+          border: 1px solid #333;
+          font-size: 13px;
+          color: #aaa;
+          font-weight: 500;
         }
-        .error-message-text {
-          color: #FCA5A5;
-          font-size: 16px;
+        .version-dot { width: 8px; height: 8px; border-radius: 50%; background: #00e87a; }
+
+        /* Error tag */
+        .error-tag {
+          display: inline-block;
+          background: rgba(255,50,50,0.15);
+          color: #ff6b6b;
+          border: 1px solid rgba(255,50,50,0.3);
+          padding: 3px 10px;
+          border-radius: 6px;
+          font-size: 13px;
           font-weight: 600;
-          line-height: 1.6;
-          font-family: 'Courier New', monospace;
+          margin-bottom: 16px;
         }
-        .stack-section {
-          margin-top: 32px;
+
+        /* Error message */
+        .error-msg {
+          color: #ff8a8a;
+          font-size: 15px;
+          line-height: 1.7;
+          margin-bottom: 12px;
+          word-break: break-word;
         }
+        .error-hint {
+          color: #22c55e;
+          font-size: 14px;
+          margin-bottom: 20px;
+        }
+
+        /* Source block */
+        .source-block {
+          background: #1a1a1a;
+          border: 1px solid #2a2a2a;
+          border-radius: 12px;
+          overflow: hidden;
+          margin-bottom: 24px;
+        }
+        .source-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 16px;
+          background: #1e1e1e;
+          border-bottom: 1px solid #2a2a2a;
+          font-size: 13px;
+          color: #aaa;
+        }
+        .source-header .file-icon { color: #666; margin-right: 8px; }
+        .source-header a {
+          color: #666;
+          text-decoration: none;
+          transition: color .15s;
+        }
+        .source-header a:hover { color: #fff; }
+        .source-code {
+          padding: 12px 0;
+          overflow-x: auto;
+          font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Menlo, monospace;
+          font-size: 13px;
+          line-height: 1.7;
+        }
+        .src-line {
+          padding: 0 16px;
+          white-space: pre;
+          color: #888;
+        }
+        .src-err {
+          background: rgba(255,50,50,0.1);
+          color: #ff8a8a;
+          font-weight: 500;
+        }
+
+        /* Call stack */
+        .stack-section { margin-bottom: 24px; }
         .stack-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 20px;
-        }
-        .stack-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #F1F5F9;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .frame-counter {
-          background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
-          color: #22D3EE;
-          padding: 6px 14px;
-          border-radius: 8px;
-          font-size: 13px;
-          font-weight: 700;
-          border: 1px solid rgba(34, 211, 238, 0.2);
-        }
-        .error-card {
-          background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-          border: 1px solid rgba(34, 211, 238, 0.2);
-          border-radius: 14px;
-          padding: 20px;
-          margin-bottom: 12px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-          display: none;
-        }
-        .error-card.active {
-          display: block;
-          animation: slideIn 0.3s ease-out;
-        }
-        .error-card:hover {
-          border-color: rgba(34, 211, 238, 0.5);
-          box-shadow: 0 8px 24px rgba(34, 211, 238, 0.2);
-          transform: translateY(-2px);
-        }
-        .card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
           margin-bottom: 12px;
         }
-        .card-title {
-          color: #22D3EE;
+        .stack-label {
           font-size: 15px;
           font-weight: 700;
-          font-family: 'Courier New', monospace;
+          color: #ededed;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
-        .card-number {
-          background: rgba(34, 211, 238, 0.2);
-          color: #22D3EE;
-          padding: 4px 10px;
+        .stack-count {
+          background: #2a2a2a;
+          color: #aaa;
+          padding: 2px 8px;
           border-radius: 6px;
           font-size: 12px;
-          font-weight: 700;
+          font-weight: 600;
         }
-        .card-location {
-          color: #94A3B8;
+        .stack-toggle {
           font-size: 13px;
-          font-family: 'Courier New', monospace;
-          word-break: break-all;
-          line-height: 1.6;
-        }
-        .pagination {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 12px;
-          margin-top: 24px;
-        }
-        .pagination-btn {
-          background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-          border: 1px solid rgba(34, 211, 238, 0.3);
-          color: #22D3EE;
-          padding: 10px 20px;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 600;
+          color: #888;
           cursor: pointer;
-          transition: all 0.2s;
+          background: none;
+          border: none;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: color .15s;
         }
-        .pagination-btn:hover:not(:disabled) {
-          background: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%);
-          color: #0F172A;
-          transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(34, 211, 238, 0.4);
+        .stack-toggle:hover { color: #fff; }
+
+        .frame {
+          padding: 12px 0;
+          border-bottom: 1px solid #1e1e1e;
         }
-        .pagination-btn:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
-        .pagination-info {
-          color: #94A3B8;
+        .frame:last-child { border-bottom: none; }
+        .frame-name {
           font-size: 14px;
           font-weight: 600;
-        }
-        .footer {
-          margin-top: 48px;
-          padding-top: 28px;
-          border-top: 1px solid rgba(34, 211, 238, 0.2);
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          flex-wrap: wrap;
-          gap: 20px;
-        }
-        .brand {
+          color: #ededed;
           display: flex;
           align-items: center;
-          gap: 10px;
-          font-weight: 700;
-          color: #22D3EE;
-          font-size: 15px;
+          gap: 6px;
+          margin-bottom: 4px;
         }
-        .brand img {
-          width: 20px;
-          height: 20px;
-        }
-        .footer-links {
-          display: flex;
-          gap: 24px;
-          flex-wrap: wrap;
-        }
-        .footer-links a {
-          color: #60A5FA;
+        .frame-name a {
+          color: #666;
           text-decoration: none;
-          font-weight: 600;
-          transition: all 0.2s;
-          font-size: 14px;
+          transition: color .15s;
         }
-        .footer-links a:hover {
-          color: #22D3EE;
-          transform: translateY(-1px);
+        .frame-name a:hover { color: #fff; }
+        .frame-loc {
+          font-size: 13px;
+          color: #666;
+          font-family: 'JetBrains Mono', 'Fira Code', monospace;
         }
-        .no-stack {
-          background: rgba(239, 68, 68, 0.1);
-          border: 1px solid rgba(239, 68, 68, 0.3);
-          border-radius: 12px;
-          padding: 32px;
-          color: #FCA5A5;
+
+        /* Footer */
+        .footer-row {
+          display: flex;
+          justify-content: flex-end;
+          padding: 16px 0;
+          border-top: 1px solid #1e1e1e;
+          margin-top: 8px;
+        }
+        .footer-row a {
+          color: #ff6b6b;
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: opacity .15s;
+        }
+        .footer-row a:hover { opacity: 0.8; }
+
+        /* Prod mode */
+        .prod-card {
+          background: #1a1a1a;
+          border: 1px solid #2a2a2a;
+          border-radius: 16px;
+          padding: 48px 32px;
           text-align: center;
-          font-size: 15px;
+          margin-top: 32px;
         }
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .prod-card h2 { font-size: 20px; margin-bottom: 8px; color: #fff; }
+        .prod-card p { font-size: 15px; color: #888; margin-bottom: 24px; }
+        .prod-card a {
+          display: inline-block;
+          padding: 10px 24px;
+          border-radius: 10px;
+          background: #222;
+          border: 1px solid #333;
+          color: #fff;
+          text-decoration: none;
+          font-weight: 500;
+          font-size: 14px;
+          transition: all .15s;
         }
+        .prod-card a:hover { background: #333; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="error-header">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-            <span>Unhandled Runtime Error</span>
+    <div class="overlay">
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="page-nav">
+                <button id="prev-btn" onclick="changePage(-1)" disabled>‹</button>
+                <span><span id="current-page">1</span>/<span id="total-pages">1</span></span>
+                <button id="next-btn" onclick="changePage(1)" disabled>›</button>
+            </div>
+            <div class="version-badge">
+                <span class="version-dot"></span>
+                Velix v${VERSION} esbuild
+            </div>
         </div>
-        
-        <div class="error-badge">SERVER ERROR 500</div>
-        ${pathname ? `<div class="route-badge">Route: ${pathname}</div>` : ''}
-        
-        <div class="error-message">
-            <div class="error-message-text">${message}</div>
+
+        <!-- Error Tag -->
+        <div class="error-tag">Unhandled Runtime Error</div>
+
+        <!-- Error Message -->
+        <div class="error-msg">${escapeHtml(message)}</div>
+        ${pathname ? `<div class="error-hint">Check the render method of '<strong>${escapeHtml(pathname)}</strong>'.</div>` : ''}
+
+        ${isDev && sourceSnippet ? `
+        <!-- Source Code Block -->
+        <div class="source-block">
+            <div class="source-header">
+                <span><span class="file-icon">⚙</span> ${escapeHtml(shortFile)}${errorLine ? ` (${errorLine})` : ''}${userFrames[0]?.funcName ? ` @ ${escapeHtml(userFrames[0].funcName)}` : ''}</span>
+                <a href="#" title="Open in editor">↗</a>
+            </div>
+            <div class="source-code">${sourceSnippet}</div>
         </div>
-        
-        ${isDev && callStackCards ? `
+        ` : ''}
+
+        ${isDev && frames.length > 0 ? `
+        <!-- Call Stack -->
         <div class="stack-section">
             <div class="stack-header">
-                <div class="stack-title">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
+                <div class="stack-label">
                     Call Stack
+                    <span class="stack-count">${frames.length}</span>
                 </div>
-                <div class="frame-counter">${frameCount}</div>
+                ${ignoredCount > 0 ? `<button class="stack-toggle" onclick="toggleIgnored()">Show ${ignoredCount} ignore-listed frames ⇕</button>` : ''}
             </div>
-            <div id="error-cards">
-                ${callStackCards}
-            </div>
-            ${frameCount > 1 ? `
-            <div class="pagination">
-                <button class="pagination-btn" id="prev-btn" onclick="changePage(-1)">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:4px;">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                    Previous
-                </button>
-                <div class="pagination-info">
-                    <span id="current-page">1</span> / <span id="total-pages">${frameCount}</span>
+            <div id="frames-list">
+                ${userFrames.map((f, i) => `
+                <div class="frame" data-frame="${i}">
+                    <div class="frame-name">
+                        <strong>${escapeHtml(f.funcName)}</strong>
+                        <a href="#" title="Open in editor">↗</a>
+                    </div>
+                    <div class="frame-loc">${escapeHtml(f.file.replace(/.*[\\\/](?=app[\\\/]|server[\\\/]|src[\\\/]|pages[\\\/])/, ''))}${f.line ? ` (${f.line}:${f.col})` : ''}</div>
                 </div>
-                <button class="pagination-btn" id="next-btn" onclick="changePage(1)">
-                    Next
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-left:4px;">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
+                `).join('')}
             </div>
-            ` : ''}
+            <div id="ignored-frames" style="display:none;">
+                ${frames.filter(f => !f.file || f.file.includes('node_modules')).map((f, i) => `
+                <div class="frame" data-frame="ignored-${i}">
+                    <div class="frame-name" style="color:#666;">
+                        <strong>${escapeHtml(f.funcName)}</strong>
+                    </div>
+                    <div class="frame-loc">${escapeHtml(f.file)}${f.line ? ` (${f.line}:${f.col})` : ''}</div>
+                </div>
+                `).join('')}
+            </div>
         </div>
-        ` : '<div class="no-stack">An error occurred while processing your request. Please check the server logs for more details.</div>'}
-        
-        <div class="footer">
-            <div class="brand">
-                <img src="/__velix/logo.webp" alt="Velix" onerror="this.style.display='none'"/>
-                <span>Velix v${VERSION}</span>
-            </div>
-            <div class="footer-links">
-                <a href="/">Home</a>
-                <a href="javascript:location.reload()">Reload</a>
-                <a href="https://github.com/velix/velix/tree/main/docs" target="_blank">Documentation</a>
-                ${isDev ? '<span style="color:#94A3B8;">Development Mode</span>' : ''}
-            </div>
+        ` : `
+        <div class="prod-card">
+            <h2>Application Error</h2>
+            <p>A server-side error occurred. Check your server logs for more details.</p>
+            <a href="/">Return Home</a>
+        </div>
+        `}
+
+        <!-- Footer -->
+        <div class="footer-row">
+            <a href="javascript:location.reload()">Was this helpful? ↻</a>
         </div>
     </div>
-    
-    ${isDev && frameCount > 0 ? `
+
     <script>
         let currentPage = 1;
-        const totalPages = ${frameCount};
-        const cards = document.querySelectorAll('.error-card');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
-        const currentPageSpan = document.getElementById('current-page');
-        
-        function showPage(page) {
-            cards.forEach((card, index) => {
-                card.classList.remove('active');
-                if (index === page - 1) {
-                    card.classList.add('active');
-                }
-            });
-            
-            currentPage = page;
-            currentPageSpan.textContent = page;
-            
-            if (prevBtn) prevBtn.disabled = page === 1;
-            if (nextBtn) nextBtn.disabled = page === totalPages;
-        }
-        
-        function changePage(direction) {
-            const newPage = currentPage + direction;
-            if (newPage >= 1 && newPage <= totalPages) {
-                showPage(newPage);
+        const totalPages = 1;
+        document.getElementById('total-pages').textContent = totalPages;
+
+        function changePage(d) {
+            const next = currentPage + d;
+            if (next >= 1 && next <= totalPages) {
+                currentPage = next;
+                document.getElementById('current-page').textContent = currentPage;
+                document.getElementById('prev-btn').disabled = currentPage === 1;
+                document.getElementById('next-btn').disabled = currentPage === totalPages;
             }
         }
-        
-        // Show first page on load
-        showPage(1);
-        
-        // Keyboard navigation
+
+        function toggleIgnored() {
+            const el = document.getElementById('ignored-frames');
+            if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') changePage(-1);
             if (e.key === 'ArrowRight') changePage(1);
         });
     </script>
-    ` : ''}
 </body>
 </html>`;
 }

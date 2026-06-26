@@ -166,6 +166,60 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── Powered By ─── */}
+      <section className="relative py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Built on a foundation of fast, production-grade tooling</h2>
+          </div>
+
+          {/* Connector visual */}
+          <div className="flex flex-col items-center mb-12">
+            <div className="flex items-center gap-1 mb-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full bg-white/20"></div>
+              ))}
+            </div>
+            <div className="px-4 py-2 rounded-lg bg-velix-dark/60 border border-white/10 text-sm text-slate-400 font-medium">
+              Powered By
+            </div>
+            <div className="flex items-center gap-1 mt-2">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="w-2 h-2 rounded-full bg-white/20"></div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* React */}
+            <div className="group p-8 rounded-2xl bg-velix-dark/40 border border-white/5 hover:border-velix-cyan/15 transition-all duration-500">
+              <div className="text-4xl mb-6">⚛️</div>
+              <h3 className="text-lg font-bold text-white mb-1">
+                React <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors text-sm">↗</a>
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">The library for web and native user interfaces. Velix is built on the latest React features, including Server Components and Actions.</p>
+            </div>
+
+            {/* esbuild */}
+            <div className="group p-8 rounded-2xl bg-velix-dark/40 border border-white/5 hover:border-velix-cyan/15 transition-all duration-500">
+              <div className="text-4xl mb-6">⚡</div>
+              <h3 className="text-lg font-bold text-white mb-1">
+                esbuild <a href="https://esbuild.github.io" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors text-sm">↗</a>
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">An extremely fast bundler for JavaScript and TypeScript, powering Velix's build system for near-instant builds and hot module reload.</p>
+            </div>
+
+            {/* Zod */}
+            <div className="group p-8 rounded-2xl bg-velix-dark/40 border border-white/5 hover:border-velix-cyan/15 transition-all duration-500">
+              <div className="text-4xl mb-6">🛡️</div>
+              <h3 className="text-lg font-bold text-white mb-1">
+                Zod <a href="https://zod.dev" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors text-sm">↗</a>
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">TypeScript-first schema validation with static type inference. Integrated natively into Velix Server Actions for end-to-end type safety.</p>
+            </div>
+          </div>
+        </div>
+      </section>
       {/* ─── Quick Comparison ─── */}
       <section className="relative py-32 px-6">
         <div className="max-w-7xl mx-auto">
