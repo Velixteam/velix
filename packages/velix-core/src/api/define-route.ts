@@ -10,11 +10,8 @@ export type RouteHandler = (
   ctx: RouteContext
 ) => Response | Promise<Response>;
 
-export class VelixHttpError extends Error {
-  constructor(public status: number, message: string) {
-    super(message);
-  }
-}
+import { VelixHttpError } from '../server/errors.js';
+export { VelixHttpError };
 
 export function defineRoute(handler: RouteHandler): RouteHandler {
   return async (req, ctx) => {

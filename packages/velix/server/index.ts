@@ -489,11 +489,60 @@ async function handlePageRoute(
     ${config.favicon ? `<link rel="icon" href="${config.favicon}">` : ''}
     ${config.styles.map(s => `<link rel="stylesheet" href="${s}">`).join('\n    ')}
     `;
+    // ── Resolve Error Boundaries ──
+    const { resolveErrorBoundary, getErrorBoundaryType } = await import('@teamvelix/velix-core');
+    const { VelixErrorBoundary, VelixDefaultErrorPage } = await import('@teamvelix/velix-react');
+
+    const errorBoundary = resolveErrorBoundary(route.filePath, appDir, 'error');
+    const notFoundBoundary = resolveErrorBoundary(route.filePath, appDir, 'not-found');
+
+    let ErrorComponent = null;
+    let NotFoundComponent = null;
+
+    if (errorBoundary) {
+      try {
+        const mod = await import(`${pathToFileURL(errorBoundary.filePath).href}?t=${Date.now()}`);
+        ErrorComponent = mod.default;
+      } catch (e) {}
+    }
+    if (notFoundBoundary) {
+      try {
+        const mod = await import(`${pathToFileURL(notFoundBoundary.filePath).href}?t=${Date.now()}`);
+        NotFoundComponent = mod.default;
+      } catch (e) {}
+    }
+
     // Extract search params for the component
     const searchParams = Object.fromEntries(url.searchParams.entries());
 
-    // Render the page component (supports async/server components)
-    let pageElement = await renderComponentAsync(PageComponent, { params: route.params, searchParams, query: searchParams });
+    let pageElement;
+    try {
+      // Render the page component (supports async/server components)
+      pageElement = await renderComponentAsync(PageComponent, { params: route.params, searchParams, query: searchParams });
+    } catch (ssrError) {
+      const err = ssrError as Error;
+      const errorType = getErrorBoundaryType(err);
+      res.statusCode = (err as any).status || (errorType === 'not-found' ? 404 : 500);
+
+      if (errorType === 'not-found' && NotFoundComponent) {
+        pageElement = React.createElement(NotFoundComponent as any);
+      } else if (ErrorComponent) {
+        pageElement = React.createElement(ErrorComponent as any, { error: err, reset: () => {} });
+      } else {
+        pageElement = React.createElement(VelixDefaultErrorPage, { error: err, reset: () => {} });
+      }
+    }
+
+    // Wrap with Error Boundary for client-side routing and hydration
+    pageElement = React.createElement(
+      VelixErrorBoundary,
+      {
+        errorComponent: ErrorComponent as any,
+        notFoundComponent: NotFoundComponent as any,
+        routePath: route.filePath,
+      },
+      pageElement
+    );
 
     // Nest layouts around page: innermost first, then wrap outward (root is first in array)
     let layoutElement = pageElement;

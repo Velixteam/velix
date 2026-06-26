@@ -73,13 +73,41 @@ export async function generateCommand(type?: string, name?: string) {
       path: `app/loading.tsx`,
       content: `export default function Loading() {\n  return <div>Loading...</div>;\n}\n`
     }),
-    error: () => ({
-      path: `app/error.tsx`,
-      content: `'use client';\n\nexport default function Error({ error, reset }: { error: Error; reset: () => void }) {\n  return (\n    <div>\n      <h2>Something went wrong!</h2>\n      <p>{error.message}</p>\n      <button onClick={reset}>Try again</button>\n    </div>\n  );\n}\n`
+    error: (n) => ({
+      path: n ? `app/${n}/error.tsx` : `app/error.tsx`,
+      content: [
+        `import { defineError } from 'velix';`,
+        ``,
+        `export default defineError(({ error, reset }) => {`,
+        `  return (`,
+        `    <div>`,
+        `      <h1>Something went wrong</h1>`,
+        `      <p>{error.message}</p>`,
+        `      {(error as any).status && <p>Status: {(error as any).status}</p>}`,
+        `      <button onClick={reset}>Try again</button>`,
+        `      <a href="/">Go home</a>`,
+        `    </div>`,
+        `  );`,
+        `});`,
+        ``,
+      ].join('\n'),
     }),
-    'not-found': () => ({
-      path: `app/not-found.tsx`,
-      content: `export default function NotFound() {\n  return (\n    <div>\n      <h1>404 - Not Found</h1>\n      <p>The page you're looking for doesn't exist.</p>\n    </div>\n  );\n}\n`
+    'not-found': (n) => ({
+      path: n ? `app/${n}/not-found.tsx` : `app/not-found.tsx`,
+      content: [
+        `import { defineNotFound } from 'velix';`,
+        ``,
+        `export default defineNotFound(() => {`,
+        `  return (`,
+        `    <div>`,
+        `      <h1>404</h1>`,
+        `      <p>This page could not be found.</p>`,
+        `      <a href="/">Go home</a>`,
+        `    </div>`,
+        `  );`,
+        `});`,
+        ``,
+      ].join('\n'),
     }),
   };
 

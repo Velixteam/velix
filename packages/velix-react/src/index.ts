@@ -5,3 +5,5 @@ export * from './context.js';
 export * from './components/Image.js';
 export * from './hooks/index.js';
 export * from './helpers.js';
+export * from './components/VelixErrorBoundary.js';
+export * from './components/VelixDefaultErrorPage.js';

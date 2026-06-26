@@ -28,6 +28,13 @@ export type {
   InferLoaderData, InferActionInput, InferActionOutput
 } from '@teamvelix/velix-core';
 
+export {
+  defineError, defineNotFound,
+  VelixHttpError, ForbiddenError, UnauthorizedError
+} from '@teamvelix/velix-core';
+
+export type { ErrorPageProps } from '@teamvelix/velix-react';
+
 // ── Helpers ──
 export {
   redirect, notFound, json, html, text,

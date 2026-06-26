@@ -20,14 +20,8 @@ export class RedirectError extends Error {
   }
 }
 
-export class NotFoundError extends Error {
-  public readonly type = 'notFound' as const;
-
-  constructor(message: string = 'Page not found') {
-    super(message);
-    this.name = 'NotFoundError';
-  }
-}
+import { NotFoundError as CoreNotFoundError } from '@teamvelix/velix-core';
+export { NotFoundError } from '@teamvelix/velix-core';
 
 /**
  * Redirect to a different URL
@@ -52,7 +46,7 @@ export function redirect(url: string, type: 'replace' | 'permanent' = 'replace')
  * Trigger a 404 Not Found response
  */
 export function notFound(message?: string): never {
-  throw new NotFoundError(message);
+  throw new CoreNotFoundError(message);
 }
 
 /**
