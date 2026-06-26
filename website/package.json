@@ -9,12 +9,12 @@
     "start": "node ./node_modules/@teamvelix/cli/dist/index.js start"
   },
   "dependencies": {
-    "@teamvelix/velix": "^5.2.5",
+    "@teamvelix/velix": "^5.2.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@teamvelix/cli": "^5.2.5",
+    "@teamvelix/cli": "^5.2.6",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0",
     "@types/react": "^19.0.0",
