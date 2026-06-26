@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "5.2.4",
+  "version": "5.2.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,12 +9,12 @@
     "start": "node ./node_modules/@teamvelix/cli/dist/index.js start"
   },
   "dependencies": {
-    "@teamvelix/velix": "^5.2.4",
+    "@teamvelix/velix": "^5.2.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@teamvelix/cli": "^5.2.4",
+    "@teamvelix/cli": "^5.2.5",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0",
     "@types/react": "^19.0.0",
