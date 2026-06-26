@@ -17,7 +17,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.0.5';
+const VERSION = '5.2.6';
 
 async function main() {
   console.log('');
@@ -116,10 +116,10 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
   // package.json
   const pkg: any = {
     name, version: '0.1.0', private: true, type: 'module',
-    scripts: { 
-      dev: 'velix dev', 
-      build: 'velix build', 
-      start: 'velix start' 
+    scripts: {
+      dev: 'velix dev',
+      build: 'velix build',
+      start: 'velix start'
     },
     dependencies: { '@teamvelix/velix': 'latest', react: '^19.0.0', 'react-dom': '^19.0.0' },
     devDependencies: { '@teamvelix/cli': 'latest', typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },

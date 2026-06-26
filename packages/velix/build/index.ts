@@ -11,6 +11,7 @@ import { buildRouteTree } from '../router/index.js';
 import { ensureDir, cleanDir, findFiles, formatBytes, formatTime } from '../utils.js';
 import logger from '../logger.js';
 import { VERSION } from '../version.js';
+import { pluginManager, loadPlugins, PluginHooks } from '../plugins/index.js';
 
 export interface BuildOptions {
   projectRoot?: string;
@@ -27,12 +28,19 @@ export async function build(options: BuildOptions = {}) {
   const config = await loadConfig(projectRoot);
   const resolved = resolvePaths(config, projectRoot);
 
+  // Load plugins and run config hook
+  await loadPlugins(projectRoot, config);
+  await pluginManager.runHook(PluginHooks.CONFIG, config);
+
   const outDir = options.outDir || resolved.resolvedOutDir;
   const startTime = Date.now();
 
   logger.logo();
   logger.info('Building for production...');
   logger.blank();
+
+  // Run build:start hook (e.g., Tailwind CSS build)
+  await pluginManager.runHook(PluginHooks.BUILD_START);
 
   // Clean output directory
   cleanDir(outDir);
@@ -153,6 +161,9 @@ export async function build(options: BuildOptions = {}) {
   logger.build({ time: elapsed });
   logger.info(`Output: ${outDir} (${formatBytes(totalSize)})`);
   logger.blank();
+
+  // Run build:end hook
+  await pluginManager.runHook(PluginHooks.BUILD_END, { time: elapsed });
 }
 
 // ============================================================================

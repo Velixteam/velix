@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/velix-core",
-  "version": "5.2.5",
+  "version": "5.2.6",
   "description": "Core routing, caching, and agnostic logic for Velix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

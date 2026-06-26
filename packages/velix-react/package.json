@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/velix-react",
-  "version": "5.2.5",
+  "version": "5.2.6",
   "description": "React bindings and SSR rendering for Velix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

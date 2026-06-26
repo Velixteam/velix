@@ -205,81 +205,26 @@ export function generate500Page(options: ErrorPageOptions): string {
     <title>Error | Velix v${VERSION}</title>
     <link rel="icon" href="/favicon.webp">
     <style>
+        :root {
+          --bg-body: #000;
+          --bg-card: #111;
+          --border: #333;
+          --text-main: #ededed;
+          --text-muted: #888;
+          --red-tag: #e5484d;
+          --red-bg: rgba(229, 72, 77, 0.15);
+          --code-bg: #000;
+          --code-hl: rgba(255,255,255,0.1);
+          --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          background: #161616;
-          color: #ededed;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+          background: var(--bg-body);
+          color: var(--text-main);
+          font-family: var(--font-sans);
           min-height: 100vh;
-          padding: 0;
-          -webkit-font-smoothing: antialiased;
-        }
-        .overlay {
-          max-width: 960px;
-          margin: 0 auto;
-          padding: 24px 20px;
-        }
-
-        /* Top bar */
-        .top-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-        }
-        .page-nav {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .page-nav button {
-          width: 28px;
-          height: 28px;
-          border-radius: 6px;
-          border: 1px solid #333;
-          background: #222;
-          color: #999;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 14px;
-          transition: all .15s;
-        }
-        .page-nav button:hover:not(:disabled) { background: #333; color: #fff; }
-        .page-nav button:disabled { opacity: 0.3; cursor: default; }
-        .page-nav span { font-size: 13px; color: #888; font-weight: 500; padding: 0 4px; }
-        .version-badge {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 12px;
-          border-radius: 999px;
-          background: #1a1a1a;
-          border: 1px solid #333;
-          font-size: 13px;
-          color: #aaa;
-          font-weight: 500;
-        }
-        .version-dot { width: 8px; height: 8px; border-radius: 50%; background: #00e87a; }
-
-        /* Error tag */
-        .error-tag {
-          display: inline-block;
-          background: rgba(255,50,50,0.15);
-          color: #ff6b6b;
-          border: 1px solid rgba(255,50,50,0.3);
-          padding: 3px 10px;
-          border-radius: 6px;
-          font-size: 13px;
-          font-weight: 600;
-          margin-bottom: 16px;
-        }
-
-        /* Error message */
-        .error-msg {
-          color: #ff8a8a;
-          font-size: 15px;
           line-height: 1.7;
           margin-bottom: 12px;
           word-break: break-word;
