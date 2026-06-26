@@ -1,5 +1,5 @@
 @import "tailwindcss";
-
+@source "../components";
 @theme {
   --color-velix-deep: #0B1120;
   --color-velix-dark: #0F172A;

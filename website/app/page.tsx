@@ -28,9 +28,9 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto py-16">
-          <div style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "4rem" }}>
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             {/* LEFT: Text */}
-            <div style={{ flex: 1, minWidth: 0 }} className="flex flex-col items-start text-left">
+            <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left">
               <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
                 <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
                 <span className="text-xs font-medium text-slate-300">Now in public beta</span>
@@ -48,8 +48,8 @@ export default function HomePage() {
               </p>
 
 
-              <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4">
-                <a href="/docs#getting-started" className="px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center">
+              <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center lg:justify-start">
+                <a href="/docs" className="px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center">
                   Get Started
                 </a>
                 <a href="https://github.com/Velixteam/velix" target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all text-center">
@@ -59,12 +59,11 @@ export default function HomePage() {
             </div>
 
             {/* RIGHT: Image */}
-            <div style={{ flexShrink: 0, width: "480px" }}>
+            <div className="w-full max-w-[320px] sm:max-w-[400px] lg:max-w-[480px] shrink-0 mx-auto">
               <img
                 src="/velix-removebg-preview.png"
                 alt="Velix Hero"
-                style={{ width: "100%", height: "auto", objectFit: "contain" }}
-                className="drop-shadow-2xl animate-fade-in-up"
+                className="w-full h-auto object-contain drop-shadow-2xl animate-fade-in-up"
               />
             </div>
           </div>

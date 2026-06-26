@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node ./node_modules/@teamvelix/cli/dist/index.js dev",
-    "build": "npx tsx build-render.ts",
+    "build": "npx tailwindcss -i ./app/globals.css -o ./public/tailwind.css && npx tsx build-render.ts",
     "start": "node ./node_modules/@teamvelix/cli/dist/index.js start"
   },
   "dependencies": {
