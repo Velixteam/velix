@@ -83,8 +83,9 @@ function Footer() {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <head>
+        <meta name="google-site-verification" content="mguAwrwKCuA9Ex9w0wPe13hKCGnFN-sTFi-4AKvl16g" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

@@ -1,7 +1,7 @@
 packages:
   - "packages/*"
   - "plugins/*"
-  - "website"
+  - "website/"
 
 ignoredBuiltDependencies:
   - esbuild

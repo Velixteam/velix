@@ -75,9 +75,10 @@ export default function ComparePage() {
       { f: "CLI Scaffolding", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
     ]},
     { name: "Performance", rows: [
-      { f: "Client Bundle Size", v: <Val hl>~18kb</Val>, n: <Val>~85kb</Val>, r: <Val>~60kb</Val>, a: <Val>~0kb</Val> },
+      { f: "Client Bundle Size", v: <Val hl>0kb (default)</Val>, n: <Val>~85kb</Val>, r: <Val>~60kb</Val>, a: <Val>0kb (default)</Val> },
+      { f: "Time to First Byte (TTFB)", v: <Val hl>Coming soon</Val>, n: <Val>~250ms</Val>, r: <Val>~180ms</Val>, a: <Val>~120ms</Val> },
       { f: "Cold Start Time", v: <Val hl>~120ms</Val>, n: <Val>~350ms</Val>, r: <Val>~280ms</Val>, a: <Val>~100ms</Val> },
-      { f: "Build Speed (1000 pages)", v: <Val hl>~4s</Val>, n: <Val>~12s</Val>, r: <Val>~8s</Val>, a: <Val>~6s</Val> },
+      { f: "Build Speed (average app)", v: <Val hl>~3.7s</Val>, n: <Val>~12s</Val>, r: <Val>~8s</Val>, a: <Val>~6s</Val> },
       { f: "Lighthouse Score", v: <Val hl>100</Val>, n: <Val>92-98</Val>, r: <Val>95-99</Val>, a: <Val>100</Val> },
     ]},
   ];
@@ -154,6 +155,11 @@ export default function ComparePage() {
               ))}
             </tbody>
           </table>
+        </div>
+        <div className="max-w-7xl mx-auto mt-4 text-right">
+          <p className="text-xs text-slate-500 font-mono italic">
+            * Benchmarks measured on Apple M2, Node 22, production build.
+          </p>
         </div>
       </section>
 

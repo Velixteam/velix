@@ -157,12 +157,12 @@ export function generate500Page(options: ErrorPageOptions): string {
   // Parse stack trace to display as cards like Next.js
   let callStackCards = '';
   let frameCount = 0;
-  
+
   if (isDev && stack) {
     const stackLines = stack.split('\n').filter(line => line.trim());
     const frames = stackLines.slice(1).filter(line => line.includes('at '));
     frameCount = frames.length;
-    
+
     callStackCards = frames.map((frame, index) => {
       const match = frame.match(/at\s+(.+?)\s+\((.+?)\)/) || frame.match(/at\s+(.+)/);
       if (match) {

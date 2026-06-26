@@ -1,7 +1,5 @@
-import { NpmCounter } from "../components/NpmCounter";
 
 export const metadata = { title: "Velix - The Modern React Framework | Build Fast. Ship Faster." };
-<meta name="google-site-verification" content="mguAwrwKCuA9Ex9w0wPe13hKCGnFN-sTFi-4AKvl16g" />
 
 function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
   return (
@@ -49,9 +47,6 @@ export default function HomePage() {
                 routing, and end-to-end type safety. Ship production-ready apps in record time.
               </p>
 
-              <div className="animate-fade-in-up animate-delay-[250ms] mb-8">
-                <NpmCounter />
-              </div>
 
               <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4">
                 <a href="/docs#getting-started" className="px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center">
@@ -158,9 +153,9 @@ export default function HomePage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-0 rounded-2xl bg-velix-dark/50 border border-white/5 divide-x divide-white/5">
             {[
               { value: "0", suffix: "kb", label: "Default JS bundle" },
-              { value: "~3", suffix: "ms", label: "Server response" },
+              { value: "~3.7", suffix: "s", label: "Build Speed" },
               { value: "100", suffix: "", label: "Lighthouse score" },
-              { value: "10", suffix: "x", label: "Faster than CRA" },
+              { value: "0", suffix: "", label: "Configuration" },
             ].map((s, i) => (
               <div key={i} className="text-center p-8">
                 <div className="text-5xl md:text-6xl font-extrabold gradient-text mb-2">{s.value}<span className="text-2xl text-slate-500">{s.suffix}</span></div>
