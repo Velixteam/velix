@@ -17,7 +17,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.2.6';
+const VERSION = '5.2.7';
 
 async function main() {
   console.log('');
