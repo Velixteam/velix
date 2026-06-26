@@ -14,7 +14,7 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@teamvelix/cli": "^5.2.3",
+    "@teamvelix/cli": "workspace:*",
     "tsx": "^4.21.0",
     "typescript": "^5.7.0",
     "@types/react": "^19.0.0",
