@@ -9,18 +9,16 @@
     "start": "node ./node_modules/@teamvelix/cli/dist/index.js start"
   },
   "dependencies": {
-    "@teamvelix/velix": "^5.2.8",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
     "@teamvelix/cli": "^5.2.8",
-    "tsx": "^4.21.0",
-    "typescript": "^5.7.0",
+    "@teamvelix/velix": "^5.2.8",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0",
-    "@tailwindcss/cli": "^4.0.0"
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
   }
 }
 
