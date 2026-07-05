@@ -23,7 +23,7 @@ function escapeHtml(str: string): string {
 }
 
 /**
- * Generate a styled 404 error page — Next.js 16 style
+ * Generate a styled 404 error page — Velix branding
  */
 export function generate404Page(pathname: string = '/'): string {
   return `<!DOCTYPE html>
@@ -31,88 +31,203 @@ export function generate404Page(pathname: string = '/'): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Page Not Found | Velix v${VERSION}</title>
+    <title>404 — Page Not Found | Velix v${VERSION}</title>
     <link rel="icon" href="/favicon.webp">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.4; }
+        }
+
         body {
-          background: #0a0a0a;
-          color: #ededed;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          background-color: #0a0a0a;
+          background-image:
+            linear-gradient(to right,  rgba(30, 32, 30, 0.3) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(30, 32, 30, 0.3) 1px, transparent 1px);
+          background-size: 60px 60px;
+          color: #e8ebe5;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
           min-height: 100vh;
+          padding: 2rem;
           -webkit-font-smoothing: antialiased;
         }
-        .container {
+
+        /* radial vignette over the grid */
+        body::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, #0a0a0a 80%);
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .card {
+          position: relative;
+          z-index: 1;
           display: flex;
+          flex-direction: column;
           align-items: center;
-          gap: 32px;
-          padding: 32px;
+          text-align: center;
+          max-width: 480px;
+          animation: fadeUp 0.25s ease forwards;
         }
-        .code {
-          font-size: 48px;
-          font-weight: 700;
+
+        /* ── glowing 404 number ── */
+        .status-number {
+          font-family: 'DM Mono', monospace;
+          font-size: clamp(80px, 18vw, 140px);
+          font-weight: 500;
           line-height: 1;
-          color: #fff;
-          border-right: 1px solid rgba(255,255,255,0.15);
-          padding-right: 32px;
-        }
-        .body h1 {
-          font-size: 18px;
-          font-weight: 600;
-          color: #ededed;
+          letter-spacing: -0.04em;
+          color: #e8ebe5;
+          position: relative;
           margin-bottom: 8px;
         }
-        .body p {
-          font-size: 14px;
-          color: #888;
-          margin-bottom: 20px;
+        .status-number::after {
+          content: attr(data-value);
+          position: absolute;
+          inset: 0;
+          color: #00e87a;
+          opacity: 0.12;
+          filter: blur(24px);
+          pointer-events: none;
         }
-        .body p code {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+        /* ── accent line ── */
+        .accent-line {
+          width: 40px;
+          height: 3px;
+          background: #00e87a;
+          border-radius: 9999px;
+          margin-bottom: 24px;
+        }
+
+        /* ── heading ── */
+        h1 {
+          font-size: 22px;
+          font-weight: 700;
+          color: #fff;
+          margin-bottom: 10px;
+          letter-spacing: -0.01em;
+        }
+
+        /* ── route badge ── */
+        .route-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          font-family: 'DM Mono', monospace;
           font-size: 13px;
-          background: rgba(255,255,255,0.07);
-          padding: 2px 6px;
-          border-radius: 4px;
-          color: #ccc;
+          color: #6b7068;
+          background: #111211;
+          border: 1px solid #1e201e;
+          padding: 5px 14px;
+          border-radius: 9999px;
+          margin-bottom: 32px;
         }
-        .actions { display: flex; gap: 10px; }
+        .route-badge .dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #ff6b6b;
+          animation: pulse 1.8s ease-in-out infinite;
+          flex-shrink: 0;
+        }
+
+        /* ── actions ── */
+        .actions {
+          display: flex;
+          gap: 12px;
+        }
         .btn {
-          display: inline-block;
-          padding: 8px 18px;
-          border-radius: 8px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 10px 22px;
+          border-radius: 10px;
           font-size: 14px;
-          font-weight: 500;
+          font-weight: 600;
           text-decoration: none;
-          transition: all .15s;
-          border: 1px solid transparent;
+          transition: all 0.15s ease;
         }
         .btn-primary {
-          background: #fff;
-          color: #000;
+          background: #00e87a;
+          color: #0a0a0a;
+          border: 1px solid #00e87a;
         }
-        .btn-primary:hover { background: #e5e5e5; }
+        .btn-primary:hover {
+          background: #00ff87;
+          transform: translateY(-1px);
+          box-shadow: 0 0 20px rgba(0, 232, 122, 0.35);
+        }
         .btn-secondary {
-          background: rgba(255,255,255,0.06);
-          color: #ededed;
-          border-color: rgba(255,255,255,0.1);
+          background: transparent;
+          color: #e8ebe5;
+          border: 1px solid #1e201e;
         }
-        .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+        .btn-secondary:hover {
+          background: #111211;
+          border-color: #2a2d2a;
+        }
+
+        /* ── footer branding ── */
+        .brand {
+          position: fixed;
+          bottom: 28px;
+          left: 50%;
+          transform: translateX(-50%);
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+          color: #3a3d3a;
+          font-family: 'DM Mono', monospace;
+        }
+        .brand-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #00e87a;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="code">404</div>
-        <div class="body">
-            <h1>This page could not be found</h1>
-            <p>The path <code>${escapeHtml(pathname)}</code> does not exist.</p>
-            <div class="actions">
-                <a href="/" class="btn btn-primary">Return Home</a>
-                <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
-            </div>
-        </div>
+    <div class="card">
+      <div class="status-number" data-value="404">404</div>
+      <div class="accent-line"></div>
+      <h1>Page not found</h1>
+      <div class="route-badge">
+        <span class="dot"></span>
+        <span>${escapeHtml(pathname)}</span>
+      </div>
+      <div class="actions">
+        <a href="/" class="btn btn-primary">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Home
+        </a>
+        <a href="javascript:history.back()" class="btn btn-secondary">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Go back
+        </a>
+      </div>
+    </div>
+
+    <div class="brand">
+      <span class="brand-dot"></span>
+      Velix v${VERSION}
     </div>
 </body>
 </html>`;
