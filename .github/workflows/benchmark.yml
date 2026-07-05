@@ -1,0 +1,130 @@
+name: Performance Benchmarks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Create test app
+        run: |
+          node scripts/create-bench-app.js
+          cd bench-app && pnpm install
+
+      - name: Build test app & measure
+        run: |
+          cd bench-app
+          node ../scripts/bench-build.js
+
+      - name: Run k6 load test
+        uses: grafana/k6-action@v0.3.0
+        with:
+          filename: scripts/bench-load.js
+        env:
+          BASE_URL: http://localhost:3000
+
+      - name: Compare with baseline
+        run: node scripts/bench-compare.js
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bench-results-${{ github.sha }}
+          path: |
+            bench-results.json
+            .bench-baseline.json
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs')
+            const results = JSON.parse(fs.readFileSync('bench-results.json', 'utf8'))
+            const baseline = fs.existsSync('.bench-baseline.json')
+              ? JSON.parse(fs.readFileSync('.bench-baseline.json', 'utf8'))
+              : null
+
+            const buildDelta = baseline
+              ? ((results.buildTime - baseline.buildTime) / baseline.buildTime * 100).toFixed(1)
+              : 'N/A'
+            const sizeDelta = baseline
+              ? ((results.bundleSize - baseline.bundleSize) / baseline.bundleSize * 100).toFixed(1)
+              : 'N/A'
+
+            const buildIcon = baseline && results.buildTime > baseline.buildTime * 1.20 ? '🔴' : '🟢'
+            const sizeIcon = baseline && results.bundleSize > baseline.bundleSize * 1.10 ? '🟡' : '🟢'
+
+            const body = `## 📊 Performance Benchmarks
+
+            | Metric | Value | vs Baseline |
+            |---|---|---|
+            | ${buildIcon} Build Time | ${results.buildTime}ms | ${buildDelta}% |
+            | ${sizeIcon} Bundle Size | ${results.bundleSize}KB | ${sizeDelta}% |
+            | Commit | \`${results.commit}\` | — |
+
+            > Seuils : build +20% → ❌ fail | bundle +10% → ⚠️ warning`
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            })
+
+  comparative-benchmarks:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Comparative Benchmarks
+        run: node scripts/bench/runner.js
+
+      - name: Upload comparative results
+        uses: actions/upload-artifact@v4
+        with:
+          name: comparative-benchmarks
+          path: bench-results/BENCHMARKS.md

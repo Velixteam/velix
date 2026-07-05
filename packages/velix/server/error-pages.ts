@@ -137,7 +137,6 @@ export function generate500Page(options: ErrorPageOptions): string {
     frames = stackLines.slice(1)
       .filter((line: string) => line.includes('at '))
       .map((frame: string): StackFrame => {
-        // "at funcName (file:line:col)" or "at file:line:col"
         const m1 = frame.match(/at\s+(.+?)\s+\((.+?):(\d+):\d+\)/);
         if (m1) return { call: m1[1].trim(), file: m1[2], line: parseInt(m1[3], 10) };
         const m2 = frame.match(/at\s+(.+?):(\d+):\d+/);
@@ -145,7 +144,6 @@ export function generate500Page(options: ErrorPageOptions): string {
         return { call: frame.replace(/^\s*at\s+/, '').trim(), file: '', line: null };
       });
 
-    // Source snippet from first user-land frame
     const firstUserFrame = frames.find(f => f.file && !f.file.includes('node_modules')) || frames[0];
     if (firstUserFrame) {
       errorFile = firstUserFrame.file;
@@ -157,20 +155,46 @@ export function generate500Page(options: ErrorPageOptions): string {
             const src: string[] = fs.readFileSync(errorFile, 'utf-8').split('\n');
             const start = Math.max(0, errorLine - 4);
             const end = Math.min(src.length, errorLine + 3);
+            
+            const syntaxHighlight = (code: string) => {
+              let hl = code;
+              // Keywords
+              hl = hl.replace(/\\b(let|const|function|return|import|export|if|else|for|while|await|async|class|var)\\b/g, '<span style="color:#c084fc">$1</span>');
+              // Strings
+              hl = hl.replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g, '<span style="color:#86efac">$1</span>');
+              // Comments
+              hl = hl.replace(/(\\&#x2F;\\&#x2F;.*)$/g, '<span style="color:#6b7068">$1</span>');
+              // Numbers
+              hl = hl.replace(/\\b(\\d+)\\b/g, '<span style="color:#f59e0b">$1</span>');
+              return hl;
+            };
+
             sourceSnippet = src.slice(start, end).map((l: string, i: number) => {
               const num = start + i + 1;
               const isErr = num === errorLine;
               const numStr = String(num).padStart(3, ' ');
+              const highlightedLine = syntaxHighlight(escapeHtml(l));
+              
               if (isErr) {
-                return `<div class="src-line src-err"><span class="ln">${numStr}</span>${escapeHtml(l)}</div>`;
+                return `<div class="src-line src-err"><span class="ln">${numStr}</span><span class="active-arrow">▶</span><span class="code-content">${highlightedLine}</span></div>`;
               }
-              return `<div class="src-line"><span class="ln">${numStr}</span>${escapeHtml(l)}</div>`;
+              return `<div class="src-line"><span class="ln">${numStr}</span><span class="active-arrow"> </span><span class="code-content">${highlightedLine}</span></div>`;
             }).join('');
           }
         } catch (_) {}
       }
     }
   }
+
+  const formatErrorMessage = (msg: string): string => {
+    let formatted = escapeHtml(msg);
+    // Render Windows and Unix absolute paths in green
+    const pathSpan = '<span style="color:#00e87a;cursor:pointer;" onclick="console.log(\'open in editor\')">';
+    formatted = formatted.replace(/([A-Z]:\\[^\s<]+|\/(?:Users|home|var|srv)\/[^\s<]+)/g, pathSpan + '$1</span>');
+    // Render ERROR: in red
+    formatted = formatted.replace(/(ERROR:)/g, '<strong style="color:#ff6b6b">$1</strong>');
+    return formatted;
+  };
 
   const userFrames = frames.filter(f => f.file && !f.file.includes('node_modules'));
   const ignoredFrames = frames.filter(f => !f.file || f.file.includes('node_modules'));
@@ -228,327 +252,459 @@ export function generate500Page(options: ErrorPageOptions): string {
     <title>Error | Velix v${VERSION}</title>
     <link rel="icon" href="/favicon.webp">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
+
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
         body {
-          background: rgba(0, 0, 0, 0.85);
-          color: #ededed;
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          background-color: #0a0a0a;
+          background-image: 
+            linear-gradient(to right, rgba(30, 32, 30, 0.25) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(30, 32, 30, 0.25) 1px, transparent 1px);
+          background-size: 60px 60px;
+          color: #e8ebe5;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           min-height: 100vh;
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: center;
-          padding: 24px;
+          padding: 2rem;
           -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Overlay Card ── */
-        .overlay {
+        /* Radial mask for the grid background */
+        .bg-mask {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: radial-gradient(circle at center, transparent 0%, #0a0a0a 80%);
+          z-index: -1;
+          pointer-events: none;
+        }
+
+        /* ── Main Container ── */
+        .container {
           width: 100%;
-          max-width: 940px;
-          background: #111;
-          border: 1px solid #2a2a2a;
-          border-radius: 12px;
-          box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-          overflow: hidden;
+          max-width: 780px;
+          margin-top: 4vh;
+          animation: fadeIn 0.2s ease forwards;
           display: flex;
           flex-direction: column;
-          max-height: calc(100vh - 48px);
+          gap: 24px;
         }
 
         /* ── Header Bar ── */
         .header {
+          position: relative;
+          background: transparent;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 12px 20px;
-          background: #161616;
-          border-bottom: 1px solid #2a2a2a;
-          gap: 12px;
-          flex-shrink: 0;
+          padding-top: 12px;
+        }
+        .header::before {
+          content: '';
+          position: absolute;
+          top: -12px; left: 0; right: 0;
+          height: 4px;
+          background: #ff6b6b;
+          border-radius: 4px;
         }
         .header-left {
           display: flex;
           align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          color: #888;
+          gap: 12px;
         }
-        .counter-badge {
-          background: #1e1e1e;
-          border: 1px solid #333;
-          border-radius: 6px;
-          padding: 2px 8px;
-          font-size: 12px;
-          color: #999;
-          font-variant-numeric: tabular-nums;
+        .header-icon {
+          width: 20px;
+          height: 20px;
+          fill: #ff6b6b;
         }
-        .nav-btn {
-          background: #1e1e1e;
-          border: 1px solid #333;
-          border-radius: 6px;
-          color: #888;
-          cursor: pointer;
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 13px;
-          transition: all .15s;
-        }
-        .nav-btn:hover:not(:disabled) { background: #2a2a2a; color: #fff; }
-        .nav-btn:disabled { opacity: 0.3; cursor: default; }
-        .framework-tag {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 12px;
-          color: #666;
-        }
-        .framework-tag::before {
-          content: '';
-          display: inline-block;
-          width: 6px; height: 6px;
-          border-radius: 50%;
-          background: #3b82f6;
-        }
-
-        /* ── Scrollable Content ── */
-        .content {
-          overflow-y: auto;
-          flex: 1;
-        }
-
-        /* ── Error Summary ── */
-        .error-summary {
-          padding: 28px 24px 20px;
-          border-bottom: 1px solid #1e1e1e;
-        }
-        .error-label {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          color: #f87171;
-          background: rgba(248, 113, 113, 0.1);
-          border: 1px solid rgba(248, 113, 113, 0.25);
-          padding: 3px 8px;
-          border-radius: 4px;
-          margin-bottom: 14px;
-        }
-        .error-label svg { width: 10px; height: 10px; fill: currentColor; }
-        .error-message {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        .header-title {
           font-size: 18px;
-          font-weight: 600;
-          line-height: 1.5;
+          font-weight: 700;
           color: #fff;
+        }
+        .dev-badge {
+          background: rgba(255, 107, 107, 0.1);
+          border: 1px solid rgba(255, 107, 107, 0.2);
+          color: #ff6b6b;
+          padding: 2px 10px;
+          border-radius: 9999px;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.05em;
+        }
+
+        /* ── Status & Route ── */
+        .status-bar {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-top: 8px;
+          font-family: 'DM Mono', monospace;
+          font-size: 13px;
+        }
+        .status-badge {
+          background: #111211;
+          border: 1px solid #1e201e;
+          color: #ff6b6b;
+          padding: 4px 10px;
+          border-radius: 6px;
+        }
+        .route-badge {
+          background: #111211;
+          border: 1px solid #1e201e;
+          color: #00e87a;
+          padding: 4px 10px;
+          border-radius: 6px;
+        }
+        .separator { color: #6b7068; }
+        .timestamp { color: #6b7068; font-family: system-ui; font-size: 13px; }
+
+        /* ── Error Message ── */
+        .error-message-box {
+          background: #111211;
+          border: 1px solid #1e201e;
+          border-left: 3px solid #ff6b6b;
+          border-radius: 10px;
+          padding: 1rem 1.25rem;
+          font-family: 'DM Mono', monospace;
+          font-size: 14px;
+          color: #e8ebe5;
+          line-height: 1.6;
+          white-space: pre-wrap;
           word-break: break-word;
         }
-        .error-location {
-          margin-top: 10px;
-          font-size: 13px;
-          color: #888;
-        }
-        .error-location strong { color: #ccc; }
 
-        /* ── Source Block ── */
-        .source-block {
-          border-bottom: 1px solid #1e1e1e;
+        /* ── Source Code Viewer ── */
+        .source-viewer {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
         }
-        .source-topbar {
+        .source-header {
           display: flex;
           align-items: center;
-          padding: 10px 16px;
-          background: #161616;
-          border-bottom: 1px solid #1e1e1e;
-          gap: 8px;
-          font-size: 12px;
-          color: #666;
+          justify-content: space-between;
         }
-        .source-topbar .filepath { color: #aaa; font-family: ui-monospace, monospace; }
-        .source-code {
-          background: #0d0d0d;
-          overflow-x: auto;
-          padding: 10px 0;
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        .source-filepath {
+          font-family: 'DM Mono', monospace;
           font-size: 13px;
-          line-height: 1.7;
+          color: #00e87a;
+        }
+        .open-in-editor {
+          color: #6b7068;
+          cursor: pointer;
+          transition: color 0.15s;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 13px;
+          text-decoration: none;
+        }
+        .open-in-editor:hover { color: #e8ebe5; }
+        .open-in-editor svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+
+        .source-body {
+          background: #0d0f0d;
+          border: 1px solid #1e201e;
+          border-radius: 8px;
+          padding: 16px 0;
+          overflow-x: auto;
+          font-family: 'DM Mono', monospace;
+          font-size: 13px;
+          line-height: 1.6;
         }
         .src-line {
           display: flex;
-          align-items: flex-start;
-          padding: 0 20px;
-          white-space: pre;
-          color: #555;
+          padding: 0 16px;
         }
-        .src-line .ln {
-          color: #3a3a3a;
+        .ln {
+          color: #3a3d3a;
+          width: 32px;
           text-align: right;
-          width: 36px;
           margin-right: 16px;
-          flex-shrink: 0;
           user-select: none;
+          flex-shrink: 0;
         }
+        .active-arrow {
+          color: transparent;
+          margin-right: 12px;
+          width: 14px;
+          text-align: center;
+          flex-shrink: 0;
+        }
+        .code-content { white-space: pre; }
+        
         .src-err {
-          background: rgba(239, 68, 68, 0.08);
-          color: #fca5a5;
-          position: relative;
+          background: rgba(0, 232, 122, 0.04);
         }
-        .src-err .ln { color: #ef4444; }
-        .src-err::before {
-          content: '';
-          position: absolute;
-          left: 0;
-          top: 0; bottom: 0;
-          width: 3px;
-          background: #ef4444;
-        }
+        .src-err .ln { color: #00e87a; }
+        .src-err .active-arrow { color: #00e87a; }
+        .src-err .code-content { color: #e8ebe5; }
 
         /* ── Call Stack ── */
-        .callstack {
-          padding: 20px 24px;
+        .callstack-section {
+          margin-top: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
         }
         .callstack-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 14px;
         }
         .callstack-title {
-          font-size: 13px;
+          font-size: 16px;
           font-weight: 600;
-          color: #aaa;
-          text-transform: uppercase;
-          letter-spacing: 0.06em;
+          display: flex;
+          align-items: center;
+          gap: 12px;
         }
-        .ignore-btn {
+        .callstack-count {
+          background: #1e201e;
+          color: #e8ebe5;
+          padding: 2px 10px;
+          border-radius: 9999px;
           font-size: 12px;
-          color: #555;
+          font-weight: 500;
+        }
+        
+        .toggle-node-modules {
+          color: #6b7068;
+          font-size: 13px;
           background: none;
           border: none;
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          transition: color .15s;
+          transition: color 0.15s;
         }
-        .ignore-btn:hover { color: #aaa; }
-        .ignore-caret { transition: transform .2s; }
-        .ignore-btn.open .ignore-caret { transform: rotate(90deg); }
+        .toggle-node-modules:hover { color: #e8ebe5; }
 
         .frame {
-          padding: 10px 12px;
-          border-radius: 6px;
-          margin-bottom: 4px;
-          font-size: 13px;
-          cursor: default;
+          background: #111211;
+          border: 1px solid #1e201e;
+          border-radius: 8px;
+          padding: 0.875rem 1rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          transition: background-color 0.15s, transform 0.15s;
         }
-        .frame:hover { background: rgba(255,255,255,0.03); }
+        .frame:hover { background: #161816; }
+        
+        .frame-info {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
         .frame-call {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-          font-weight: 600;
-          color: #e2e8f0;
-          margin-bottom: 3px;
+          font-family: 'DM Mono', monospace;
+          font-size: 14px;
+          font-weight: 700;
+          color: #00e87a;
         }
-        .frame-loc {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        .frame-file {
+          font-family: 'DM Mono', monospace;
+          font-size: 13px;
+          color: #6b7068;
+        }
+        
+        .frame.node-modules .frame-call { color: #6b7068; font-weight: 400; }
+        .frame.node-modules .frame-file { color: #3a3d3a; }
+        
+        .frame-number {
+          background: #1e201e;
+          color: #6b7068;
+          padding: 2px 8px;
+          border-radius: 6px;
           font-size: 12px;
-          color: #555;
+          font-variant-numeric: tabular-nums;
         }
-        .frame.ignored .frame-call { color: #444; }
 
-        .ignored-section { margin-top: 8px; display: none; }
-        .ignored-section.open { display: block; }
+        .pagination {
+          display: flex;
+          justify-content: flex-end;
+          gap: 8px;
+          margin-top: 8px;
+        }
+        .page-btn {
+          background: transparent;
+          border: 1px solid #1e201e;
+          color: #e8ebe5;
+          padding: 6px 14px;
+          border-radius: 6px;
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.15s;
+        }
+        .page-btn:hover:not(:disabled) { background: #1e201e; }
+        .page-btn:disabled { opacity: 0.3; cursor: default; }
+        
+        .node-modules-list { display: none; flex-direction: column; gap: 12px; margin-top: 12px; }
+        .node-modules-list.visible { display: flex; }
+
+        /* ── Footer ── */
+        .footer {
+          margin-top: 32px;
+          padding-top: 24px;
+          border-top: 1px solid #1e201e;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .footer-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          font-weight: 600;
+          color: #e8ebe5;
+        }
+        .velix-dot { width: 8px; height: 8px; border-radius: 50%; background: #00e87a; }
+        .footer-right {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .footer-link {
+          color: #6b7068;
+          text-decoration: none;
+          font-size: 13px;
+          transition: color 0.15s;
+        }
+        .footer-link:hover { color: #e8ebe5; }
+        .dev-pill {
+          background: #1e201e;
+          color: #e8ebe5;
+          padding: 4px 12px;
+          border-radius: 9999px;
+          font-size: 12px;
+        }
     </style>
 </head>
 <body>
-    <div class="overlay">
-
-      <!-- Header bar -->
+    <div class="bg-mask"></div>
+    <div class="container">
+      
+      <!-- Header -->
       <div class="header">
         <div class="header-left">
-          <button class="nav-btn" disabled>‹</button>
-          <span class="counter-badge">1 / 1</span>
-          <button class="nav-btn" disabled>›</button>
-          <span style="margin-left: 4px;">Unhandled Runtime Error</span>
+          <svg class="header-icon" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.83L19.17 19H4.83L12 5.83zM11 10h2v5h-2v-5zm0 6h2v2h-2v-2z"/></svg>
+          <div class="header-title">Unhandled Runtime Error</div>
         </div>
-        <div class="framework-tag">Velix v${VERSION} · esbuild</div>
+        <div class="dev-badge">DEV</div>
       </div>
 
-      <!-- Scrollable content -->
-      <div class="content">
+      <!-- Status & Route -->
+      <div class="status-bar">
+        <div class="status-badge">${options.statusCode || 500}</div>
+        <div class="separator">·</div>
+        <div class="route-badge">Route: ${pathname || '/'}</div>
+        <div class="separator">·</div>
+        <div class="timestamp">just now</div>
+      </div>
 
-        <!-- Error summary -->
-        <div class="error-summary">
-          <div class="error-label">
-            <svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm-.75 3.5a.75.75 0 0 1 1.5 0v4a.75.75 0 0 1-1.5 0v-4zm.75 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5z"/></svg>
-            Runtime Error
-          </div>
-          <div class="error-message">${escapeHtml(message)}</div>
-          ${pathname ? `<div class="error-location">in <strong>${escapeHtml(pathname)}</strong></div>` : ''}
+      <!-- Error Message -->
+      <div class="error-message-box">
+        ${formatErrorMessage(message)}
+      </div>
+
+      ${sourceSnippet ? `
+      <!-- Source Viewer -->
+      <div class="source-viewer">
+        <div class="source-header">
+          <div class="source-filepath">${escapeHtml(shortFile)}${errorLine ? ` (${errorLine})` : ''} @ runtime</div>
+          <a href="#" class="open-in-editor" onclick="console.log('Open in editor clicked')">
+            Open in editor
+            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </a>
         </div>
-
-        ${sourceSnippet ? `
-        <!-- Source code snippet -->
-        <div class="source-block">
-          <div class="source-topbar">
-            <svg width="12" height="12" fill="none" viewBox="0 0 24 24"><path stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/><polyline stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="14 2 14 8 20 8"/></svg>
-            <span class="filepath">${escapeHtml(shortFile)}${errorLine ? `:${errorLine}` : ''}</span>
-          </div>
-          <div class="source-code">${sourceSnippet}</div>
+        <div class="source-body">
+          ${sourceSnippet}
         </div>
-        ` : ''}
+      </div>
+      ` : ''}
 
-        <!-- Call stack -->
-        <div class="callstack">
-          <div class="callstack-header">
-            <div class="callstack-title">Call Stack</div>
-            ${ignoredFrames.length > 0 ? `
-            <button class="ignore-btn" id="ignoreBtn" onclick="toggleIgnored()">
-              <svg class="ignore-caret" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              ${ignoredFrames.length} ignored frames
-            </button>
-            ` : ''}
+      <!-- Call Stack -->
+      <div class="callstack-section">
+        <div class="callstack-header">
+          <div class="callstack-title">
+            Call Stack
+            <div class="callstack-count">${frames.length}</div>
           </div>
-
-          <!-- User frames -->
-          ${userFrames.map((f: StackFrame) => `
-          <div class="frame">
-            <div class="frame-call">${escapeHtml(f.call)}</div>
-            <div class="frame-loc">${escapeHtml(f.file.replace(/\\/g, '/').replace(/.*\/(?=app\/|server\/|src\/|pages\/)/, ''))}${f.line ? `:${f.line}` : ''}</div>
-          </div>
-          `).join('')}
-
-          <!-- Ignored frames -->
           ${ignoredFrames.length > 0 ? `
-          <div class="ignored-section" id="ignoredSection">
-            ${ignoredFrames.map((f: StackFrame) => `
-            <div class="frame ignored">
-              <div class="frame-call">${escapeHtml(f.call)}</div>
-              <div class="frame-loc">${escapeHtml(f.file)}${f.line ? `:${f.line}` : ''}</div>
-            </div>
-            `).join('')}
-          </div>
+          <button class="toggle-node-modules" id="toggleNodeModules" onclick="toggleNodeModules()">
+            Show ${ignoredFrames.length} node_modules frames
+          </button>
           ` : ''}
         </div>
 
-      </div><!-- /content -->
-    </div><!-- /overlay -->
+        ${userFrames.map((f: StackFrame, i: number) => `
+        <div class="frame">
+          <div class="frame-info">
+            <div class="frame-call">${escapeHtml(f.call)}</div>
+            <div class="frame-file">${escapeHtml(f.file.replace(/\\\\/g, '/'))}${f.line ? `:${f.line}` : ''}</div>
+          </div>
+          <div class="frame-number">${i + 1}</div>
+        </div>
+        `).join('')}
+
+        ${ignoredFrames.length > 0 ? `
+        <div class="node-modules-list" id="nodeModulesList">
+          ${ignoredFrames.map((f: StackFrame, i: number) => `
+          <div class="frame node-modules">
+            <div class="frame-info">
+              <div class="frame-call">${escapeHtml(f.call)}</div>
+              <div class="frame-file">${escapeHtml(f.file)}${f.line ? `:${f.line}` : ''}</div>
+            </div>
+            <div class="frame-number">${userFrames.length + i + 1}</div>
+          </div>
+          `).join('')}
+        </div>
+        ` : ''}
+        
+        <div class="pagination">
+          <button class="page-btn" disabled>Previous</button>
+          <button class="page-btn" disabled>Next</button>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <div class="footer-left">
+          <div class="velix-dot"></div>
+          Velix v${VERSION}
+        </div>
+        <div class="footer-right">
+          <a href="/" class="footer-link">Home</a>
+          <a href="#" class="footer-link" onclick="window.location.reload()">Reload</a>
+          <a href="https://velixcloud.io/docs" class="footer-link" target="_blank">Documentation</a>
+          <div class="dev-pill">Development Mode</div>
+        </div>
+      </div>
+
+    </div>
 
     <script>
-      function toggleIgnored() {
-        const btn = document.getElementById('ignoreBtn');
-        const sec = document.getElementById('ignoredSection');
-        if (!btn || !sec) return;
-        const open = sec.classList.toggle('open');
-        btn.classList.toggle('open', open);
+      function toggleNodeModules() {
+        const list = document.getElementById('nodeModulesList');
+        const btn = document.getElementById('toggleNodeModules');
+        if (!list || !btn) return;
+        
+        const isVisible = list.classList.contains('visible');
+        if (isVisible) {
+          list.classList.remove('visible');
+          btn.textContent = 'Show ' + list.children.length + ' node_modules frames';
+        } else {
+          list.classList.add('visible');
+          btn.textContent = 'Hide node_modules frames';
+        }
       }
     </script>
 </body>
