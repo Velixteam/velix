@@ -53,73 +53,76 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
   return `
 <style>
 /* ── Velix DevTools v5.1 ────────────────────────────────── */
-#__vdt-btn{position:fixed;bottom:16px;left:16px;z-index:9999;width:40px;height:40px;border-radius:50%;background:#111827;border:2px solid #22D3EE;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .2s,box-shadow .2s;outline:none;}
-#__vdt-btn:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(34,211,238,.25);}
-#__vdt-dot{position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;background:#22D3EE;border:2px solid #111827;transition:background .3s;}
-#__vdt{display:none;position:fixed;bottom:68px;left:16px;width:340px;background:#111827;color:#f3f4f6;border-radius:14px;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;box-shadow:0 24px 60px rgba(0,0,0,.6);z-index:10000;border:1px solid #1f2937;overflow:hidden;}
+#__vdt-btn{position:fixed;bottom:16px;left:16px;z-index:9999;min-width:40px;height:40px;border-radius:20px;background:#0B1120;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);outline:none;padding:0 12px;gap:8px;color:#fff;overflow:hidden;}
+#__vdt-btn:hover{transform:scale(1.05);background:#0F172A;border-color:rgba(255,255,255,0.2);}
+#__vdt-status-text{font-size:12px;font-weight:600;white-space:nowrap;opacity:0;max-width:0;transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);font-family:ui-sans-serif,system-ui,sans-serif;letter-spacing:0.3px;}
+#__vdt-btn.vdt-compiling #__vdt-status-text, #__vdt-btn.vdt-navigating #__vdt-status-text{opacity:1;max-width:120px;}
+
+#__vdt-dot{display:none;}
+#__vdt{display:none;position:fixed;bottom:68px;left:16px;width:340px;background:#0B1120;color:#f3f4f6;border-radius:14px;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;box-shadow:0 24px 60px rgba(0,0,0,.6);z-index:10000;border:1px solid #0F172A;overflow:hidden;}
 /* header */
-.__vdt-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1f2937;}
+.__vdt-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #0F172A;}
 .__vdt-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#f9fafb;}
-.__vdt-badge{font-size:11px;font-weight:600;background:#1f2937;color:#9ca3af;border-radius:5px;padding:2px 7px;letter-spacing:.3px;}
+.__vdt-badge{font-size:11px;font-weight:600;background:#0F172A;color:#9ca3af;border-radius:5px;padding:2px 7px;letter-spacing:.3px;}
 .__vdt-close{background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;line-height:1;padding:0;transition:color .15s;}
 .__vdt-close:hover{color:#f9fafb;}
 /* tabs */
-.__vdt-tabs{display:flex;border-bottom:1px solid #1f2937;}
+.__vdt-tabs{display:flex;border-bottom:1px solid #0F172A;}
 .__vdt-tab{flex:1;padding:10px 0;background:none;border:none;color:#6b7280;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;font-family:inherit;letter-spacing:.1px;}
 .__vdt-tab:hover{color:#d1d5db;}
-.__vdt-tab.active{color:#10b981;border-bottom-color:#10b981;}
+.__vdt-tab.active{color:#2563EB;border-bottom-color:#2563EB;}
 /* body */
 .__vdt-body{padding:14px 16px;min-height:200px;}
 .__vdt-section{margin-bottom:14px;}
 .__vdt-label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
-.__vdt-box{background:#1f2937;border-radius:8px;padding:10px 13px;font-size:13px;color:#e5e7eb;font-family:ui-monospace,'Cascadia Code','Fira Code',monospace;border:1px solid #374151;}
-.__vdt-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#1f2937;border-radius:8px;margin-bottom:6px;border:1px solid #374151;}
+.__vdt-box{background:#0F172A;border-radius:8px;padding:10px 13px;font-size:13px;color:#e5e7eb;font-family:ui-monospace,'Cascadia Code','Fira Code',monospace;border:1px solid #162032;}
+.__vdt-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #162032;}
 .__vdt-row-left{display:flex;align-items:center;gap:8px;color:#d1d5db;}
-.__vdt-row-right{font-family:ui-monospace,'Cascadia Code',monospace;color:#10b981;font-size:12px;font-weight:500;}
+.__vdt-row-right{font-family:ui-monospace,'Cascadia Code',monospace;color:#2563EB;font-size:12px;font-weight:500;}
 .__vdt-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:.2px;}
-.__vdt-pill-green{background:#052e16;color:#4ade80;border:1px solid #166534;}
+.__vdt-pill-green{background:#162032;color:#38BDF8;border:1px solid #2563EB;}
 .__vdt-pill-blue{background:#0c1a3a;color:#60a5fa;border:1px solid #1e3a8a;}
-.__vdt-render{display:flex;align-items:center;gap:6px;padding:8px 13px;background:#1f2937;border-radius:8px;border:1px solid #374151;color:#9ca3af;font-size:12px;}
+.__vdt-render{display:flex;align-items:center;gap:6px;padding:8px 13px;background:#0F172A;border-radius:8px;border:1px solid #162032;color:#9ca3af;font-size:12px;}
 .__vdt-render svg{color:#6b7280;}
 /* vitals */
-.__vdt-vital{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#1f2937;border-radius:8px;margin-bottom:6px;border:1px solid #374151;}
+.__vdt-vital{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #162032;}
 .__vdt-vital-left{display:flex;align-items:center;gap:8px;}
-.__vdt-dot-good{width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0;}
+.__vdt-dot-good{width:8px;height:8px;border-radius:50%;background:#2563EB;flex-shrink:0;}
 .__vdt-dot-warn{width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;}
 .__vdt-dot-bad{width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;}
 .__vdt-vital-name{color:#d1d5db;font-weight:500;}
-.__vdt-vital-val{font-family:ui-monospace,'Cascadia Code',monospace;color:#10b981;font-size:12px;font-weight:600;}
-.__vdt-build{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;color:#9ca3af;font-size:12px;border-top:1px solid #374151;margin-top:8px;padding-top:12px;}
+.__vdt-vital-val{font-family:ui-monospace,'Cascadia Code',monospace;color:#2563EB;font-size:12px;font-weight:600;}
+.__vdt-build{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;color:#9ca3af;font-size:12px;border-top:1px solid #162032;margin-top:8px;padding-top:12px;}
 /* info rows */
-.__vdt-info-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#1f2937;border-radius:8px;margin-bottom:6px;border:1px solid #374151;}
+.__vdt-info-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #162032;}
 .__vdt-info-left{display:flex;align-items:center;gap:8px;color:#d1d5db;}
 .__vdt-info-val{font-family:ui-monospace,'Cascadia Code',monospace;color:#9ca3af;font-size:12px;}
-.__vdt-dev-badge{display:flex;align-items:center;gap:8px;padding:10px 13px;background:#052e16;border:1px solid #166534;border-radius:8px;color:#4ade80;font-size:12px;font-weight:500;margin-top:10px;}
+.__vdt-dev-badge{display:flex;align-items:center;gap:8px;padding:10px 13px;background:#162032;border:1px solid #2563EB;border-radius:8px;color:#38BDF8;font-size:12px;font-weight:500;margin-top:10px;}
 /* footer */
-.__vdt-footer{padding:10px 16px;border-top:1px solid #1f2937;display:flex;align-items:center;justify-content:space-between;}
+.__vdt-footer{padding:10px 16px;border-top:1px solid #0F172A;display:flex;align-items:center;justify-content:space-between;}
 .__vdt-host{color:#6b7280;font-size:11px;font-family:ui-monospace,'Cascadia Code',monospace;}
-.__vdt-conn{display:flex;align-items:center;gap:5px;font-size:11px;color:#10b981;}
-.__vdt-conn-dot{width:6px;height:6px;border-radius:50%;background:#10b981;}
+.__vdt-conn{display:flex;align-items:center;gap:5px;font-size:11px;color:#2563EB;}
+.__vdt-conn-dot{width:6px;height:6px;border-radius:50%;background:#2563EB;}
 
 /* ── Widget state colors ── */
 .vdt-idle{border-color:#22D3EE !important;}
-.vdt-compiling{border-color:#4ade80 !important;}
+.vdt-compiling{border-color:#38BDF8 !important;}
 .vdt-rendering{border-color:#fb923c !important;}
 .vdt-navigating{border-color:#60a5fa !important;}
 .vdt-error{border-color:#f87171 !important;}
 #__vdt-dot.idle{background:#22D3EE;}
-#__vdt-dot.compiling{background:#4ade80;}
+#__vdt-dot.compiling{background:#38BDF8;}
 #__vdt-dot.rendering{background:#fb923c;}
 #__vdt-dot.navigating{background:#60a5fa;}
 #__vdt-dot.error{background:#f87171;}
 @keyframes __vdt-pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
-.vdt-compiling #__vdt-dot,.vdt-rendering #__vdt-dot,.vdt-navigating #__vdt-dot{animation:__vdt-pulse .9s ease-in-out infinite;}
+.vdt-compiling svg, .vdt-navigating svg{animation:__vdt-pulse .8s alternate infinite;}
 </style>
 
 <!-- ── Floating button ── -->
 <button id="__vdt-btn" class="vdt-idle" onclick="__vdtOpen()" title="Velix DevTools (${version})">
   ${ICON_LOGO}
-  <div id="__vdt-dot" class="idle"></div>
+  <span id="__vdt-status-text"></span>
 </button>
 
 <!-- ── Panel ── -->
@@ -270,7 +273,7 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
       dot.className = v <= threshGood ? '__vdt-dot-good' : v <= threshOk ? '__vdt-dot-warn' : '__vdt-dot-bad';
     }
     if(el && typeof v === 'number'){
-      el.style.color = v <= threshGood ? '#10b981' : v <= threshOk ? '#f59e0b' : '#ef4444';
+      el.style.color = v <= threshGood ? '#2563EB' : v <= threshOk ? '#f59e0b' : '#ef4444';
     }
   }
 
@@ -320,13 +323,18 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
 
   function setStatus(s){
     if(btn){ btn.className = 'vdt-' + s; }
-    if(dot){ dot.className = s; }
+    var text = document.getElementById('__vdt-status-text');
+    if(text) {
+      if(s === 'compiling') text.textContent = 'Compiling...';
+      else if(s === 'navigating') text.textContent = 'Loading...';
+      else text.textContent = '';
+    }
   }
 
   function setConn(ok){
-    if(connDot)  connDot.style.background  = ok ? '#10b981' : '#ef4444';
+    if(connDot)  connDot.style.background  = ok ? '#2563EB' : '#ef4444';
     if(connText) connText.textContent = ok ? 'connected' : 'disconnected';
-    if(connText) connText.style.color = ok ? '#10b981' : '#ef4444';
+    if(connText) connText.style.color = ok ? '#2563EB' : '#ef4444';
   }
 
   var ws = new WebSocket('ws://' + window.location.host + '/__velix_hmr');

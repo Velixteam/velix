@@ -239,11 +239,11 @@ importers:
         specifier: ^4.0.0
         version: 4.2.2
       '@teamvelix/cli':
-        specifier: ^5.2.8
-        version: 5.2.8
+        specifier: workspace:*
+        version: link:../packages/velix-cli
       '@teamvelix/velix':
-        specifier: ^5.2.8
-        version: 5.2.8(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: workspace:*
+        version: link:../packages/velix
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.7
@@ -1203,29 +1203,6 @@ packages:
   '@tailwindcss/oxide@4.2.2':
     resolution: {integrity: sha512-qEUA07+E5kehxYp9BVMpq9E8vnJuBHfJEC0vPC5e7iL/hw7HR61aDKoVoKzrG+QKp56vhNZe4qwkRmMC0zDLvg==}
     engines: {node: '>= 20'}
-
-  '@teamvelix/cli@5.2.8':
-    resolution: {integrity: sha512-a9oRjh8zHyn7LDxDXOL+OCzyZWHMqKBz10pP/KWGPBDm/hYmbvC9VWJY8kyTxfNohOd3ZK5p5YFD+PoT01ljyA==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
-
-  '@teamvelix/velix-core@5.2.8':
-    resolution: {integrity: sha512-iZH9Oj20H4DPe2wIbv5g60kIqKg7GUCSZAF/Kcc6R4XByXX/g8Y7iLX0p+PXX09WM9jXey8LafO/kCxmrgwHVw==}
-    engines: {node: '>=18.0.0'}
-
-  '@teamvelix/velix-react@5.2.8':
-    resolution: {integrity: sha512-X1vYy8nApDIT4iV57rFGPAJBTJq5w0WcZFCzx3cs+By3RuUag+gGoBt/3MMRG3Ki65WE0So+m0+h71XaH2+/tQ==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: '>=19.0.1'
-      react-dom: '>=19.0.1'
-
-  '@teamvelix/velix@5.2.8':
-    resolution: {integrity: sha512-dkohI2ZKOpgelDmzZzjxQyiE3LwXatwty8+YhB8yyGShYR02xaD1sKU2STZwOaHJ2iuE24xTF1Ye2JKBld4Tmw==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      react: '>=19.0.1'
-      react-dom: '>=19.0.1'
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -3164,48 +3141,6 @@ snapshots:
       '@tailwindcss/oxide-wasm32-wasi': 4.2.2
       '@tailwindcss/oxide-win32-arm64-msvc': 4.2.2
       '@tailwindcss/oxide-win32-x64-msvc': 4.2.2
-
-  '@teamvelix/cli@5.2.8':
-    dependencies:
-      ora: 8.2.0
-      picocolors: 1.1.1
-      prompts: 2.4.2
-
-  '@teamvelix/velix-core@5.2.8':
-    dependencies:
-      chokidar: 3.6.0
-      glob: 13.0.6
-      lru-cache: 11.5.1
-      picocolors: 1.1.1
-      ws: 8.21.0
-      zod: 3.25.76
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@teamvelix/velix-react@5.2.8(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@teamvelix/velix-core': 5.2.8
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@teamvelix/velix@5.2.8(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
-    dependencies:
-      '@teamvelix/velix-core': 5.2.8
-      '@teamvelix/velix-react': 5.2.8(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      chokidar: 3.6.0
-      esbuild: 0.25.0
-      lru-cache: 11.5.1
-      picocolors: 1.1.1
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      zod: 3.25.76
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   '@testing-library/dom@10.4.1':
     dependencies:

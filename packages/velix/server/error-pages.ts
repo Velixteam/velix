@@ -48,12 +48,12 @@ export function generate404Page(pathname: string = '/'): string {
         }
 
         body {
-          background-color: #0a0a0a;
+          background-color: #0B1120;
           background-image:
-            linear-gradient(to right,  rgba(30, 32, 30, 0.3) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(30, 32, 30, 0.3) 1px, transparent 1px);
+            linear-gradient(to right,  rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
           background-size: 60px 60px;
-          color: #e8ebe5;
+          color: #F8FAFC;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           display: flex;
           flex-direction: column;
@@ -69,7 +69,7 @@ export function generate404Page(pathname: string = '/'): string {
           content: '';
           position: fixed;
           inset: 0;
-          background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, #0a0a0a 80%);
+          background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, #0B1120 80%);
           pointer-events: none;
           z-index: 0;
         }
@@ -92,7 +92,7 @@ export function generate404Page(pathname: string = '/'): string {
           font-weight: 500;
           line-height: 1;
           letter-spacing: -0.04em;
-          color: #e8ebe5;
+          color: #F8FAFC;
           position: relative;
           margin-bottom: 8px;
         }
@@ -100,7 +100,7 @@ export function generate404Page(pathname: string = '/'): string {
           content: attr(data-value);
           position: absolute;
           inset: 0;
-          color: #00e87a;
+          color: #2563EB;
           opacity: 0.12;
           filter: blur(24px);
           pointer-events: none;
@@ -110,7 +110,7 @@ export function generate404Page(pathname: string = '/'): string {
         .accent-line {
           width: 40px;
           height: 3px;
-          background: #00e87a;
+          background: #2563EB;
           border-radius: 9999px;
           margin-bottom: 24px;
         }
@@ -131,9 +131,9 @@ export function generate404Page(pathname: string = '/'): string {
           gap: 8px;
           font-family: 'DM Mono', monospace;
           font-size: 13px;
-          color: #6b7068;
-          background: #111211;
-          border: 1px solid #1e201e;
+          color: #94A3B8;
+          background: #0F172A;
+          border: 1px solid #1E293B;
           padding: 5px 14px;
           border-radius: 9999px;
           margin-bottom: 32px;
@@ -164,23 +164,23 @@ export function generate404Page(pathname: string = '/'): string {
           transition: all 0.15s ease;
         }
         .btn-primary {
-          background: #00e87a;
-          color: #0a0a0a;
-          border: 1px solid #00e87a;
+          background: #2563EB;
+          color: #0B1120;
+          border: 1px solid #2563EB;
         }
         .btn-primary:hover {
-          background: #00ff87;
+          background: #3B82F6;
           transform: translateY(-1px);
-          box-shadow: 0 0 20px rgba(0, 232, 122, 0.35);
+          box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
         }
         .btn-secondary {
           background: transparent;
-          color: #e8ebe5;
-          border: 1px solid #1e201e;
+          color: #F8FAFC;
+          border: 1px solid #1E293B;
         }
         .btn-secondary:hover {
-          background: #111211;
-          border-color: #2a2d2a;
+          background: #0F172A;
+          border-color: #334155;
         }
 
         /* ── footer branding ── */
@@ -193,14 +193,14 @@ export function generate404Page(pathname: string = '/'): string {
           align-items: center;
           gap: 8px;
           font-size: 12px;
-          color: #3a3d3a;
+          color: #475569;
           font-family: 'DM Mono', monospace;
         }
         .brand-dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #00e87a;
+          background: #2563EB;
         }
     </style>
 </head>
@@ -278,7 +278,7 @@ export function generate500Page(options: ErrorPageOptions): string {
               // Strings
               hl = hl.replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g, '<span style="color:#86efac">$1</span>');
               // Comments
-              hl = hl.replace(/(\\&#x2F;\\&#x2F;.*)$/g, '<span style="color:#6b7068">$1</span>');
+              hl = hl.replace(/(\\&#x2F;\\&#x2F;.*)$/g, '<span style="color:#94A3B8">$1</span>');
               // Numbers
               hl = hl.replace(/\\b(\\d+)\\b/g, '<span style="color:#f59e0b">$1</span>');
               return hl;
@@ -304,7 +304,7 @@ export function generate500Page(options: ErrorPageOptions): string {
   const formatErrorMessage = (msg: string): string => {
     let formatted = escapeHtml(msg);
     // Render Windows and Unix absolute paths in green
-    const pathSpan = '<span style="color:#00e87a;cursor:pointer;" onclick="console.log(\'open in editor\')">';
+    const pathSpan = '<span style="color:#2563EB;cursor:pointer;" onclick="console.log(\'open in editor\')">';
     formatted = formatted.replace(/([A-Z]:\\[^\s<]+|\/(?:Users|home|var|srv)\/[^\s<]+)/g, pathSpan + '$1</span>');
     // Render ERROR: in red
     formatted = formatted.replace(/(ERROR:)/g, '<strong style="color:#ff6b6b">$1</strong>');
@@ -330,7 +330,7 @@ export function generate500Page(options: ErrorPageOptions): string {
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          background: #0a0a0a;
+          background: #0B1120;
           color: #ededed;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           display: flex; align-items: center; justify-content: center;
@@ -377,12 +377,12 @@ export function generate500Page(options: ErrorPageOptions): string {
         }
 
         body {
-          background-color: #0a0a0a;
+          background-color: #0B1120;
           background-image: 
-            linear-gradient(to right, rgba(30, 32, 30, 0.25) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(30, 32, 30, 0.25) 1px, transparent 1px);
+            linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
           background-size: 60px 60px;
-          color: #e8ebe5;
+          color: #F8FAFC;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           min-height: 100vh;
           display: flex;
@@ -396,7 +396,7 @@ export function generate500Page(options: ErrorPageOptions): string {
         .bg-mask {
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
-          background: radial-gradient(circle at center, transparent 0%, #0a0a0a 80%);
+          background: radial-gradient(circle at center, transparent 0%, #0B1120 80%);
           z-index: -1;
           pointer-events: none;
         }
@@ -465,32 +465,32 @@ export function generate500Page(options: ErrorPageOptions): string {
           font-size: 13px;
         }
         .status-badge {
-          background: #111211;
-          border: 1px solid #1e201e;
+          background: #0F172A;
+          border: 1px solid #1E293B;
           color: #ff6b6b;
           padding: 4px 10px;
           border-radius: 6px;
         }
         .route-badge {
-          background: #111211;
-          border: 1px solid #1e201e;
-          color: #00e87a;
+          background: #0F172A;
+          border: 1px solid #1E293B;
+          color: #2563EB;
           padding: 4px 10px;
           border-radius: 6px;
         }
-        .separator { color: #6b7068; }
-        .timestamp { color: #6b7068; font-family: system-ui; font-size: 13px; }
+        .separator { color: #94A3B8; }
+        .timestamp { color: #94A3B8; font-family: system-ui; font-size: 13px; }
 
         /* ── Error Message ── */
         .error-message-box {
-          background: #111211;
-          border: 1px solid #1e201e;
+          background: #0F172A;
+          border: 1px solid #1E293B;
           border-left: 3px solid #ff6b6b;
           border-radius: 10px;
           padding: 1rem 1.25rem;
           font-family: 'DM Mono', monospace;
           font-size: 14px;
-          color: #e8ebe5;
+          color: #F8FAFC;
           line-height: 1.6;
           white-space: pre-wrap;
           word-break: break-word;
@@ -510,10 +510,10 @@ export function generate500Page(options: ErrorPageOptions): string {
         .source-filepath {
           font-family: 'DM Mono', monospace;
           font-size: 13px;
-          color: #00e87a;
+          color: #2563EB;
         }
         .open-in-editor {
-          color: #6b7068;
+          color: #94A3B8;
           cursor: pointer;
           transition: color 0.15s;
           display: flex;
@@ -522,12 +522,12 @@ export function generate500Page(options: ErrorPageOptions): string {
           font-size: 13px;
           text-decoration: none;
         }
-        .open-in-editor:hover { color: #e8ebe5; }
+        .open-in-editor:hover { color: #F8FAFC; }
         .open-in-editor svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
 
         .source-body {
-          background: #0d0f0d;
-          border: 1px solid #1e201e;
+          background: #020617;
+          border: 1px solid #1E293B;
           border-radius: 8px;
           padding: 16px 0;
           overflow-x: auto;
@@ -540,7 +540,7 @@ export function generate500Page(options: ErrorPageOptions): string {
           padding: 0 16px;
         }
         .ln {
-          color: #3a3d3a;
+          color: #475569;
           width: 32px;
           text-align: right;
           margin-right: 16px;
@@ -557,11 +557,11 @@ export function generate500Page(options: ErrorPageOptions): string {
         .code-content { white-space: pre; }
         
         .src-err {
-          background: rgba(0, 232, 122, 0.04);
+          background: rgba(37, 99, 235, 0.04);
         }
-        .src-err .ln { color: #00e87a; }
-        .src-err .active-arrow { color: #00e87a; }
-        .src-err .code-content { color: #e8ebe5; }
+        .src-err .ln { color: #2563EB; }
+        .src-err .active-arrow { color: #2563EB; }
+        .src-err .code-content { color: #F8FAFC; }
 
         /* ── Call Stack ── */
         .callstack-section {
@@ -583,8 +583,8 @@ export function generate500Page(options: ErrorPageOptions): string {
           gap: 12px;
         }
         .callstack-count {
-          background: #1e201e;
-          color: #e8ebe5;
+          background: #1E293B;
+          color: #F8FAFC;
           padding: 2px 10px;
           border-radius: 9999px;
           font-size: 12px;
@@ -592,18 +592,18 @@ export function generate500Page(options: ErrorPageOptions): string {
         }
         
         .toggle-node-modules {
-          color: #6b7068;
+          color: #94A3B8;
           font-size: 13px;
           background: none;
           border: none;
           cursor: pointer;
           transition: color 0.15s;
         }
-        .toggle-node-modules:hover { color: #e8ebe5; }
+        .toggle-node-modules:hover { color: #F8FAFC; }
 
         .frame {
-          background: #111211;
-          border: 1px solid #1e201e;
+          background: #0F172A;
+          border: 1px solid #1E293B;
           border-radius: 8px;
           padding: 0.875rem 1rem;
           display: flex;
@@ -611,7 +611,7 @@ export function generate500Page(options: ErrorPageOptions): string {
           align-items: center;
           transition: background-color 0.15s, transform 0.15s;
         }
-        .frame:hover { background: #161816; }
+        .frame:hover { background: #1E293B; }
         
         .frame-info {
           display: flex;
@@ -622,20 +622,20 @@ export function generate500Page(options: ErrorPageOptions): string {
           font-family: 'DM Mono', monospace;
           font-size: 14px;
           font-weight: 700;
-          color: #00e87a;
+          color: #2563EB;
         }
         .frame-file {
           font-family: 'DM Mono', monospace;
           font-size: 13px;
-          color: #6b7068;
+          color: #94A3B8;
         }
         
-        .frame.node-modules .frame-call { color: #6b7068; font-weight: 400; }
-        .frame.node-modules .frame-file { color: #3a3d3a; }
+        .frame.node-modules .frame-call { color: #94A3B8; font-weight: 400; }
+        .frame.node-modules .frame-file { color: #475569; }
         
         .frame-number {
-          background: #1e201e;
-          color: #6b7068;
+          background: #1E293B;
+          color: #94A3B8;
           padding: 2px 8px;
           border-radius: 6px;
           font-size: 12px;
@@ -650,15 +650,15 @@ export function generate500Page(options: ErrorPageOptions): string {
         }
         .page-btn {
           background: transparent;
-          border: 1px solid #1e201e;
-          color: #e8ebe5;
+          border: 1px solid #1E293B;
+          color: #F8FAFC;
           padding: 6px 14px;
           border-radius: 6px;
           font-size: 13px;
           cursor: pointer;
           transition: all 0.15s;
         }
-        .page-btn:hover:not(:disabled) { background: #1e201e; }
+        .page-btn:hover:not(:disabled) { background: #1E293B; }
         .page-btn:disabled { opacity: 0.3; cursor: default; }
         
         .node-modules-list { display: none; flex-direction: column; gap: 12px; margin-top: 12px; }
@@ -668,7 +668,7 @@ export function generate500Page(options: ErrorPageOptions): string {
         .footer {
           margin-top: 32px;
           padding-top: 24px;
-          border-top: 1px solid #1e201e;
+          border-top: 1px solid #1E293B;
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -679,24 +679,24 @@ export function generate500Page(options: ErrorPageOptions): string {
           gap: 8px;
           font-size: 13px;
           font-weight: 600;
-          color: #e8ebe5;
+          color: #F8FAFC;
         }
-        .velix-dot { width: 8px; height: 8px; border-radius: 50%; background: #00e87a; }
+        .velix-dot { width: 8px; height: 8px; border-radius: 50%; background: #2563EB; }
         .footer-right {
           display: flex;
           align-items: center;
           gap: 16px;
         }
         .footer-link {
-          color: #6b7068;
+          color: #94A3B8;
           text-decoration: none;
           font-size: 13px;
           transition: color 0.15s;
         }
-        .footer-link:hover { color: #e8ebe5; }
+        .footer-link:hover { color: #F8FAFC; }
         .dev-pill {
-          background: #1e201e;
-          color: #e8ebe5;
+          background: #1E293B;
+          color: #F8FAFC;
           padding: 4px 12px;
           border-radius: 9999px;
           font-size: 12px;
