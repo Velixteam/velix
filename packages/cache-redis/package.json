@@ -1,5 +1,5 @@
 {
-  "name": "@velix/cache-redis",
+  "name": "@teamvelix/cache-redis",
   "version": "0.1.0",
   "description": "Redis cache adapter for Velix — implements ICacheAdapter via ioredis",
   "main": "dist/index.js",
