@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@theme {
+  --color-velix-deep: #0B1120;
+  --color-velix-dark: #0F172A;
+  --color-velix-accent: #2563EB;
+  --color-velix-cyan: #22D3EE;
+  --color-velix-glow: #38BDF8;
+}

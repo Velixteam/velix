@@ -1,0 +1,27 @@
+{
+  "name": "test",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "velix dev",
+    "build": "velix build",
+    "start": "velix start"
+  },
+  "dependencies": {
+    "@teamvelix/velix": "^5.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^2.2.1",
+    "lucide-react": "^0.359.0"
+  },
+  "devDependencies": {
+    "@teamvelix/cli": "^5.3.1",
+    "typescript": "^5.7.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/cli": "^4.0.0"
+  }
+}
