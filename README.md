@@ -1,4 +1,4 @@
-# Velix v5.2
+# Velix v5.3
 
 <p align="center">
   <img src="./assets/velix cover.webp" width="100%" alt="Velix Cover" />
