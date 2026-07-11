@@ -7,7 +7,7 @@ const STATUS_CONFIG: Record<number, { label: string; color: string; glow: string
   400: { label: 'Bad Request',           color: '#f59e0b', glow: 'rgba(245,158,11,0.06)' },
   401: { label: 'Unauthorized',          color: '#f59e0b', glow: 'rgba(245,158,11,0.06)' },
   403: { label: 'Forbidden',             color: '#f59e0b', glow: 'rgba(245,158,11,0.06)' },
-  404: { label: 'Page not found',        color: '#00e87a', glow: 'rgba(0,232,122,0.05)' },
+  404: { label: 'Page not found',        color: '#2563EB', glow: 'rgba(37,99,235,0.05)' },
   500: { label: 'Internal Server Error', color: '#ff6b6b', glow: 'rgba(255,107,107,0.06)' },
   503: { label: 'Service Unavailable',   color: '#ff6b6b', glow: 'rgba(255,107,107,0.06)' },
 }
@@ -62,7 +62,7 @@ export function VelixDefaultErrorPage({ error, reset }: ErrorPageProps) {
       }}>
         <div style={{
           width: 8, height: 8, borderRadius: '50%',
-          background: '#00e87a',
+          background: '#2563EB',
         }} />
         <span style={{
           fontWeight: 800, fontSize: '1rem', color: '#fafaf8',
@@ -134,7 +134,7 @@ export function VelixDefaultErrorPage({ error, reset }: ErrorPageProps) {
         {/* Actions */}
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <a href="/" style={{
-            background: '#00e87a', color: '#0a0a0a',
+            background: '#2563EB', color: '#0a0a0a',
             padding: '0.625rem 1.5rem', borderRadius: '8px',
             fontWeight: 700, fontSize: '0.875rem',
             textDecoration: 'none', fontFamily: 'system-ui',

@@ -186,11 +186,19 @@ function generateGlobalsCss(useTailwind: boolean) {
   --velix-bg: #0a0a0a;
   --velix-surface: #111211;
   --velix-border: #1e201e;
-  --velix-accent: #00e87a;
+  /* Brand blue palette — extracted from DevTools (source of truth) */
+  --velix-accent: #2563EB;          /* tab active border, row values, conn dot   */
+  --velix-accent-light: #38BDF8;    /* pill text, dev-badge text, compile spinner */
+  --velix-accent-hover: #1D4ED8;    /* button hover                               */
+  --velix-accent-glow: rgba(37,99,235,0.15);
+  --velix-accent-deep: #0c1a3a;     /* pill-blue bg                               */
+  /* Semantic only — do NOT use as brand accent */
+  --velix-success: #00e87a;
   --velix-muted: #6b7068;
   --velix-text: #e8ebe5;
   --velix-error: #ff6b6b;
 }
+
 
 body {
   background-color: var(--velix-bg);
@@ -200,7 +208,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-@keyframes pulse-green {
+@keyframes pulse-blue {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.8); }
 }
@@ -272,7 +280,7 @@ function generateMinimalPage(useTailwind: boolean): string {
     container: 'style={{ minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden", backgroundColor: "#0a0a0a", color: "#e8ebe5" }}',
     grid: 'style={{ position: "absolute", inset: 0, backgroundImage: "linear-gradient(to right, #1e201e 1px, transparent 1px), linear-gradient(to bottom, #1e201e 1px, transparent 1px)", backgroundSize: "60px 60px", opacity: 0.2, maskImage: "radial-gradient(circle at center, black, transparent 80%)", WebkitMaskImage: "radial-gradient(circle at center, black, transparent 80%)", pointerEvents: "none" }}',
     header: 'style={{ position: "absolute", top: "2rem", left: "2rem", display: "flex", alignItems: "center", gap: "0.75rem", zIndex: 10 }}',
-    dot: 'style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#00e87a" }}',
+    dot: 'style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#2563EB" }}',
     logo: 'style={{ fontWeight: "bold", fontSize: "1.25rem" }}',
     badge: 'style={{ backgroundColor: "#1e201e", color: "#6b7068", padding: "0.1rem 0.6rem", borderRadius: "999px", fontSize: "0.75rem" }}',
     main: 'style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", zIndex: 10 }}',
@@ -281,10 +289,10 @@ function generateMinimalPage(useTailwind: boolean): string {
     subtitle: 'style={{ color: "#6b7068", fontSize: "14px" }}',
     columns: 'style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1rem", width: "100%", maxWidth: "480px", marginBottom: "3rem" }}',
     colCard: 'style={{ flex: "1 1 200px", backgroundColor: "#111211", border: "1px solid #1e201e", borderRadius: "10px", padding: "1rem" }}',
-    colLabel: 'style={{ color: "#00e87a", fontFamily: "\\"Geist Mono\\", monospace", fontSize: "12px", marginBottom: "1rem" }}',
+    colLabel: 'style={{ color: "#2563EB", fontFamily: "\\"Geist Mono\\", monospace", fontSize: "12px", marginBottom: "1rem" }}',
     ul: 'style={{ listStyle: "none", padding: 0, margin: 0, fontSize: "13px", display: "flex", flexDirection: "column", gap: "0.5rem" }}',
     li: 'style={{ display: "flex", gap: "1rem" }}',
-    liFile: 'style={{ color: "#00e87a", width: "80px" }}',
+    liFile: 'style={{ color: "#2563EB", width: "80px" }}',
     liDesc: 'style={{ color: "#6b7068" }}',
     linksRow: 'style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1rem", width: "100%", maxWidth: "480px" }}',
     linkCard: 'style={{ flex: "1 1 120px", backgroundColor: "#111211", border: "1px solid #1e201e", padding: "1rem", borderRadius: "8px", textDecoration: "none", display: "flex", flexDirection: "column", gap: "0.25rem" }}',
@@ -296,7 +304,7 @@ function generateMinimalPage(useTailwind: boolean): string {
     container: 'className="min-h-screen flex flex-col relative overflow-hidden bg-[#0a0a0a] text-[#e8ebe5]"',
     grid: 'className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: "linear-gradient(to right, #1e201e 1px, transparent 1px), linear-gradient(to bottom, #1e201e 1px, transparent 1px)", backgroundSize: "60px 60px", maskImage: "radial-gradient(circle at center, black, transparent 80%)", WebkitMaskImage: "radial-gradient(circle at center, black, transparent 80%)" }}',
     header: 'className="absolute top-8 left-8 flex items-center gap-3 z-10"',
-    dot: 'className="w-2 h-2 rounded-full bg-[#00e87a]"',
+    dot: 'className="w-2 h-2 rounded-full bg-[#2563EB]"',
     logo: 'className="font-bold text-xl"',
     badge: 'className="bg-[#1e201e] text-[#6b7068] px-2.5 py-0.5 rounded-full text-xs"',
     main: 'className="flex-1 flex flex-col items-center justify-center p-8 z-10"',
@@ -305,13 +313,13 @@ function generateMinimalPage(useTailwind: boolean): string {
     subtitle: 'className="text-[#6b7068] text-[14px]"',
     columns: 'className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-[480px] mb-12"',
     colCard: 'className="bg-[#111211] border border-[#1e201e] rounded-[10px] p-4"',
-    colLabel: 'className="text-[#00e87a] font-mono text-xs mb-4"',
+    colLabel: 'className="text-[#2563EB] font-mono text-xs mb-4"',
     ul: 'className="flex flex-col gap-2 text-[13px]"',
     li: 'className="flex gap-4"',
-    liFile: 'className="text-[#00e87a] w-[80px]"',
+    liFile: 'className="text-[#2563EB] w-[80px]"',
     liDesc: 'className="text-[#6b7068]"',
     linksRow: 'className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-[480px]"',
-    linkCard: 'className="bg-[#111211] border border-[#1e201e] hover:border-[#00e87a] transition-colors duration-200 cursor-pointer p-4 rounded-lg flex flex-col gap-1 text-left"',
+    linkCard: 'className="bg-[#111211] border border-[#1e201e] hover:border-[#2563EB] transition-colors duration-200 cursor-pointer p-4 rounded-lg flex flex-col gap-1 text-left"',
     linkTitle: 'className="text-[#e8ebe5] text-[14px] font-bold"',
     linkDesc: 'className="text-[#6b7068] text-[12px]"',
     footer: 'className="absolute bottom-8 left-0 right-0 text-center z-10"',
@@ -386,7 +394,7 @@ function generateDefaultPage(useTailwind: boolean): string {
 export default function HomePage() {
   return (
     <main style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#0a0a0a", color: "#e8ebe5" }}>
-      <h1 style={{ fontSize: "3rem", fontWeight: 800 }}>Build faster. <span style={{ color: "#00e87a" }}>Ship smarter.</span></h1>
+      <h1 style={{ fontSize: "3rem", fontWeight: 800 }}>Build faster. <span style={{ color: "#2563EB" }}>Ship smarter.</span></h1>
       <p style={{ color: "#6b7068", marginTop: "0.5rem" }}>Velix v5.3 is here.</p>
     </main>
   );
@@ -412,16 +420,16 @@ export default function HomePage() {
       {/* SECTION 1 - Hero */}
       <section className="relative pt-40 pb-24 flex flex-col items-center justify-center text-center overflow-hidden min-h-[90vh]">
         <div className="absolute inset-0 pointer-events-none opacity-30" style={{ backgroundImage: 'linear-gradient(to right, #1e201e 1px, transparent 1px), linear-gradient(to bottom, #1e201e 1px, transparent 1px)', backgroundSize: '60px 60px', maskImage: 'radial-gradient(ellipse 80% 60% at center, black, transparent)', WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at center, black, transparent)' }} />
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(0,232,122,0.05),transparent_50%)]" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.05),transparent_50%)]" />
         
         <div className="z-10 flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#111211] border border-[#1e201e] mb-8">
-          <div className="w-2 h-2 rounded-full bg-[#00e87a] animate-[pulse-green_2s_ease-in-out_infinite]" />
+          <div className="w-2 h-2 rounded-full bg-[#2563EB] animate-[pulse-blue_2s_ease-in-out_infinite]" />
           <span className="text-[13px] text-[#6b7068]">Velix v5.3 is here</span>
         </div>
 
         <h1 className="z-10 text-[4rem] md:text-[5rem] font-bold leading-none tracking-tight mb-6">
           <span className="text-[#e8ebe5]">Build faster.</span><br/>
-          <span className="text-[#00e87a]">Ship smarter.</span>
+          <span className="text-[#2563EB]">Ship smarter.</span>
         </h1>
 
         <p className="z-10 text-[16px] text-[#6b7068] max-w-[500px] mb-10 px-4">
@@ -429,7 +437,7 @@ export default function HomePage() {
         </p>
 
         <div className="z-10 flex flex-col sm:flex-row items-center gap-4 mb-16">
-          <a href="#" className="px-8 py-3.5 bg-[#00e87a] text-[#0a0a0a] font-bold rounded-lg hover:opacity-90 hover:-translate-y-[1px] transition-all">Get started &rarr;</a>
+          <a href="#" className="px-8 py-3.5 bg-[#2563EB] text-[#0a0a0a] font-bold rounded-lg hover:opacity-90 hover:-translate-y-[1px] transition-all">Get started &rarr;</a>
           <a href="https://github.com/Velixteam/velix" className="px-8 py-3.5 bg-transparent text-[#e8ebe5] border border-[#1e201e] rounded-lg hover:border-[#6b7068] transition-all">View on GitHub</a>
         </div>
 
@@ -445,7 +453,7 @@ export default function HomePage() {
           </div>
           <div className="p-4 font-mono text-[13px] leading-loose text-[#e8ebe5]">
             <div className="opacity-0 animate-[termFade_0.2s_ease-out_forwards]" style={{ animationDelay: '0ms' }}>
-              <span className="text-[#6b7068]">$</span> <span className="text-[#00e87a]">npx create-velix-app@latest</span> my-app
+              <span className="text-[#6b7068]">$</span> <span className="text-[#2563EB]">npx create-velix-app@latest</span> my-app
             </div>
             <div className="opacity-0 animate-[termFade_0.2s_ease-out_forwards] text-[#6b7068]" style={{ animationDelay: '600ms' }}>
               ✓ Detected Velix v5.3
@@ -456,11 +464,11 @@ export default function HomePage() {
             <div className="opacity-0 animate-[termFade_0.2s_ease-out_forwards] text-[#6b7068]" style={{ animationDelay: '1800ms' }}>
               ✓ Setting up TypeScript
             </div>
-            <div className="opacity-0 animate-[termFade_0.2s_ease-out_forwards] text-[#00e87a]" style={{ animationDelay: '2400ms' }}>
+            <div className="opacity-0 animate-[termFade_0.2s_ease-out_forwards] text-[#2563EB]" style={{ animationDelay: '2400ms' }}>
               ✓ Ready! cd my-app && npm run dev
             </div>
             <div className="opacity-0 animate-[termFade_0.2s_ease-out_forwards]" style={{ animationDelay: '3000ms' }}>
-              <span className="text-[#6b7068]">$</span> <span className="text-[#00e87a]">cursor</span> <span className="inline-block w-2 h-4 bg-[#e8ebe5] ml-1 align-middle animate-[blink_1s_step-end_infinite]" />
+              <span className="text-[#6b7068]">$</span> <span className="text-[#2563EB]">cursor</span> <span className="inline-block w-2 h-4 bg-[#e8ebe5] ml-1 align-middle animate-[blink_1s_step-end_infinite]" />
             </div>
           </div>
         </div>
@@ -504,16 +512,16 @@ app/
           </div>
           
           <div className="rounded-xl border border-[rgba(0,232,122,0.15)] bg-[#111211] overflow-hidden">
-            <div className="bg-[rgba(0,232,122,0.05)] border-b border-[rgba(0,232,122,0.15)] px-4 py-3 flex items-center gap-2">
-              <span className="text-[#00e87a] font-mono text-sm font-bold">✅ Velix</span>
+            <div className="bg-[rgba(37,99,235,0.05)] border-b border-[rgba(0,232,122,0.15)] px-4 py-3 flex items-center gap-2">
+              <span className="text-[#2563EB] font-mono text-sm font-bold">✅ Velix</span>
             </div>
             <div className="p-6 font-mono text-[13px] text-[#6b7068] leading-[2.5] whitespace-pre overflow-x-auto">
 app/
-  page.tsx        <span className="text-[#00e87a]">← UI only ✓</span>
+  page.tsx        <span className="text-[#2563EB]">← UI only ✓</span>
 server/
-  api/posts.ts    <span className="text-[#00e87a]">← clean ✓</span>
-  loaders/...     <span className="text-[#00e87a]">← clean ✓</span>
-  actions/...     <span className="text-[#00e87a]">← clean ✓</span>
+  api/posts.ts    <span className="text-[#2563EB]">← clean ✓</span>
+  loaders/...     <span className="text-[#2563EB]">← clean ✓</span>
+  actions/...     <span className="text-[#2563EB]">← clean ✓</span>
             </div>
           </div>
         </div>
@@ -561,7 +569,7 @@ server/
             <div className="p-6 font-mono text-[13px] leading-loose whitespace-pre overflow-x-auto text-[#e8ebe5]">
 <span className="text-[#c084fc]">import</span> {"{ defineLoader, NotFoundError }"} <span className="text-[#c084fc]">from</span> <span className="text-[#86efac]">'velix/server'</span>
 
-<span className="text-[#c084fc]">export const</span> <span className="text-[#00e87a]">blogLoader</span> = <span className="text-[#00e87a]">defineLoader</span>(<span className="text-[#c084fc]">async</span> {"({ params }) => {"}
+<span className="text-[#c084fc]">export const</span> <span className="text-[#2563EB]">blogLoader</span> = <span className="text-[#2563EB]">defineLoader</span>(<span className="text-[#c084fc]">async</span> {"({ params }) => {"}
   <span className="text-[#c084fc]">const</span> post = <span className="text-[#c084fc]">await</span> db.post.findUnique{"({"}
     where: {"{ slug: params.slug }"}
   {"})"}
@@ -595,12 +603,12 @@ server/
 
       {/* SECTION 6 - CTA */}
       <section className="py-32 flex flex-col items-center justify-center text-center relative bg-[#0d0f0d] border-t border-[#1e201e] w-full">
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(0,232,122,0.03),transparent_60%)]" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.03),transparent_60%)]" />
         <h2 className="text-[3rem] font-bold text-[#e8ebe5] mb-4 z-10">Ready to ship?</h2>
         <p className="text-[#6b7068] mb-10 max-w-[400px] z-10 text-[15px]">Join developers building with Velix.<br/>No credit card. No lock-in. Just code.</p>
         
         <div className="z-10 flex flex-col items-center">
-          <button onClick={handleCopy} className="group relative bg-[#00e87a] hover:bg-[#00d66f] text-[#0a0a0a] font-mono font-bold text-[16px] md:text-[18px] py-4 px-8 rounded-xl shadow-[0_0_20px_rgba(0,232,122,0.2)] hover:shadow-[0_0_30px_rgba(0,232,122,0.3)] transition-all flex items-center gap-3 cursor-pointer">
+          <button onClick={handleCopy} className="group relative bg-[#2563EB] hover:bg-[#1D4ED8] text-[#0a0a0a] font-mono font-bold text-[16px] md:text-[18px] py-4 px-8 rounded-xl shadow-[0_0_20px_rgba(37,99,235,0.2)] hover:shadow-[0_0_30px_rgba(37,99,235,0.3)] transition-all flex items-center gap-3 cursor-pointer">
             {copied ? "✓ Copied!" : "$ npx create-velix-app@latest"}
           </button>
           <p className="text-[#6b7068] text-[13px] mt-6">Or: npm create velix-app@latest &middot; pnpm create velix-app</p>
@@ -614,14 +622,14 @@ server/
 
 function generateNavbar(useTailwind: boolean): string {
   if (!useTailwind) {
-    return `export default function Navbar() { return <nav style={{ padding: "1.25rem 2.5rem", borderBottom: "1px solid #1e201e", display: "flex", justifyContent: "space-between", backgroundColor: "#0a0a0a" }}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#00e87a" }} /><strong style={{ color: "#e8ebe5" }}>Velix</strong></div></nav>; }`;
+    return `export default function Navbar() { return <nav style={{ padding: "1.25rem 2.5rem", borderBottom: "1px solid #1e201e", display: "flex", justifyContent: "space-between", backgroundColor: "#0a0a0a" }}><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: "#2563EB" }} /><strong style={{ color: "#e8ebe5" }}>Velix</strong></div></nav>; }`;
   }
   return `export default function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[100] bg-[rgba(10,10,10,0.85)] backdrop-blur-[12px] border-b border-[#1e201e] px-6 md:px-10 py-4 md:py-5">
       <div className="max-w-[1200px] mx-auto flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-[#00e87a]" />
+          <div className="w-2 h-2 rounded-full bg-[#2563EB]" />
           <span className="font-bold text-[#e8ebe5] text-lg">Velix</span>
           <span className="text-[#6b7068] bg-[#1e201e] px-2 py-0.5 rounded-full text-xs hidden sm:inline-block">v5.3</span>
         </div>
@@ -636,7 +644,7 @@ function generateNavbar(useTailwind: boolean): string {
               <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
             </svg>
           </a>
-          <a href="#" className="bg-[#00e87a] text-[#0a0a0a] font-bold px-4 md:px-5 py-2 rounded-md hover:opacity-90 transition-opacity text-sm md:text-base">Deploy</a>
+          <a href="#" className="bg-[#2563EB] text-[#0a0a0a] font-bold px-4 md:px-5 py-2 rounded-md hover:opacity-90 transition-opacity text-sm md:text-base">Deploy</a>
         </div>
       </div>
     </nav>
@@ -656,7 +664,7 @@ function generateFooter(useTailwind: boolean): string {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 mb-12">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-2 h-2 rounded-full bg-[#00e87a]" />
+              <div className="w-2 h-2 rounded-full bg-[#2563EB]" />
               <span className="font-bold text-[#e8ebe5] text-lg">Velix</span>
             </div>
             <p className="text-[#6b7068] text-sm mb-4">The full-stack React framework.</p>
@@ -732,8 +740,8 @@ export default function BlogPage() {
             { id: "2", slug: "modern-styling", title: "Styling with purpose", date: "Mar 18, 2026", excerpt: "How we use Tailwind and CSS variables to create stunning dark mode interfaces." }
           ].map((post) => (
             <article key={post.id} className="group relative">
-              <span className="text-sm font-bold text-[#00e87a] mb-2 block uppercase tracking-widest">{post.date}</span>
-              <h2 className="text-3xl font-bold mb-4 group-hover:text-[#00e87a] transition-colors">
+              <span className="text-sm font-bold text-[#2563EB] mb-2 block uppercase tracking-widest">{post.date}</span>
+              <h2 className="text-3xl font-bold mb-4 group-hover:text-[#2563EB] transition-colors">
                 <a href={"/blog/post/" + post.slug}>{post.title}</a>
               </h2>
               <p className="text-[#6b7068] leading-relaxed mb-6 text-lg">{post.excerpt}</p>
@@ -753,7 +761,7 @@ export default function BlogPage() {
   return (
     <article className="min-h-screen ${useTailwind ? 'bg-[#0a0a0a] text-[#e8ebe5]' : ''}">
       <div className="max-w-3xl mx-auto px-6 py-24">
-        <a href="/blog" className="text-[#00e87a] font-bold mb-8 block hover:translate-x-[-4px] transition-transform w-fit">&larr; Back to Journal</a>
+        <a href="/blog" className="text-[#2563EB] font-bold mb-8 block hover:translate-x-[-4px] transition-transform w-fit">&larr; Back to Journal</a>
         <header className="mb-12">
            <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight capitalize">{params.slug.replace(/-/g, ' ')}</h1>
         </header>
@@ -777,10 +785,10 @@ export default function BlogPage() {
   return (
     <main className="min-h-screen ${useTailwind ? 'bg-[#0a0a0a] text-[#e8ebe5]' : ''} flex items-center justify-center">
       <div className="max-w-xl text-center p-12 bg-[#111211] backdrop-blur-3xl rounded-3xl border border-[#1e201e]">
-        <span className="bg-[rgba(0,232,122,0.1)] text-[#00e87a] px-4 py-1 rounded-full text-sm font-bold mb-6 inline-block">ID ROUTE</span>
+        <span className="bg-[rgba(37,99,235,0.1)] text-[#2563EB] px-4 py-1 rounded-full text-sm font-bold mb-6 inline-block">ID ROUTE</span>
         <h1 className="text-4xl font-black mb-4">Post Reference: #{params.id}</h1>
         <p className="text-[#6b7068] mb-8 text-lg">Looking for a specific record? Velix allows you to mix route patterns seamlessly.</p>
-        <a href="/blog" className="text-[#00e87a] hover:underline font-semibold">Back to Blog</a>
+        <a href="/blog" className="text-[#2563EB] hover:underline font-semibold">Back to Blog</a>
       </div>
     </main>
   );

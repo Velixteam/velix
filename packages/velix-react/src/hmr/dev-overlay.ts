@@ -24,9 +24,9 @@ export const VelixDevOverlay = {
           </style>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="animation: velix-spin 0.8s linear infinite;">
             <circle cx="8" cy="8" r="7" stroke="#1e201e" stroke-width="2" />
-            <path d="M15 8a7 7 0 0 0-7-7" stroke="#00e87a" stroke-width="2" stroke-linecap="round" />
+            <path d="M15 8a7 7 0 0 0-7-7" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" />
           </svg>
-          <div><span style="color: #00e87a; font-weight: bold;">Compiling</span><span style="color: #6b7068;">...</span></div>
+          <div><span style="color: #38BDF8; font-weight: bold;">Compiling</span><span style="color: #6b7068;">...</span></div>
         </div>
       `;
     }, 200);
@@ -57,7 +57,7 @@ export const VelixDevOverlay = {
             <button onclick="document.getElementById('__velix-overlay').innerHTML = ''" style="background: transparent; border: none; color: #6b7068; cursor: pointer; font-size: 18px;">×</button>
           </div>
           <div style="padding: 20px;">
-            ${err.file ? `<div style="color: #00e87a; font-family: monospace; font-size: 13px; margin-bottom: 4px;">${err.file}</div>` : ''}
+            ${err.file ? `<div style="color: #38BDF8; font-family: monospace; font-size: 13px; margin-bottom: 4px;">${err.file}</div>` : ''}
             ${loc ? `<div style="color: #6b7068; font-size: 12px; margin-bottom: 16px;">${loc}</div>` : ''}
             <pre style="background: #111; color: #e8ebe5; padding: 16px; border-radius: 8px; overflow-y: auto; max-height: 200px; font-size: 13px; margin: 0 0 20px 0; border: 1px solid #1e201e; white-space: pre-wrap;">${err.message}</pre>
             <div style="display: flex; gap: 10px;">

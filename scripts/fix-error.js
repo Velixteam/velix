@@ -8,8 +8,8 @@ content = content.replace(/\(\\\&#x2F;\\\&#x2F;\\.\*\)\\\$/g, '(\\/\\/.*)$');
 content = content.replace(/\\b\(\\d\+\)\\b/g, '\\b(\\d+)\\b');
 
 // Fix string replacement in formatErrorMessage
-const target192 = "formatted = formatted.replace(/(\\\\[?[A-Z]:\\\\\\\\[^ \\\\n]+\\\\]?|\\\\/Users\\\\/[^ \\\\n]+)/g, '<span style=\"color:#00e87a; cursor:pointer;\" onclick=\"console.log(\\\\'open in editor\\\\')\">$1</span>');";
-const replacement192 = "formatted = formatted.replace(/(\\[?[A-Z]:\\\\[^ \\n]+\\]?|\\/Users\\/[^ \\n]+)/g, '<span style=\"color:#00e87a; cursor:pointer;\" onclick=\"console.log(\\'open in editor\\')\">$1</span>');";
+const target192 = "formatted = formatted.replace(/(\\\\[?[A-Z]:\\\\\\\\[^ \\\\n]+\\\\]?|\\\\/Users\\\\/[^ \\\\n]+)/g, '<span style=\"color:#2563EB; cursor:pointer;\" onclick=\"console.log(\\\\'open in editor\\\\')\">$1</span>');";
+const replacement192 = "formatted = formatted.replace(/(\\[?[A-Z]:\\\\[^ \\n]+\\]?|\\/Users\\/[^ \\n]+)/g, '<span style=\"color:#2563EB; cursor:pointer;\" onclick=\"console.log(\\'open in editor\\')\">$1</span>');";
 content = content.replace(target192, replacement192);
 
 // Fix template string escapes (where I mistakenly escaped backticks or template braces)
