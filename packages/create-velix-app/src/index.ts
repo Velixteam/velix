@@ -17,7 +17,7 @@ import prompts from 'prompts';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const VERSION = '5.3.1';
+const VERSION = '5.3.2';
 
 async function main() {
   console.log('');
@@ -177,7 +177,254 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
     fs.mkdirSync(path.join(dir, 'public'), { recursive: true });
     fs.copyFileSync(logoSrc, path.join(dir, 'public', 'favicon.webp'));
   }
+
+  // AGENT.md — AI coding guide for the generated project
+  write(path.join(dir, 'AGENT.md'), generateAgentMd(name, template, useTailwind));
 }
+
+// ─── AGENT.md generator ─────────────────────────────────────────────────────
+
+function generateAgentMd(name: string, template: string, useTailwind: boolean): string {
+  const styling = useTailwind
+    ? 'Tailwind CSS v4 (utility classes). Use `bg-[#2563EB]`, `text-[#38BDF8]` etc. for brand colors.'
+    : 'Vanilla CSS via `app/globals.css`. Use CSS custom properties: `var(--velix-accent)`, `var(--velix-accent-light)`.';
+
+  const templateBlurb: Record<string, string> = {
+    default: 'Full Velix app — landing page hero, navbar, footer, feature sections, CTA. Edit `app/page.tsx` to customise the landing page.',
+    minimal: 'Bare-bones Velix app — a single page with project structure displayed. Perfect starting point for custom UIs.',
+    blog:    'Blog starter — listing page (`app/blog/page.tsx`), slug route (`app/blog/post/[slug]/page.tsx`), and ID route (`app/blog/id/[id]/page.tsx`).',
+  };
+
+  const structureByTemplate: Record<string, string> = {
+    default: `\`\`\`
+${name}/
+├── app/
+│   ├── layout.tsx          ← root layout (wraps Navbar + Footer)
+│   ├── page.tsx            ← landing page — hero, features, CTA
+│   └── globals.css         ← CSS tokens + keyframes
+├── components/
+│   └── layout/
+│       ├── navbar.tsx      ← fixed top bar with Deploy CTA
+│       └── footer.tsx      ← 4-column footer grid
+├── server/
+│   └── api/
+│       └── hello.ts        ← GET /api/hello
+├── public/
+│   └── favicon.webp
+└── velix.config.ts
+\`\`\``,
+    minimal: `\`\`\`
+${name}/
+├── app/
+│   ├── layout.tsx          ← root layout
+│   ├── page.tsx            ← home page (project structure display)
+│   └── globals.css         ← CSS tokens + keyframes
+├── public/
+│   └── favicon.webp
+└── velix.config.ts
+\`\`\``,
+    blog: `\`\`\`
+${name}/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── globals.css
+│   └── blog/
+│       ├── page.tsx                    ← /blog listing
+│       ├── post/[slug]/page.tsx        ← /blog/post/:slug
+│       └── id/[id]/page.tsx            ← /blog/id/:id
+├── server/
+│   └── api/
+│       └── hello.ts
+├── public/
+│   └── favicon.webp
+└── velix.config.ts
+\`\`\``,
+  };
+
+  const serverSection = template !== 'minimal' ? `
+## Server Layer
+
+\`server/\` is **server-only** — never imported by the browser bundle.
+
+| Directory | Purpose | Example export |
+|---|---|---|
+| \`server/api/\` | REST endpoints | \`export function GET() { return Response.json({}) }\` |
+| \`server/loaders/\` | SSR data fetching | \`export const loader = defineLoader(async ({ params }) => data)\` |
+| \`server/actions/\` | Server mutations (Zod) | \`export const action = defineAction(schema, async (data) => result)\` |
+
+To add a loader and use it in a page:
+
+\`\`\`ts
+// server/loaders/posts.loader.ts
+import { defineLoader } from 'velix/server';
+export const postsLoader = defineLoader(async () => {
+  return { posts: await db.posts.findAll() };
+});
+\`\`\`
+
+\`\`\`tsx
+// app/page.tsx
+import { postsLoader } from '~/server/loaders/posts.loader';
+import type { InferLoaderData } from 'velix';
+export const loader = postsLoader;
+export default function Page({ data }: { data: InferLoaderData<typeof loader> }) {
+  return <ul>{data.posts.map(p => <li key={p.id}>{p.title}</li>)}</ul>;
+}
+\`\`\`
+` : '';
+
+  const blogSection = template === 'blog' ? `
+## Blog Routes
+
+| Route | File | Notes |
+|---|---|---|
+| \`/blog\` | \`app/blog/page.tsx\` | Article listing |
+| \`/blog/post/:slug\` | \`app/blog/post/[slug]/page.tsx\` | Slug-based route |
+| \`/blog/id/:id\` | \`app/blog/id/[id]/page.tsx\` | ID-based route |
+
+To add a real data source, create a loader:
+
+\`\`\`ts
+// server/loaders/blog.loader.ts
+import { defineLoader, NotFoundError } from 'velix/server';
+export const blogLoader = defineLoader(async ({ params }) => {
+  const post = await db.post.findUnique({ where: { slug: params.slug } });
+  if (!post) throw new NotFoundError();
+  return { post };
+});
+\`\`\`
+` : '';
+
+  return `# AGENT.md — ${name}
+
+> AI coding guide for this Velix project.
+> Read this before editing any file. Keep it up to date when you add routes, components, or server logic.
+
+---
+
+## Project
+
+- **Template:** \`${template}\` — ${templateBlurb[template] ?? 'Velix app'}
+- **Framework:** Velix v5.3 (React 19, TypeScript strict, file-based routing)
+- **Styling:** ${styling}
+- **Dev server:** \`npm run dev\` → [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Project Structure
+
+${structureByTemplate[template] ?? ''}
+${serverSection}${blogSection}
+## Key Files
+
+| File | What to edit |
+|---|---|
+| \`app/page.tsx\` | Main page content |
+| \`app/layout.tsx\` | Root HTML shell, global providers |
+| \`app/globals.css\` | CSS tokens, global styles, keyframes |
+| \`velix.config.ts\` | App name, port, SEO, plugins |${template === 'default' ? `
+| \`components/layout/navbar.tsx\` | Top navigation bar |
+| \`components/layout/footer.tsx\` | Site footer |` : ''}
+
+---
+
+## Commands
+
+\`\`\`bash
+npm run dev      # start dev server with HMR
+npm run build    # production build
+npm run start    # serve production build
+\`\`\`
+
+---
+
+## Routing Rules
+
+- Files in \`app/\` become routes automatically:
+  - \`app/page.tsx\` → \`/\`
+  - \`app/blog/page.tsx\` → \`/blog\`
+  - \`app/blog/[slug]/page.tsx\` → \`/blog/:slug\`
+- \`layout.tsx\` wraps all child routes at the same level
+- \`error.tsx\` catches errors for that subtree
+- \`app/\` and \`server/\` are **strictly separated** — never cross-import
+
+---
+
+## Official Color Palette
+
+> Source of truth: Velix DevTools widget (bottom-left pill in dev mode).
+
+### Brand Blue — use for all UI accents
+
+| Token | Hex | Use |
+|---|---|---|
+| \`--velix-accent\` | \`#2563EB\` | Buttons, active tabs, links, brand dots |
+| \`--velix-accent-light\` | \`#38BDF8\` | Secondary highlights, monospace values |
+| \`--velix-accent-hover\` | \`#1D4ED8\` | Button :hover |
+| \`--velix-accent-glow\` | \`rgba(37,99,235,0.15)\` | Glow / radial bg |
+
+${useTailwind ? `Tailwind usage: \`bg-[#2563EB]\`, \`text-[#38BDF8]\`, \`border-[#2563EB]\`, \`hover:bg-[#1D4ED8]\`` : `CSS usage: \`color: var(--velix-accent)\`, \`border-color: var(--velix-accent)\``}
+
+### UI Neutrals
+
+| Token | Hex | Use |
+|---|---|---|
+| \`--velix-bg\` | \`#0a0a0a\` | Page background |
+| \`--velix-surface\` | \`#111211\` | Cards, panels |
+| \`--velix-border\` | \`#1e201e\` | Borders, dividers |
+| \`--velix-muted\` | \`#6b7068\` | Secondary text |
+| \`--velix-text\` | \`#e8ebe5\` | Primary text |
+
+### Semantic (not brand)
+
+| Token | Hex | Use |
+|---|---|---|
+| \`--velix-success\` | \`#00e87a\` | ✓ build OK, success status only |
+| \`--velix-error\` | \`#ff6b6b\` | Errors, 5xx |
+| \`--velix-warn\` | \`#f59e0b\` | Warnings, 4xx |
+
+### Color Rules
+
+- ✅ Use **blue** (\`#2563EB\` / \`#38BDF8\`) for all brand accent UI (buttons, headings, links, badges)
+- ❌ **Never** use green (\`#00e87a\`) as a brand accent color
+- ✅ Green is only allowed for semantic success states (build completed, form submitted, status: ok)
+
+---
+
+## TypeScript Conventions
+
+- \`strict: true\` — no implicit \`any\`
+- Use \`InferLoaderData<typeof loader>\` to type page props
+- Use \`defineLoader\` / \`defineAction\` from \`'velix/server'\`
+- Server imports stay in \`server/\` — never import them from \`app/\`
+
+---
+
+## Adding Features (quick reference)
+
+### New page
+Create \`app/about/page.tsx\` → available at \`/about\`
+
+### New API route
+Create \`server/api/hello.ts\` → available at \`GET /api/hello\`
+
+### New component
+Create \`components/ui/Button.tsx\` → import from \`'~/components/ui/Button'\`
+
+### Islands (partial hydration)
+\`\`\`tsx
+'use client'; // mark a component as a client island
+export default function Counter() { ... }
+\`\`\`
+
+---
+
+*Generated by [create-velix-app](https://github.com/Velixteam/velix) · Velix v5.3*
+`;
+}
+
+
 
 function generateGlobalsCss(useTailwind: boolean) {
   const base = `@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap');

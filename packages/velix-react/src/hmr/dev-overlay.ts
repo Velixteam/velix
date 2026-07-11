@@ -36,10 +36,11 @@ export const VelixDevOverlay = {
     clearTimeout(this.timeoutId);
     const el = this.getContainer();
     el.innerHTML = `
-      <div style="position: fixed; bottom: 20px; right: 20px; z-index: 99999; background: #0a0a0a; border: 1px solid rgba(0,232,122,0.15); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; font-family: system-ui; font-size: 13px;">
-        <span style="color: #00e87a;">✓</span>
-        <span style="color: #e8ebe5;">Compiled in <span style="color: #00e87a; font-weight: bold;">${duration}ms</span></span>
+      <div style="position: fixed; bottom: 20px; right: 20px; z-index: 99999; background: #0a0a0a; border: 1px solid rgba(37,99,235,0.25); border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; font-family: system-ui; font-size: 13px;">
+        <span style="color: #38BDF8;">✓</span>
+        <span style="color: #e8ebe5;">Compiled in <span style="color: #38BDF8; font-weight: bold;">${duration}ms</span></span>
       </div>
+
     `;
   },
 
