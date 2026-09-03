@@ -100,7 +100,7 @@ export function generate404Page(pathname: string = '/'): string {
           content: attr(data-value);
           position: absolute;
           inset: 0;
-          color: #2563EB;
+          color: #00e87a;
           opacity: 0.12;
           filter: blur(24px);
           pointer-events: none;
@@ -110,7 +110,7 @@ export function generate404Page(pathname: string = '/'): string {
         .accent-line {
           width: 40px;
           height: 3px;
-          background: #2563EB;
+          background: #00e87a;
           border-radius: 9999px;
           margin-bottom: 24px;
         }
@@ -164,14 +164,14 @@ export function generate404Page(pathname: string = '/'): string {
           transition: all 0.15s ease;
         }
         .btn-primary {
-          background: #2563EB;
-          color: #0B1120;
-          border: 1px solid #2563EB;
+          background: #00e87a;
+          color: #0a0a0a;
+          border: 1px solid #00e87a;
         }
         .btn-primary:hover {
-          background: #3B82F6;
+          background: #00ff87;
           transform: translateY(-1px);
-          box-shadow: 0 0 20px rgba(37, 99, 235, 0.35);
+          box-shadow: 0 0 20px rgba(0, 232, 122, 0.35);
         }
         .btn-secondary {
           background: transparent;
@@ -474,7 +474,7 @@ export function generate500Page(options: ErrorPageOptions): string {
         .route-badge {
           background: #0F172A;
           border: 1px solid #1E293B;
-          color: #2563EB;
+          color: #00e87a;
           padding: 4px 10px;
           border-radius: 6px;
         }
@@ -510,7 +510,7 @@ export function generate500Page(options: ErrorPageOptions): string {
         .source-filepath {
           font-family: 'DM Mono', monospace;
           font-size: 13px;
-          color: #2563EB;
+          color: #00e87a;
         }
         .open-in-editor {
           color: #94A3B8;

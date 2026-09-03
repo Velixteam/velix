@@ -70,39 +70,39 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
 .__vdt-tabs{display:flex;border-bottom:1px solid #0F172A;}
 .__vdt-tab{flex:1;padding:10px 0;background:none;border:none;color:#6b7280;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;font-family:inherit;letter-spacing:.1px;}
 .__vdt-tab:hover{color:#d1d5db;}
-.__vdt-tab.active{color:#2563EB;border-bottom-color:#2563EB;}
+.__vdt-tab.active{color:#00e87a;border-bottom-color:#00e87a;}
 /* body */
 .__vdt-body{padding:14px 16px;min-height:200px;}
 .__vdt-section{margin-bottom:14px;}
 .__vdt-label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
-.__vdt-box{background:#0F172A;border-radius:8px;padding:10px 13px;font-size:13px;color:#e5e7eb;font-family:ui-monospace,'Cascadia Code','Fira Code',monospace;border:1px solid #162032;}
-.__vdt-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #162032;}
+.__vdt-box{background:#0F172A;border-radius:8px;padding:10px 13px;font-size:13px;color:#e5e7eb;font-family:ui-monospace,'Cascadia Code','Fira Code',monospace;border:1px solid #1e201e;}
+.__vdt-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
 .__vdt-row-left{display:flex;align-items:center;gap:8px;color:#d1d5db;}
-.__vdt-row-right{font-family:ui-monospace,'Cascadia Code',monospace;color:#2563EB;font-size:12px;font-weight:500;}
+.__vdt-row-right{font-family:ui-monospace,'Cascadia Code',monospace;color:#00e87a;font-size:12px;font-weight:500;}
 .__vdt-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:.2px;}
-.__vdt-pill-green{background:#162032;color:#38BDF8;border:1px solid #2563EB;}
-.__vdt-pill-blue{background:#0c1a3a;color:#60a5fa;border:1px solid #1e3a8a;}
-.__vdt-render{display:flex;align-items:center;gap:6px;padding:8px 13px;background:#0F172A;border-radius:8px;border:1px solid #162032;color:#9ca3af;font-size:12px;}
+.__vdt-pill-green{background:#111211;color:#00e87a;border:1px solid #00e87a;}
+.__vdt-pill-blue{background:#111211;color:#00e87a;border:1px solid #1e201e;}
+.__vdt-render{display:flex;align-items:center;gap:6px;padding:8px 13px;background:#0F172A;border-radius:8px;border:1px solid #1e201e;color:#9ca3af;font-size:12px;}
 .__vdt-render svg{color:#6b7280;}
 /* vitals */
-.__vdt-vital{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #162032;}
+.__vdt-vital{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
 .__vdt-vital-left{display:flex;align-items:center;gap:8px;}
-.__vdt-dot-good{width:8px;height:8px;border-radius:50%;background:#2563EB;flex-shrink:0;}
+.__vdt-dot-good{width:8px;height:8px;border-radius:50%;background:#00e87a;flex-shrink:0;}
 .__vdt-dot-warn{width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;}
 .__vdt-dot-bad{width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;}
 .__vdt-vital-name{color:#d1d5db;font-weight:500;}
-.__vdt-vital-val{font-family:ui-monospace,'Cascadia Code',monospace;color:#2563EB;font-size:12px;font-weight:600;}
-.__vdt-build{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;color:#9ca3af;font-size:12px;border-top:1px solid #162032;margin-top:8px;padding-top:12px;}
+.__vdt-vital-val{font-family:ui-monospace,'Cascadia Code',monospace;color:#00e87a;font-size:12px;font-weight:600;}
+.__vdt-build{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;color:#9ca3af;font-size:12px;border-top:1px solid #1e201e;margin-top:8px;padding-top:12px;}
 /* info rows */
-.__vdt-info-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #162032;}
+.__vdt-info-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
 .__vdt-info-left{display:flex;align-items:center;gap:8px;color:#d1d5db;}
 .__vdt-info-val{font-family:ui-monospace,'Cascadia Code',monospace;color:#9ca3af;font-size:12px;}
-.__vdt-dev-badge{display:flex;align-items:center;gap:8px;padding:10px 13px;background:#162032;border:1px solid #2563EB;border-radius:8px;color:#38BDF8;font-size:12px;font-weight:500;margin-top:10px;}
+.__vdt-dev-badge{display:flex;align-items:center;gap:8px;padding:10px 13px;background:#111211;border:1px solid #00e87a;border-radius:8px;color:#00e87a;font-size:12px;font-weight:500;margin-top:10px;}
 /* footer */
 .__vdt-footer{padding:10px 16px;border-top:1px solid #0F172A;display:flex;align-items:center;justify-content:space-between;}
 .__vdt-host{color:#6b7280;font-size:11px;font-family:ui-monospace,'Cascadia Code',monospace;}
-.__vdt-conn{display:flex;align-items:center;gap:5px;font-size:11px;color:#2563EB;}
-.__vdt-conn-dot{width:6px;height:6px;border-radius:50%;background:#2563EB;}
+.__vdt-conn{display:flex;align-items:center;gap:5px;font-size:11px;color:#00e87a;}
+.__vdt-conn-dot{width:6px;height:6px;border-radius:50%;background:#00e87a;}
 
 /* ── Widget state colors ── */
 .vdt-idle{border-color:#22D3EE !important;}
@@ -273,7 +273,7 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
       dot.className = v <= threshGood ? '__vdt-dot-good' : v <= threshOk ? '__vdt-dot-warn' : '__vdt-dot-bad';
     }
     if(el && typeof v === 'number'){
-      el.style.color = v <= threshGood ? '#2563EB' : v <= threshOk ? '#f59e0b' : '#ef4444';
+      el.style.color = v <= threshGood ? '#00e87a' : v <= threshOk ? '#f59e0b' : '#ef4444';
     }
   }
 
@@ -332,9 +332,9 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
   }
 
   function setConn(ok){
-    if(connDot)  connDot.style.background  = ok ? '#2563EB' : '#ef4444';
+    if(connDot)  connDot.style.background  = ok ? '#00e87a' : '#ef4444';
     if(connText) connText.textContent = ok ? 'connected' : 'disconnected';
-    if(connText) connText.style.color = ok ? '#2563EB' : '#ef4444';
+    if(connText) connText.style.color = ok ? '#00e87a' : '#ef4444';
   }
 
   var ws = new WebSocket('ws://' + window.location.host + '/__velix_hmr');
