@@ -16,6 +16,23 @@ async function startDev() {
 
   const { server, config } = await createServer({ projectRoot, mode });
 
+  const isPack = process.argv.includes('--pack');
+  let packInstance: any = null;
+
+  if (isPack) {
+    try {
+      const { VelixPack } = await import('@teamvelix/velix-pack');
+      packInstance = new VelixPack({ projectRoot, mode: 'development' });
+      const stats = await packInstance.build();
+      logger.success(`Velix Pack initialized (${stats.modulesCount} modules, ${stats.chunksCount} chunks, ${(stats.duration / 1000).toFixed(2)}s)`);
+      packInstance.watch((affected: string[]) => {
+        logger.info(`Velix Pack incremental rebuild: ${affected.length} modules affected`);
+      });
+    } catch (e: any) {
+      logger.warn(`Velix Pack initialization fallback: ${e.message}`);
+    }
+  }
+
   // Watch for file changes
   const appDir = path.join(projectRoot, 'app');
   const serverDir = path.join(projectRoot, 'server');

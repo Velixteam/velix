@@ -35,6 +35,7 @@ velix/                          ← workspace root
 │   │   ├── metadata/           ← SEO / Open Graph helpers
 │   │   ├── plugins/            ← plugin system (tailwind, ai, etc.)
 │   │   └── runtime/            ← dev/build entry points
+│   ├── velix-pack/             ← @teamvelix/velix-pack — incremental build engine (0.1.0-beta.1)
 │   ├── velix-core/             ← framework-agnostic core (ICacheAdapter, RequestDeduplicator)
 │   ├── velix-react/            ← React 19 bindings (hooks, SSR, error pages, HMR overlay)
 │   │   ├── src/components/     ← VelixDefaultErrorPage
@@ -150,62 +151,32 @@ HTTP Request
 
 ---
 
-## 6. Official Velix Color Palette
+## 6. Official Velix Color Palette (v5.3 Identity)
 
-> **Source of truth:** extracted from `packages/velix/server/devtools.ts`
-
-### Brand Blue (primary accent)
+### Velix Green (primary brand accent)
 
 | Token | Hex | Usage |
 |---|---|---|
-| `--velix-accent` | `#2563EB` | Tab active border, row values, connection dot, CTA buttons |
-| `--velix-accent-light` | `#38BDF8` | Pill text, dev-badge text, compile spinner, success overlay |
-| `--velix-accent-hover` | `#1D4ED8` | Button hover state |
-| `--velix-accent-glow` | `rgba(37,99,235,0.15)` | Glow halos, radial bg gradients |
-| `--velix-accent-deep` | `#0c1a3a` | `.pill-blue` background |
-
-### UI Neutrals
-
-| Token | Hex | Usage |
-|---|---|---|
+| `--velix-accent` | `#00e87a` | Primary brand accent, CTA buttons, active states, highlights |
 | `--velix-bg` | `#0a0a0a` | Page / app background |
-| `--velix-surface` | `#0F172A` / `#111211` | Panels, cards, DevTools body |
-| `--velix-border` | `#1e201e` / `#162032` | Borders, dividers |
-| `--velix-muted` | `#6b7068` | Secondary text, labels |
+| `--velix-surface` | `#111211` | Panels, cards, containers |
+| `--velix-border` | `#1e201e` | Borders, subtle dividers |
+| `--velix-muted` | `#6b7068` | Muted text, secondary labels |
 | `--velix-text` | `#e8ebe5` | Primary foreground text |
-
-### Semantic (non-brand)
-
-| Token | Hex | Usage |
-|---|---|---|
-| `--velix-success` | `#00e87a` | ✓ semantic success, build OK indicators, file-tree annotations |
-| `--velix-error` | `#ff6b6b` | Error states, 500 status, compile errors |
-| `--velix-warn` | `#f59e0b` | Warning states, 4xx status codes |
-
-### WCAG AA Contrast check (dark `#0a0a0a` background)
-
-| Color | Hex | Contrast ratio | AA pass |
-|---|---|---|---|
-| `--velix-accent` | `#2563EB` | ~4.6:1 | ✅ (large text / UI) |
-| `--velix-accent-light` | `#38BDF8` | ~7.1:1 | ✅ |
-| `--velix-success` | `#00e87a` | ~8.2:1 | ✅ |
-| `--velix-error` | `#ff6b6b` | ~5.9:1 | ✅ |
 
 ---
 
 ## 7. Color Rules — MUST READ
 
-### ✅ Use the blue palette for all brand accent UI:
-- Hero text highlights (`Ship smarter.`)
-- Badges, pills, tab active states
-- CTA buttons (`Get started`, `Deploy`, copy buttons)
-- Link hovers, navbar accents, footer brand dots
-- DevTools panel (already correct — this is the source)
+### ✅ Strictly use the Velix green palette for official website & brand identity:
+- Main background: `#0a0a0a`
+- Surface/cards: `#111211`
+- Brand accent: `#00e87a`
+- Borders: `#1e201e`
+- Primary text: `#e8ebe5`
+- Fonts: Geist, Geist Mono
 
-### ❌ Never introduce green (`#00e87a` or similar) as a brand accent:
-- Green is **semantically reserved** for success / build-OK states only
-- Examples of allowed green: `✓ Compiled`, `← clean ✓` code annotations, `✅ Velix` comparison table
-- Examples of forbidden green: hero heading color, badge background, CTA button background, navbar dot
+### ❌ Never introduce blue or cyan as dominant brand accents on the website.
 
 ### Pattern reference from DevTools (source):
 

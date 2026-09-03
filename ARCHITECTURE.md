@@ -9,6 +9,7 @@ Velix is divided into several decoupled packages within the monorepo:
 ```mermaid
 graph TD
     A[velix CLI / Build] --> B(velix-core)
+    A --> P(@teamvelix/velix-pack)
     B --> C{Cache Interface}
     C --> D(Memory Cache)
     C --> E(@velix/cache-redis)

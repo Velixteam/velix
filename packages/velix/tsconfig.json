@@ -18,7 +18,9 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@velix/*": ["./*"]
+      "@velix/*": ["./*"],
+      "@teamvelix/velix-pack": ["../velix-pack/src/index.ts"],
+      "@teamvelix/velix-pack/*": ["../velix-pack/src/*"]
     },
     "types": ["node"]
   },

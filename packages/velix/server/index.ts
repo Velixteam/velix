@@ -535,7 +535,7 @@ async function handlePageRoute(
 
     // Wrap with Error Boundary for client-side routing and hydration
     pageElement = React.createElement(
-      VelixErrorBoundary,
+      VelixErrorBoundary as any,
       {
         errorComponent: ErrorComponent as any,
         notFoundComponent: NotFoundComponent as any,

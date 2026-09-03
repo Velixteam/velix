@@ -6,8 +6,11 @@ import path from 'path';
 import { showBanner, log } from './shared.js';
 
 export async function devCommand() {
+  const args = process.argv.slice(2);
+  const isPack = args.includes('--pack');
+
   showBanner();
-  log.info('Starting development server...');
+  log.info(`Starting development server${isPack ? ' with Velix Pack Beta' : ''}...`);
 
   const { spawn } = await import('child_process');
 
@@ -24,7 +27,8 @@ export async function devCommand() {
     process.exit(1);
   }
 
-  const child = spawn(`npx tsx --no-cache "${devScript}"`, {
+  const packFlag = isPack ? ' --pack' : '';
+  const child = spawn(`npx tsx --no-cache "${devScript}"${packFlag}`, {
     stdio: 'inherit', cwd, shell: true,
   });
 

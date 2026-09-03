@@ -33,6 +33,7 @@ function showHelp() {
   console.log(`    ${pc.cyan('start')}                  Start production server`);
   console.log(`    ${pc.cyan('g')} <type> <name>        Generate component/page/api/...`);
   console.log(`    ${pc.cyan('ui')} add <component>   Install Shadcn-style UI components`);
+  console.log(`    ${pc.cyan('pack')} [options]            Velix Pack diagnostics (--analyze, --debug, --profile)`);
   console.log(`    ${pc.cyan('doctor')}                 Health check & diagnostics`);
   console.log(`    ${pc.cyan('info')}                   Framework & environment info`);
   console.log(`    ${pc.cyan('analyze')}                Bundle analysis`);
@@ -106,6 +107,11 @@ async function main() {
     case 'analyze':
       log.info('Bundle analysis coming soon...');
       break;
+    case 'pack': {
+      const { packCommand } = await import('./commands/pack.js');
+      await packCommand(args.slice(1));
+      break;
+    }
 
     case 'ui': {
       const { handleUiCommand } = await import('./commands/ui.js');

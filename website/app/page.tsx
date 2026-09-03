@@ -1,286 +1,278 @@
-
-export const metadata = { title: "Velix - The Modern React Framework | Build Fast. Ship Faster." };
-
-function FeatureCard({ icon, title, description }: { icon: string; title: string; description: string }) {
-  return (
-    <div className="group relative p-8 rounded-2xl bg-velix-dark/40 border border-white/5 hover:border-velix-cyan/15 transition-all duration-500">
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-velix-accent/0 to-velix-cyan/0 group-hover:from-velix-accent/5 group-hover:to-velix-cyan/5 transition-all duration-500"></div>
-      <div className="relative z-10">
-        <div className="w-12 h-12 rounded-xl bg-velix-cyan/10 flex items-center justify-center text-2xl mb-5">{icon}</div>
-        <h3 className="text-lg font-semibold text-white mb-3">{title}</h3>
-
-
-        <p className="text-sm text-slate-400 leading-relaxed">{description}</p>
-
-      </div>
-    </div>
-  );
-}
+export const metadata = {
+  title: "Velix 5.3 — The Fullstack React Framework Built for Speed",
+};
 
 export default function HomePage() {
   return (
     <>
-      {/* ─── Hero ─── */}
-      <section className="relative min-h-screen flex items-center px-6 overflow-hidden pt-20">
+      {/* ─── 1. HERO SECTION ─── */}
+      <section className="relative min-h-[90vh] flex items-center justify-center px-6 overflow-hidden pt-12 pb-24">
+        {/* Subtle radial glow */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-velix-accent/10 rounded-full blur-[180px]"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-velix-cyan/8 rounded-full blur-[160px]"></div>
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-[#00e87a]/5 rounded-full blur-[160px]"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto py-16">
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-            {/* LEFT: Text */}
-            <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left">
-              <div className="animate-fade-in-up inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6">
-                <span className="w-1.5 h-1.5 rounded-full bg-velix-accent"></span>
-                <span className="text-xs font-medium text-slate-300">Now in public beta</span>
-              </div>
-
-              <h1 className="animate-fade-in-up animate-delay-100 text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
-                <span className="text-white">Build fullstack apps</span>
-                <br />
-                <span className="text-velix-accent">faster</span>
-              </h1>
-
-              <p className="animate-fade-in-up animate-delay-200 text-base sm:text-lg text-slate-400 max-w-lg mb-8 leading-relaxed">
-                Velix is a modern fullstack framework with server-first architecture, file-based
-                routing, and end-to-end type safety. Ship production-ready apps in record time.
-              </p>
-
-
-              <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center lg:justify-start">
-                <a href="/docs" className="px-6 py-3 rounded-lg bg-velix-accent text-white font-medium text-sm hover:bg-velix-accent/90 transition-all text-center">
-                  Get Started
-                </a>
-                <a href="https://github.com/Velixteam/velix" target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-lg bg-white/5 border border-white/10 text-slate-300 font-medium text-sm hover:bg-white/10 transition-all text-center">
-                  GitHub
-                </a>
-              </div>
-            </div>
-
-            {/* RIGHT: Image */}
-            <div className="w-full max-w-[320px] sm:max-w-[400px] lg:max-w-[480px] shrink-0 mx-auto">
-              <img
-                src="/velix-removebg-preview.png"
-                alt="Velix Hero"
-                className="w-full h-auto object-contain drop-shadow-2xl animate-fade-in-up"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Features ─── */}
-      <section className="relative py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <span className="text-xs font-semibold tracking-widest uppercase text-velix-cyan mb-4 block">Features</span>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Everything you need.<br /><span className="gradient-text">Nothing you don't.</span></h2>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">Velix gives you the complete toolkit for building modern web apps, with sensible defaults and the flexibility to customize everything.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FeatureCard icon="📁" title="File-Based Routing" description="Create pages by adding files to the app/ directory. Nested layouts, dynamic routes, and catch-all segments built in." />
-            <FeatureCard icon="⚡" title="Server Actions" description="Type-safe server functions callable directly from your components. No API boilerplate required." />
-            <FeatureCard icon="🏝️" title="Islands Architecture" description="Ship zero JavaScript by default. Hydrate only the interactive parts of your page for optimal performance." />
-            <FeatureCard icon="🔌" title="API Routes" description="Build full REST APIs with simple exported functions. GET, POST, PUT, DELETE — all file-based." />
-            <FeatureCard icon="🛡️" title="Middleware" description="Intercept and modify requests with powerful middleware. Authentication, logging, headers — all in one place." />
-            <FeatureCard icon="🎯" title="Built-in SEO" description="Export metadata from any page. Automatic meta tags, Open Graph, structured data, and sitemap generation." />
-            <FeatureCard icon="📦" title="Zero Config" description="Start building immediately. TypeScript, Tailwind CSS, and all tooling configured out of the box." />
-            <FeatureCard icon="🚀" title="Edge Ready" description="Deploy anywhere — Node.js, serverless, or the edge. Optimized bundles for every environment." />
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Code Examples ─── */}
-      <section className="relative py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <span className="text-xs font-semibold tracking-widest uppercase text-velix-cyan mb-4 block">Developer Experience</span>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Write less. <span className="gradient-text">Do more.</span></h2>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">Clean, intuitive APIs that let you focus on building your product instead of fighting your framework.</p>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-velix-accent/15 flex items-center justify-center text-sm">📁</div>
-                <div><h3 className="text-sm font-semibold text-white">File-Based Routing</h3><p className="text-xs text-slate-500">app/page.tsx</p></div>
-              </div>
-              <div className="code-block">
-                <pre className="font-mono text-sm"><code><span className="text-slate-500">{"// app/page.tsx"}</span>{"\n"}<span className="text-purple-400">export const</span> <span className="text-velix-cyan">metadata</span> = {"{"}{"\n"}{"  "}<span className="text-velix-glow">title</span>: <span className="text-green-400">"My App"</span>,{"\n"}{"}"};{"\n\n"}<span className="text-purple-400">export default function</span> <span className="text-yellow-300">HomePage</span>() {"{"}{"\n"}{"  "}<span className="text-purple-400">return</span> <span className="text-slate-400">{"<"}</span><span className="text-red-400">h1</span><span className="text-slate-400">{">"}</span>Welcome<span className="text-slate-400">{"</"}</span><span className="text-red-400">h1</span><span className="text-slate-400">{">"}</span>;{"\n"}{"}"}</code></pre>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-velix-cyan/15 flex items-center justify-center text-sm">⚡</div>
-                <div><h3 className="text-sm font-semibold text-white">Server Actions</h3><p className="text-xs text-slate-500">server/actions/auth.ts</p></div>
-              </div>
-              <div className="code-block">
-                <pre className="font-mono text-sm"><code><span className="text-purple-400">import</span> {"{ "}<span className="text-velix-cyan">serverAction</span>{" }"} <span className="text-purple-400">from</span> <span className="text-green-400">"velix/server"</span>;{"\n\n"}<span className="text-purple-400">export const</span> <span className="text-yellow-300">login</span> = <span className="text-velix-cyan">serverAction</span>({"\n"}{"  "}<span className="text-purple-400">async</span> <span className="text-yellow-300">handler</span>(<span className="text-orange-300">data</span>) {"{"}{"\n"}{"    "}<span className="text-purple-400">const</span> user = <span className="text-purple-400">await</span> db.verify(data);{"\n"}{"    "}<span className="text-purple-400">return</span> {"{ "}token: sign(user) {"}"};{"\n"}{"  }"}{"\n"});</code></pre>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center text-sm">🔌</div>
-                <div><h3 className="text-sm font-semibold text-white">API Routes</h3><p className="text-xs text-slate-500">server/api/tasks.ts</p></div>
-              </div>
-              <div className="code-block">
-                <pre className="font-mono text-sm"><code><span className="text-purple-400">export function</span> <span className="text-yellow-300">GET</span>(<span className="text-orange-300">req</span>) {"{"}{"\n"}{"  "}<span className="text-purple-400">return</span> {"{ "}tasks: db.findAll() {"}"};{"\n"}{"}"}{"\n\n"}<span className="text-purple-400">export function</span> <span className="text-yellow-300">POST</span>(<span className="text-orange-300">req</span>) {"{"}{"\n"}{"  "}<span className="text-purple-400">const</span> task = db.create(req.body);{"\n"}{"  "}<span className="text-purple-400">return</span> {"{ "}task, msg: <span className="text-green-400">"Created"</span> {"}"};{"\n"}{"}"}</code></pre>
-              </div>
-            </div>
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-sm">🛡️</div>
-                <div><h3 className="text-sm font-semibold text-white">Middleware</h3><p className="text-xs text-slate-500">server/middleware.ts</p></div>
-              </div>
-              <div className="code-block">
-                <pre className="font-mono text-sm"><code><span className="text-purple-400">export default async function</span>(<span className="text-orange-300">req</span>, <span className="text-orange-300">res</span>, <span className="text-orange-300">next</span>) {"{"}{"\n"}{"  "}console.log(<span className="text-green-400">`${"{"}</span>req.method<span className="text-green-400">{"}"} ${"{"}</span>req.url<span className="text-green-400">{"}"}`</span>);{"\n"}{"  "}res.setHeader(<span className="text-green-400">"X-Frame"</span>, <span className="text-green-400">"DENY"</span>);{"\n"}{"  "}<span className="text-purple-400">await</span> next();{"\n"}{"}"}</code></pre>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Performance ─── */}
-      <section className="relative py-32 px-6">
-        <div className="absolute inset-0 pointer-events-none"><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-velix-accent/5 rounded-full blur-[160px]"></div></div>
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-20">
-            <span className="text-xs font-semibold tracking-widest uppercase text-velix-cyan mb-4 block">Performance</span>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">Blazing fast.<br /><span className="gradient-text">By design.</span></h2>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">Velix is built from the ground up for speed. Zero-JS pages by default, smart code splitting, and optimized server rendering.</p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-0 rounded-2xl bg-velix-dark/50 border border-white/5 divide-x divide-white/5">
-            {[
-              { value: "0", suffix: "kb", label: "Default JS bundle" },
-              { value: "~3.7", suffix: "s", label: "Build Speed" },
-              { value: "100", suffix: "", label: "Lighthouse score" },
-              { value: "0", suffix: "", label: "Configuration" },
-            ].map((s, i) => (
-              <div key={i} className="text-center p-8">
-                <div className="text-5xl md:text-6xl font-extrabold gradient-text mb-2">{s.value}<span className="text-2xl text-slate-500">{s.suffix}</span></div>
-                <div className="text-sm text-slate-400">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Powered By ─── */}
-      <section className="relative py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4">Built on a foundation of fast, production-grade tooling</h2>
+        <div className="relative z-10 max-w-5xl mx-auto text-center flex flex-col items-center">
+          {/* Badge */}
+          <div className="animate-fade-in-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#111211] border border-[#1e201e] mb-8">
+            <span className="w-2 h-2 rounded-full bg-[#00e87a] animate-pulse"></span>
+            <span className="text-xs font-mono text-[#e8ebe5]">VELIX 5.3</span>
+            <span className="text-xs text-[#6b7068]">|</span>
+            <span className="text-xs font-medium text-[#00e87a]">Velix Pack Now in Beta</span>
           </div>
 
-          {/* Connector visual */}
-          <div className="flex flex-col items-center mb-12">
-            <div className="flex items-center gap-1 mb-2">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="w-2 h-2 rounded-full bg-white/20"></div>
-              ))}
-            </div>
-            <div className="px-4 py-2 rounded-lg bg-velix-dark/60 border border-white/10 text-sm text-slate-400 font-medium">
-              Powered By
-            </div>
-            <div className="flex items-center gap-1 mt-2">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="w-2 h-2 rounded-full bg-white/20"></div>
-              ))}
-            </div>
-          </div>
+          {/* Heading */}
+          <h1 className="animate-fade-in-up animate-delay-100 text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] mb-8 max-w-4xl">
+            The fullstack React framework <br />
+            <span className="gradient-green-text">built for speed.</span>
+          </h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* React */}
-            <div className="group p-8 rounded-2xl bg-velix-dark/40 border border-white/5 hover:border-velix-cyan/15 transition-all duration-500">
-              <div className="text-4xl mb-6">⚛️</div>
-              <h3 className="text-lg font-bold text-white mb-1">
-                React <a href="https://react.dev" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors text-sm">↗</a>
-              </h3>
-              <p className="text-sm text-slate-400 leading-relaxed">The library for web and native user interfaces. Velix is built on the latest React features, including Server Components and Actions.</p>
-            </div>
+          {/* Description */}
+          <p className="animate-fade-in-up animate-delay-200 text-base sm:text-lg text-[#6b7068] max-w-2xl mb-10 leading-relaxed">
+            Build modern applications with a server-first architecture, zero-config tooling
+            and an ecosystem designed around performance.
+          </p>
 
-            {/* esbuild */}
-            <div className="group p-8 rounded-2xl bg-velix-dark/40 border border-white/5 hover:border-velix-cyan/15 transition-all duration-500">
-              <div className="text-4xl mb-6">⚡</div>
-              <h3 className="text-lg font-bold text-white mb-1">
-                esbuild <a href="https://esbuild.github.io" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors text-sm">↗</a>
-              </h3>
-              <p className="text-sm text-slate-400 leading-relaxed">An extremely fast bundler for JavaScript and TypeScript, powering Velix's build system for near-instant builds and hot module reload.</p>
-            </div>
-
-            {/* Zod */}
-            <div className="group p-8 rounded-2xl bg-velix-dark/40 border border-white/5 hover:border-velix-cyan/15 transition-all duration-500">
-              <div className="text-4xl mb-6">🛡️</div>
-              <h3 className="text-lg font-bold text-white mb-1">
-                Zod <a href="https://zod.dev" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-white transition-colors text-sm">↗</a>
-              </h3>
-              <p className="text-sm text-slate-400 leading-relaxed">TypeScript-first schema validation with static type inference. Integrated natively into Velix Server Actions for end-to-end type safety.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* ─── Quick Comparison ─── */}
-      <section className="relative py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <span className="text-xs font-semibold tracking-widest uppercase text-velix-cyan mb-4 block">Comparison</span>
-            <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">How Velix <span className="gradient-text">stacks up</span></h2>
-            <p className="text-lg text-slate-400 max-w-2xl mx-auto">See how Velix compares to other popular React frameworks.</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left py-4 px-6 text-sm font-semibold text-slate-400">Feature</th>
-                  <th className="text-center py-4 px-6 text-sm font-semibold text-velix-cyan">Velix</th>
-                  <th className="text-center py-4 px-6 text-sm font-semibold text-slate-400">Next.js</th>
-                  <th className="text-center py-4 px-6 text-sm font-semibold text-slate-400">Remix</th>
-                  <th className="text-center py-4 px-6 text-sm font-semibold text-slate-400">Astro</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {([
-                  ["File-Based Routing", true, true, true, true],
-                  ["Server Actions", true, true, true, false],
-                  ["Islands Architecture", true, false, false, true],
-                  ["Zero-JS by Default", true, false, false, true],
-                  ["API Routes", true, true, false, true],
-                  ["Built-in Middleware", true, true, false, false],
-                  ["React 19 Support", true, true, true, false],
-                  ["Zero Config", true, false, false, true],
-                ] as [string, boolean, boolean, boolean, boolean][]).map(([feature, v, n, r, a], i) => (
-                  <tr key={i} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-4 px-6 text-sm text-slate-300">{feature}</td>
-                    <td className="text-center py-4 px-6">{v ? <span className="text-velix-cyan text-lg">✓</span> : <span className="text-slate-600">✗</span>}</td>
-                    <td className="text-center py-4 px-6">{n ? <span className="text-green-400/70 text-lg">✓</span> : <span className="text-slate-600">✗</span>}</td>
-                    <td className="text-center py-4 px-6">{r ? <span className="text-green-400/70 text-lg">✓</span> : <span className="text-slate-600">✗</span>}</td>
-                    <td className="text-center py-4 px-6">{a ? <span className="text-green-400/70 text-lg">✓</span> : <span className="text-slate-600">✗</span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="text-center mt-10">
-            <a href="/compare" className="inline-flex items-center gap-2 text-sm text-velix-cyan hover:text-white transition-colors font-medium">
-              See full comparison →
+          {/* CTA Buttons */}
+          <div className="animate-fade-in-up animate-delay-300 flex flex-col sm:flex-row gap-4 w-full sm:w-auto justify-center">
+            <a
+              href="/docs#getting-started"
+              className="px-7 py-3.5 rounded-lg bg-[#00e87a] hover:bg-[#00ff87] text-[#0a0a0a] font-bold text-sm transition-all shadow-[0_0_25px_rgba(0,232,122,0.25)] hover:shadow-[0_0_40px_rgba(0,232,122,0.4)] text-center"
+            >
+              Get Started
+            </a>
+            <a
+              href="https://github.com/Velixteam/velix"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-7 py-3.5 rounded-lg bg-[#111211] border border-[#1e201e] hover:border-[#6b7068] text-[#e8ebe5] font-medium text-sm transition-all text-center"
+            >
+              Explore GitHub
             </a>
           </div>
         </div>
       </section>
 
-      {/* ─── CTA ─── */}
-      <section className="relative py-32 px-6">
-        <div className="absolute inset-0 pointer-events-none"><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-velix-cyan/8 rounded-full blur-[160px]"></div></div>
-        <div className="max-w-3xl mx-auto text-center relative z-10">
-          <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-6">Ready to build with<br /><span className="gradient-text">Velix</span>?</h2>
-          <p className="text-lg text-slate-400 mb-10 max-w-xl mx-auto">Get started in seconds. One command to create your project, zero configuration needed.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10">
-            <a href="/docs#getting-started" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-velix-accent to-velix-cyan text-white font-semibold shadow-[0_0_30px_rgba(34,211,238,0.25)] hover:shadow-[0_0_50px_rgba(34,211,238,0.4)] transition-all hover:-translate-y-0.5">Start Building</a>
-            <a href="https://github.com/Velixteam/velix" target="_blank" rel="noreferrer" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-slate-300 font-semibold hover:bg-white/10 hover:text-white transition-all">View on GitHub</a>
+      {/* ─── 2. VELIX PACK FEATURE SECTION ─── */}
+      <section id="pack" className="relative py-28 px-6 border-t border-[#1e201e] bg-[#0a0a0a]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#00e87a]/10 text-[#00e87a] font-mono text-xs font-semibold mb-4">
+              VELIX PACK BETA
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#e8ebe5] mb-4">
+              Meet Velix Pack.
+            </h2>
+            <p className="text-lg text-[#6b7068] max-w-xl mx-auto">
+              The build engine designed specifically for Velix.
+            </p>
           </div>
-          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-velix-dark/80 border border-white/5 font-mono text-sm">
-            <span className="text-velix-cyan">$</span>
-            <span className="text-slate-300">npx create-velix-app my-app</span>
+
+          {/* Key Copy Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+            {[
+              { title: "Incremental builds.", desc: "Rebuild only what changed in your application module graph." },
+              { title: "Persistent caching.", desc: "Reuse compilation artifacts across cold and warm builds." },
+              { title: "Native server/client aware.", desc: "Strict boundary checking prevents backend leaks to browser." },
+              { title: "Lightning-fast development.", desc: "Near-instant startup and HMR tailored for React 19." },
+            ].map((f, i) => (
+              <div key={i} className="p-6 rounded-xl bg-[#111211] border border-[#1e201e] hover:border-[#00e87a]/30 transition-all">
+                <div className="w-2 h-2 rounded-full bg-[#00e87a] mb-4"></div>
+                <h3 className="text-base font-bold text-[#e8ebe5] mb-2">{f.title}</h3>
+                <p className="text-xs text-[#6b7068] leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Visual Architecture Flow */}
+          <div className="p-8 rounded-2xl bg-[#111211] border border-[#1e201e] mb-16">
+            <h3 className="text-xs font-mono uppercase tracking-widest text-[#6b7068] mb-8 text-center">
+              Compilation Pipeline Architecture
+            </h3>
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 font-mono text-xs">
+              {[
+                { name: "Source", sub: "app/ & server/" },
+                { name: "Module Graph", sub: "Dependency Tree" },
+                { name: "Incremental Compiler", sub: "esbuild Backend" },
+                { name: "Cache", sub: ".velix/cache/pack/" },
+                { name: "Optimized Output", sub: "Client & Server Chunks" },
+              ].map((step, idx, arr) => (
+                <div key={idx} className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                  <div className="w-full md:w-auto p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-center min-w-[150px]">
+                    <div className="text-[#00e87a] font-bold mb-1">{step.name}</div>
+                    <div className="text-[10px] text-[#6b7068]">{step.sub}</div>
+                  </div>
+                  {idx < arr.length - 1 && (
+                    <div className="text-[#6b7068] font-bold text-lg rotate-90 md:rotate-0">
+                      ↓
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Interactive Terminal Simulation */}
+          <div className="max-w-2xl mx-auto rounded-xl bg-[#111211] border border-[#1e201e] overflow-hidden shadow-2xl">
+            <div className="flex items-center px-4 py-3 bg-[#0a0a0a] border-b border-[#1e201e]">
+              <div className="flex gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#1e201e]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#1e201e]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#1e201e]"></div>
+              </div>
+              <span className="mx-auto text-xs font-mono text-[#6b7068]">Terminal — velix dev --pack</span>
+            </div>
+            <div className="p-6 font-mono text-xs leading-loose text-[#e8ebe5] space-y-1">
+              <div>
+                <span className="text-[#00e87a]">$</span> velix dev --pack
+              </div>
+              <div className="text-[#00e87a]">✓ Velix Pack initialized</div>
+              <div className="text-[#00e87a]">✓ Module graph ready</div>
+              <div className="text-[#00e87a]">✓ Cache restored</div>
+              <div className="text-[#00e87a]">✓ Dev server running</div>
+              <div className="pt-2 text-[#6b7068]">
+                Local: <span className="text-[#e8ebe5] underline">http://localhost:3000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 3. PERFORMANCE SECTION ─── */}
+      <section id="performance" className="relative py-28 px-6 border-t border-[#1e201e] bg-[#0a0a0a]">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#00e87a] mb-2 block">Performance</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#e8ebe5] mb-4">
+              Designed for speed from the ground up.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="p-8 rounded-2xl bg-[#111211] border border-[#1e201e] hover:border-[#00e87a]/20 transition-colors">
+              <div className="text-xs font-mono text-[#00e87a] font-bold uppercase tracking-wider mb-2">INCREMENTAL</div>
+              <h3 className="text-xl font-bold text-[#e8ebe5] mb-3">Rebuild only what changed.</h3>
+              <p className="text-sm text-[#6b7068] leading-relaxed">
+                When a component is saved, Velix Pack traverses the module graph and recompiles strictly the affected dependency sub-tree.
+              </p>
+            </div>
+
+            <div className="p-8 rounded-2xl bg-[#111211] border border-[#1e201e] hover:border-[#00e87a]/20 transition-colors">
+              <div className="text-xs font-mono text-[#00e87a] font-bold uppercase tracking-wider mb-2">CACHED</div>
+              <h3 className="text-xl font-bold text-[#e8ebe5] mb-3">Reuse previous compilation work.</h3>
+              <p className="text-sm text-[#6b7068] leading-relaxed">
+                Persistent filesystem caching stores transformed modules across cold restarts, enabling near-instant cold startups.
+              </p>
+            </div>
+
+            <div className="p-8 rounded-2xl bg-[#111211] border border-[#1e201e] hover:border-[#00e87a]/20 transition-colors">
+              <div className="text-xs font-mono text-[#00e87a] font-bold uppercase tracking-wider mb-2">SMART</div>
+              <h3 className="text-xl font-bold text-[#e8ebe5] mb-3">Understand server and client boundaries.</h3>
+              <p className="text-sm text-[#6b7068] leading-relaxed">
+                Native directive detection guarantees server-only logic (`server/`) is never accidentally bundled into browser client code.
+              </p>
+            </div>
+
+            <div className="p-8 rounded-2xl bg-[#111211] border border-[#1e201e] hover:border-[#00e87a]/20 transition-colors">
+              <div className="text-xs font-mono text-[#00e87a] font-bold uppercase tracking-wider mb-2">FAST</div>
+              <h3 className="text-xl font-bold text-[#e8ebe5] mb-3">Designed for Velix from the ground up.</h3>
+              <p className="text-sm text-[#6b7068] leading-relaxed">
+                Zero legacy bundle overhead. Built specifically around React 19 Server Components and Islands architecture.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 4. ARCHITECTURE SECTION ─── */}
+      <section id="architecture" className="relative py-28 px-6 border-t border-[#1e201e] bg-[#0a0a0a]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#00e87a] mb-2 block">Architecture</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#e8ebe5] mb-4">
+              The Velix Ecosystem
+            </h2>
+            <p className="text-base text-[#6b7068] max-w-lg mx-auto">
+              A unified fullstack platform where every layer is designed to work in harmony.
+            </p>
+          </div>
+
+          <div className="p-8 rounded-2xl bg-[#111211] border border-[#1e201e]">
+            <div className="font-mono text-center mb-8 text-[#00e87a] font-bold text-lg">VELIX</div>
+            <div className="flex justify-center mb-6">
+              <div className="w-px h-8 bg-[#1e201e]"></div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center font-mono text-xs">
+              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-[#e8ebe5]">Router</div>
+              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-[#e8ebe5]">Server</div>
+              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-[#e8ebe5]">Query</div>
+              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-[#e8ebe5]">Store</div>
+              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#00e87a]/40 text-[#00e87a] font-bold">Pack</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 5. ROADMAP SECTION ─── */}
+      <section id="roadmap" className="relative py-28 px-6 border-t border-[#1e201e] bg-[#0a0a0a]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#00e87a] mb-2 block">Roadmap</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#e8ebe5] mb-4">
+              Where Velix is heading
+            </h2>
+          </div>
+
+          <div className="space-y-8 font-mono text-sm">
+            <div className="p-6 rounded-xl bg-[#111211] border border-[#1e201e]">
+              <div className="text-[#00e87a] font-bold mb-3">VELIX 5.3</div>
+              <div className="space-y-2 text-xs text-[#e8ebe5]">
+                <div>✓ New identity</div>
+                <div>✓ New templates</div>
+                <div>✓ Developer experience</div>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-xl bg-[#111211] border border-[#00e87a]/40">
+              <div className="text-[#00e87a] font-bold mb-3">VELIX PACK</div>
+              <div className="space-y-2 text-xs text-[#00e87a]">
+                <div>● Beta</div>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-xl bg-[#111211] border border-[#1e201e]">
+              <div className="text-[#6b7068] font-bold mb-3">NEXT</div>
+              <div className="space-y-2 text-xs text-[#6b7068]">
+                <div>○ Velix Router</div>
+                <div>○ Velix Query</div>
+                <div>○ Velix Store</div>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-xl bg-[#111211] border border-[#1e201e]">
+              <div className="text-[#6b7068] font-bold mb-3">FUTURE</div>
+              <div className="space-y-2 text-xs text-[#6b7068]">
+                <div>○ Velix DevTools</div>
+                <div>○ Edge runtime improvements</div>
+                <div>○ Advanced compiler optimizations</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 6. CTA SECTION ─── */}
+      <section className="relative py-28 px-6 border-t border-[#1e201e] bg-[#0a0a0a]">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#e8ebe5] mb-6">
+            Ready to build with <span className="gradient-green-text">Velix</span>?
+          </h2>
+          <p className="text-base text-[#6b7068] mb-10">
+            Get started in seconds. One command to create your project with Velix Pack Beta.
+          </p>
+          <div className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-[#111211] border border-[#1e201e] font-mono text-sm mb-8">
+            <span className="text-[#00e87a]">$</span>
+            <span className="text-[#e8ebe5]">npx create-velix-app my-app</span>
           </div>
         </div>
       </section>

@@ -82,12 +82,24 @@ export async function createCommand(name?: string) {
     useShadcn = shResponse.useShadcn;
   }
 
+  let usePack: boolean | undefined = flags.includes('--pack') ? true : (flags.includes('--no-pack') ? false : undefined);
+
+  if (usePack === undefined) {
+    const packResponse = await prompts({
+      type: 'confirm',
+      name: 'usePack',
+      message: 'Enable Velix Pack Beta engine? (Recommended for fast rebuilds & HMR)',
+      initial: true
+    });
+    usePack = packResponse.usePack;
+  }
+
   const { default: ora } = await import('ora');
   const spinner = ora('Creating project...').start();
 
   try {
     fs.mkdirSync(projectDir, { recursive: true });
-    generateProjectFiles(projectDir, name, template, useTailwind, useShadcn);
+    generateProjectFiles(projectDir, name, template, useTailwind, useShadcn, usePack);
     spinner.succeed(`Project ${pc.bold(name)} created!`);
     log.blank();
     console.log(`  ${pc.bold('Next steps:')}`);
@@ -112,15 +124,15 @@ interface PackageJson {
   devDependencies: Record<string, string>;
 }
 
-function generateProjectFiles(dir: string, name: string, template: string, useTailwind: boolean = true, useShadcn: boolean = false) {
+function generateProjectFiles(dir: string, name: string, template: string, useTailwind: boolean = true, useShadcn: boolean = false, usePack: boolean = true) {
   const pkg: PackageJson = {
     name,
     version: '0.1.0',
     private: true,
     type: 'module',
     scripts: {
-      dev: 'velix dev',
-      build: 'velix build',
+      dev: usePack ? 'velix dev --pack' : 'velix dev',
+      build: usePack ? 'velix build --pack' : 'velix build',
       start: 'velix start',
     },
     dependencies: {
@@ -130,6 +142,7 @@ function generateProjectFiles(dir: string, name: string, template: string, useTa
     },
     devDependencies: {
       '@teamvelix/cli': `^${VERSION}`,
+      '@teamvelix/velix-pack': '^0.1.0-beta.1',
       typescript: '^5.7.0',
       '@types/react': '^19.0.0',
       '@types/react-dom': '^19.0.0',

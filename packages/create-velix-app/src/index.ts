@@ -75,6 +75,16 @@ async function main() {
     inactive: 'no',
   });
 
+  // Ask for Velix Pack Beta
+  const { usePack } = await prompts({
+    type: 'toggle',
+    name: 'usePack',
+    message: 'Enable Velix Pack Beta engine? (Recommended for fast rebuilds & HMR)',
+    initial: true,
+    active: 'yes',
+    inactive: 'no',
+  });
+
   const packageManager = 'npm';
 
   console.log('');
@@ -90,7 +100,7 @@ async function main() {
     copyDir(templateDir, projectDir);
   } else {
     // Inline template generation
-    generateTemplate(projectDir, projectName, template, useTailwind);
+    generateTemplate(projectDir, projectName, template, useTailwind, usePack);
   }
 
   // Install dependencies
@@ -112,17 +122,17 @@ async function main() {
   console.log('');
 }
 
-function generateTemplate(dir: string, name: string, template: string, useTailwind: boolean = true) {
+function generateTemplate(dir: string, name: string, template: string, useTailwind: boolean = true, usePack: boolean = true) {
   // package.json
   const pkg: any = {
     name, version: '0.1.0', private: true, type: 'module',
     scripts: {
-      dev: 'velix dev',
-      build: 'velix build',
+      dev: usePack ? 'velix dev --pack' : 'velix dev',
+      build: usePack ? 'velix build --pack' : 'velix build',
       start: 'velix start'
     },
     dependencies: { '@teamvelix/velix': 'latest', react: '^19.0.0', 'react-dom': '^19.0.0' },
-    devDependencies: { '@teamvelix/cli': 'latest', typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
+    devDependencies: { '@teamvelix/cli': 'latest', '@teamvelix/velix-pack': '^0.1.0-beta.1', typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
   };
 
   if (useTailwind) {

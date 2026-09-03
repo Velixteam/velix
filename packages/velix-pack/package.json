@@ -1,0 +1,48 @@
+{
+  "name": "@teamvelix/velix-pack",
+  "version": "0.1.0-beta.1",
+  "description": "Incremental build engine designed specifically for Velix",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node build.js",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "velix",
+    "pack",
+    "bundler",
+    "compiler",
+    "incremental",
+    "hmr"
+  ],
+  "author": "Velix Team",
+  "license": "MIT",
+  "dependencies": {
+    "@teamvelix/velix-core": "workspace:*",
+    "chokidar": "^3.6.0",
+    "esbuild": "0.25.0",
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

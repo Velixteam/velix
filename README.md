@@ -11,6 +11,7 @@ Velix is a lightweight but powerful React 19 framework featuring file-based rout
 ## ✨ Features
 
 - ⚡ **React 19** — Latest React with Server Components & Actions
+- 📦 **Velix Pack Beta** — Incremental build engine designed specifically for Velix (`--pack`)
 - 🏗️ **Core/React Split** — Clean, decoupled architecture for stability
 - 🚀 **Advanced Caching** — High-performance LRU cache with SWR, TTL, and tags
 - 📁 **File-based Routing** — Intuitive `app/` directory convention
@@ -249,6 +250,7 @@ export default defineConfig({
 | Package | Version | Description |
 |---------|---------|-------------|
 | [@teamvelix/velix](https://npmjs.com/package/@teamvelix/velix) | ![npm](https://img.shields.io/npm/v/@teamvelix/velix) | Core framework |
+| [@teamvelix/velix-pack](https://npmjs.com/package/@teamvelix/velix-pack) | `0.1.0-beta.1` | Incremental build engine |
 | [create-velix-app](https://npmjs.com/package/create-velix-app) | ![npm](https://img.shields.io/npm/v/create-velix-app) | Project scaffolding |
 | [@teamvelix/cli](https://npmjs.com/package/@teamvelix/cli) | ![npm](https://img.shields.io/npm/v/@teamvelix/cli) | Command-line interface |
 

@@ -3,6 +3,7 @@
 Velix v5 is designed to be a complete ecosystem. Below is our vision for the next set of official plugins and features.
 
 ## Core Refinements (Q2 2026)
+- **✅ Velix Pack Beta**: Incremental build engine with module graph, persistent cache, server/client boundary enforcement, route-based code splitting, and `--pack` CLI support.
 - **✅ Enhanced DevTools**: Visual state indicators (orange=rendering, green=compiling, blue=navigating) inspired by Next.js latest. Real-time status updates via HMR.
 - **✅ Improved Error Pages**: Beautiful 404/500 error pages with stack traces in development mode.
 - **✅ Advanced Link Component**: Client-side navigation with prefetch strategies (immediate, hover, visible) and scroll management.
