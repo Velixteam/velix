@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/velix-pack",
-  "version": "5.3.4",
+  "version": "5.3.5",
   "description": "Incremental build engine designed specifically for Velix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -29,7 +29,7 @@
   "author": "Velix Team",
   "license": "MIT",
   "dependencies": {
-    "@teamvelix/velix-core": "workspace:*",
+    "@teamvelix/velix-core": "^5.3.5",
     "chokidar": "^3.6.0",
     "esbuild": "0.25.0",
     "picocolors": "^1.1.1"
