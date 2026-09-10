@@ -12,7 +12,6 @@ export default defineConfig({
     js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
   },
   external: [
-    '@teamvelix/velix-pack',
     '@teamvelix/velix-core',
     '@teamvelix/velix',
     'esbuild',
