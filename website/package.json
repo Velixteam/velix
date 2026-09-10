@@ -1,6 +1,6 @@
 {
   "name": "website",
-  "version": "5.3.3",
+  "version": "5.3.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.0.0",
-    "@teamvelix/cli": "^5.3.3",
-    "@teamvelix/velix": "^5.3.3",
+    "@teamvelix/cli": "^5.3.4",
+    "@teamvelix/velix": "^5.3.4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "react": "^19.0.0",

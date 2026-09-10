@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/velix-pack",
-  "version": "5.3.3",
+  "version": "5.3.4",
   "description": "Incremental build engine designed specifically for Velix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
