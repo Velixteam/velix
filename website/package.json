@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.0.0",
-    "@teamvelix/cli": "workspace:*",
-    "@teamvelix/velix": "workspace:*",
+    "@teamvelix/cli": "^5.3.3",
+    "@teamvelix/velix": "^5.3.3",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "react": "^19.0.0",
