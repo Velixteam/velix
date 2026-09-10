@@ -15,8 +15,8 @@ export interface TailwindPluginOptions {
  * Detect which Tailwind CLI is available (v4: @tailwindcss/cli, v3: tailwindcss)
  */
 function detectTailwindCli(): string {
-  // Try v4 CLI first
-  const v4 = spawnSync('npx @tailwindcss/cli --help', {
+  // Try v4 CLI first — use pipe to suppress npm warnings from appearing in console
+  const v4 = spawnSync('npx --no-warnings @tailwindcss/cli --help', {
     stdio: 'pipe',
     timeout: 15000,
     shell: true,
@@ -59,17 +59,19 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
       },
 
       [PluginHooks.BUILD_START]: async () => {
-        logger.info('Building Tailwind CSS...');
         try {
           const cli = getCli();
-          let cmd = `npx ${cli} -i "${input}" -o "${output}"`;
+          let cmd = `npx --no-warnings ${cli} -i "${input}" -o "${output}"`;
           if (options.minify !== false) cmd += ' --minify';
-          spawnSync(cmd, { 
-            stdio: 'inherit',
+          const result = spawnSync(cmd, { 
+            stdio: 'pipe',
             cwd: process.cwd(),
             shell: true,
           });
-          logger.success('Tailwind CSS built successfully');
+          if (result.status !== 0) {
+            const stderr = result.stderr?.toString().trim();
+            if (stderr) logger.warn(`Tailwind build: ${stderr.split('\n')[0]}`);
+          }
         } catch (err: unknown) {
           logger.error('Tailwind build failed', err as Error);
         }
@@ -91,11 +93,10 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
           fs.mkdirSync(outputDir, { recursive: true });
         }
 
-        // Build initial CSS synchronously
-        logger.info('Building initial Tailwind CSS...');
+        // Build initial CSS synchronously (silent — no console noise)
         try {
           const cli = getCli();
-          const buildResult = spawnSync(`npx ${cli} -i "${input}" -o "${output}"`, {
+          const buildResult = spawnSync(`npx --no-warnings ${cli} -i "${input}" -o "${output}"`, {
             cwd: process.cwd(),
             stdio: 'pipe',
             shell: true,
@@ -103,23 +104,17 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
 
           if (buildResult.status !== 0) {
             const stderr = buildResult.stderr?.toString() || '';
-            // Only show 'not installed' if we actually can't find the CLI command
             if (buildResult.error || stderr.includes('not found') || stderr.includes('ENOENT')) {
               logger.warn('Tailwind CSS CLI not found — skipping. CSS will still be served if pre-built.');
-            } else if (stderr.trim()) {
-              logger.warn(`Tailwind build warning: ${stderr.trim().split('\n')[0]}`);
             }
             return;
           }
-
-          logger.success('Tailwind CSS built successfully');
         } catch (err: unknown) {
           logger.error('Failed to build Tailwind CSS', err as Error);
           return;
         }
 
-        // Start watcher
-        logger.info('Starting Tailwind CSS watcher...');
+        // Start watcher silently
         const cli = getCli();
         const watcher = spawn(`npx ${cli} -i "${input}" -o "${output}" --watch`, {
           stdio: 'pipe',

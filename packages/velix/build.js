@@ -18,6 +18,15 @@ async function main() {
     { in: 'runtime/start-build.ts', out: 'runtime/start-build' },
   ];
 
+  const esmShimBanner = [
+    `import { createRequire as __createRequire } from 'module';`,
+    `import { fileURLToPath as __fileURLToPath } from 'url';`,
+    `import * as __path from 'path';`,
+    `const require = __createRequire(import.meta.url);`,
+    `const __filename = __fileURLToPath(import.meta.url);`,
+    `const __dirname = __path.dirname(__filename);`,
+  ].join('\n');
+
   await Promise.all(entries.map(e => esbuild.build({
     entryPoints: [e.in],
     outfile: `dist/${e.out}.js`,
@@ -26,6 +35,7 @@ async function main() {
     platform: 'node',
     target: 'node18',
     sourcemap: true,
+    banner: { js: esmShimBanner },
     external: [
       '@teamvelix/velix-core',
       '@teamvelix/velix-react',

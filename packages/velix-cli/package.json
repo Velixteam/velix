@@ -17,6 +17,9 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
+    "@teamvelix/velix-pack": "workspace:*",
+    "@teamvelix/velix-core": "workspace:*",
+    "@teamvelix/velix": "workspace:*",
     "ora": "^8.1.1",
     "picocolors": "^1.1.1",
     "prompts": "^2.4.2"

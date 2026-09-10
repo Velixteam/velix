@@ -15,6 +15,9 @@ async function main() {
     platform: 'node',
     target: 'node18',
     sourcemap: true,
+    banner: {
+      js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
+    },
     external: [
       '@teamvelix/velix-core',
       'chokidar',

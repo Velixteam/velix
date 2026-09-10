@@ -29,7 +29,7 @@ export async function packCommand(args: string[]) {
       console.log(pc.dim(`Modules: ${stats.modulesCount} | Chunks: ${stats.chunksCount} | Cache hits: ${stats.cacheHits}`));
     }
   } catch (err: any) {
-    log.error(`Velix Pack failed: ${err?.message || String(err)}`);
+    log.error(`Velix Pack failed: ${err?.stack || err?.message || String(err)}`);
     process.exit(1);
   }
 }

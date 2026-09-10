@@ -48,12 +48,12 @@ export function generate404Page(pathname: string = '/'): string {
         }
 
         body {
-          background-color: #0B1120;
+          background-color: #0a0a0a;
           background-image:
-            linear-gradient(to right,  rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            linear-gradient(to right,  rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
           background-size: 60px 60px;
-          color: #F8FAFC;
+          color: #e8ebe5;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           display: flex;
           flex-direction: column;
@@ -69,7 +69,7 @@ export function generate404Page(pathname: string = '/'): string {
           content: '';
           position: fixed;
           inset: 0;
-          background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, #0B1120 80%);
+          background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, #0a0a0a 80%);
           pointer-events: none;
           z-index: 0;
         }
@@ -92,7 +92,7 @@ export function generate404Page(pathname: string = '/'): string {
           font-weight: 500;
           line-height: 1;
           letter-spacing: -0.04em;
-          color: #F8FAFC;
+          color: #e8ebe5;
           position: relative;
           margin-bottom: 8px;
         }
@@ -101,7 +101,7 @@ export function generate404Page(pathname: string = '/'): string {
           position: absolute;
           inset: 0;
           color: #00e87a;
-          opacity: 0.12;
+          opacity: 0.18;
           filter: blur(24px);
           pointer-events: none;
         }
@@ -119,7 +119,7 @@ export function generate404Page(pathname: string = '/'): string {
         h1 {
           font-size: 22px;
           font-weight: 700;
-          color: #fff;
+          color: #e8ebe5;
           margin-bottom: 10px;
           letter-spacing: -0.01em;
         }
@@ -131,9 +131,9 @@ export function generate404Page(pathname: string = '/'): string {
           gap: 8px;
           font-family: 'DM Mono', monospace;
           font-size: 13px;
-          color: #94A3B8;
-          background: #0F172A;
-          border: 1px solid #1E293B;
+          color: #6b7068;
+          background: #111211;
+          border: 1px solid #1e201e;
           padding: 5px 14px;
           border-radius: 9999px;
           margin-bottom: 32px;
@@ -175,12 +175,12 @@ export function generate404Page(pathname: string = '/'): string {
         }
         .btn-secondary {
           background: transparent;
-          color: #F8FAFC;
-          border: 1px solid #1E293B;
+          color: #e8ebe5;
+          border: 1px solid #1e201e;
         }
         .btn-secondary:hover {
-          background: #0F172A;
-          border-color: #334155;
+          background: #111211;
+          border-color: #2e322e;
         }
 
         /* ── footer branding ── */
@@ -193,14 +193,14 @@ export function generate404Page(pathname: string = '/'): string {
           align-items: center;
           gap: 8px;
           font-size: 12px;
-          color: #475569;
+          color: #6b7068;
           font-family: 'DM Mono', monospace;
         }
         .brand-dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #2563EB;
+          background: #00e87a;
         }
     </style>
 </head>

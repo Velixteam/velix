@@ -154,6 +154,15 @@ importers:
 
   packages/velix-cli:
     dependencies:
+      '@teamvelix/velix':
+        specifier: workspace:*
+        version: link:../velix
+      '@teamvelix/velix-core':
+        specifier: workspace:*
+        version: link:../velix-core
+      '@teamvelix/velix-pack':
+        specifier: workspace:*
+        version: link:../velix-pack
       ora:
         specifier: ^8.1.1
         version: 8.2.0
