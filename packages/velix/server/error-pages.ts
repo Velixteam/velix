@@ -557,10 +557,10 @@ export function generate500Page(options: ErrorPageOptions): string {
         .code-content { white-space: pre; }
         
         .src-err {
-          background: rgba(37, 99, 235, 0.04);
+          background: rgba(0, 232, 122, 0.08);
         }
-        .src-err .ln { color: #2563EB; }
-        .src-err .active-arrow { color: #2563EB; }
+        .src-err .ln { color: #00e87a; }
+        .src-err .active-arrow { color: #00e87a; }
         .src-err .code-content { color: #F8FAFC; }
 
         /* ── Call Stack ── */
@@ -622,7 +622,7 @@ export function generate500Page(options: ErrorPageOptions): string {
           font-family: 'DM Mono', monospace;
           font-size: 14px;
           font-weight: 700;
-          color: #2563EB;
+          color: #00e87a;
         }
         .frame-file {
           font-family: 'DM Mono', monospace;
@@ -681,7 +681,7 @@ export function generate500Page(options: ErrorPageOptions): string {
           font-weight: 600;
           color: #F8FAFC;
         }
-        .velix-dot { width: 8px; height: 8px; border-radius: 50%; background: #2563EB; }
+        .velix-dot { width: 8px; height: 8px; border-radius: 50%; background: #00e87a; }
         .footer-right {
           display: flex;
           align-items: center;

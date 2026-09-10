@@ -11,7 +11,7 @@ export default defineConfig([
       'islands/index.ts',
     ],
     format: ['esm'],
-    dts: true,
+    dts: false,
     sourcemap: true,
     clean: true,
     target: 'node18',

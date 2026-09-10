@@ -22,7 +22,7 @@
     "assets/*.webp"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "node build.js",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
   },

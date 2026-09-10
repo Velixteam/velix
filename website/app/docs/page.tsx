@@ -9,7 +9,7 @@ export default function GettingStartedPage() {
   return (
     <>
       <div className="text-sm text-slate-500 mb-8 font-mono">
-        Docs <span className="mx-2">/</span> <span className="text-velix-cyan">Getting Started</span>
+        Docs <span className="mx-2">/</span> <span className="text-[#00e87a]">Getting Started</span>
       </div>
 
       <Section title="Getting Started">

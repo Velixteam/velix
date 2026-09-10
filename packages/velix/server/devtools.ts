@@ -53,21 +53,21 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
   return `
 <style>
 /* ── Velix DevTools v5.1 ────────────────────────────────── */
-#__vdt-btn{position:fixed;bottom:16px;left:16px;z-index:9999;min-width:40px;height:40px;border-radius:20px;background:#0B1120;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);outline:none;padding:0 12px;gap:8px;color:#fff;overflow:hidden;}
-#__vdt-btn:hover{transform:scale(1.05);background:#0F172A;border-color:rgba(255,255,255,0.2);}
+#__vdt-btn{position:fixed;bottom:16px;left:16px;z-index:9999;min-width:40px;height:40px;border-radius:20px;background:#0a0a0a;border:1px solid #00e87a;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);outline:none;padding:0 12px;gap:8px;color:#fff;overflow:hidden;}
+#__vdt-btn:hover{transform:scale(1.05);background:#111211;border-color:#00ff87;}
 #__vdt-status-text{font-size:12px;font-weight:600;white-space:nowrap;opacity:0;max-width:0;transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);font-family:ui-sans-serif,system-ui,sans-serif;letter-spacing:0.3px;}
 #__vdt-btn.vdt-compiling #__vdt-status-text, #__vdt-btn.vdt-navigating #__vdt-status-text{opacity:1;max-width:120px;}
 
 #__vdt-dot{display:none;}
-#__vdt{display:none;position:fixed;bottom:68px;left:16px;width:340px;background:#0B1120;color:#f3f4f6;border-radius:14px;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;box-shadow:0 24px 60px rgba(0,0,0,.6);z-index:10000;border:1px solid #0F172A;overflow:hidden;}
+#__vdt{display:none;position:fixed;bottom:68px;left:16px;width:340px;background:#0a0a0a;color:#f3f4f6;border-radius:14px;font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;box-shadow:0 24px 60px rgba(0,0,0,.6);z-index:10000;border:1px solid #1e201e;overflow:hidden;}
 /* header */
-.__vdt-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #0F172A;}
+.__vdt-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #1e201e;}
 .__vdt-brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:#f9fafb;}
-.__vdt-badge{font-size:11px;font-weight:600;background:#0F172A;color:#9ca3af;border-radius:5px;padding:2px 7px;letter-spacing:.3px;}
+.__vdt-badge{font-size:11px;font-weight:600;background:#111211;color:#00e87a;border:1px solid #1e201e;border-radius:5px;padding:2px 7px;letter-spacing:.3px;}
 .__vdt-close{background:none;border:none;color:#6b7280;cursor:pointer;font-size:20px;line-height:1;padding:0;transition:color .15s;}
 .__vdt-close:hover{color:#f9fafb;}
 /* tabs */
-.__vdt-tabs{display:flex;border-bottom:1px solid #0F172A;}
+.__vdt-tabs{display:flex;border-bottom:1px solid #1e201e;}
 .__vdt-tab{flex:1;padding:10px 0;background:none;border:none;color:#6b7280;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;font-family:inherit;letter-spacing:.1px;}
 .__vdt-tab:hover{color:#d1d5db;}
 .__vdt-tab.active{color:#00e87a;border-bottom-color:#00e87a;}
@@ -75,17 +75,17 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
 .__vdt-body{padding:14px 16px;min-height:200px;}
 .__vdt-section{margin-bottom:14px;}
 .__vdt-label{font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;}
-.__vdt-box{background:#0F172A;border-radius:8px;padding:10px 13px;font-size:13px;color:#e5e7eb;font-family:ui-monospace,'Cascadia Code','Fira Code',monospace;border:1px solid #1e201e;}
-.__vdt-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
+.__vdt-box{background:#111211;border-radius:8px;padding:10px 13px;font-size:13px;color:#e5e7eb;font-family:ui-monospace,'Cascadia Code','Fira Code',monospace;border:1px solid #1e201e;}
+.__vdt-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#111211;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
 .__vdt-row-left{display:flex;align-items:center;gap:8px;color:#d1d5db;}
 .__vdt-row-right{font-family:ui-monospace,'Cascadia Code',monospace;color:#00e87a;font-size:12px;font-weight:500;}
 .__vdt-pill{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:.2px;}
 .__vdt-pill-green{background:#111211;color:#00e87a;border:1px solid #00e87a;}
 .__vdt-pill-blue{background:#111211;color:#00e87a;border:1px solid #1e201e;}
-.__vdt-render{display:flex;align-items:center;gap:6px;padding:8px 13px;background:#0F172A;border-radius:8px;border:1px solid #1e201e;color:#9ca3af;font-size:12px;}
+.__vdt-render{display:flex;align-items:center;gap:6px;padding:8px 13px;background:#111211;border-radius:8px;border:1px solid #1e201e;color:#9ca3af;font-size:12px;}
 .__vdt-render svg{color:#6b7280;}
 /* vitals */
-.__vdt-vital{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
+.__vdt-vital{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#111211;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
 .__vdt-vital-left{display:flex;align-items:center;gap:8px;}
 .__vdt-dot-good{width:8px;height:8px;border-radius:50%;background:#00e87a;flex-shrink:0;}
 .__vdt-dot-warn{width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;}
@@ -94,26 +94,26 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
 .__vdt-vital-val{font-family:ui-monospace,'Cascadia Code',monospace;color:#00e87a;font-size:12px;font-weight:600;}
 .__vdt-build{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;color:#9ca3af;font-size:12px;border-top:1px solid #1e201e;margin-top:8px;padding-top:12px;}
 /* info rows */
-.__vdt-info-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#0F172A;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
+.__vdt-info-row{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:#111211;border-radius:8px;margin-bottom:6px;border:1px solid #1e201e;}
 .__vdt-info-left{display:flex;align-items:center;gap:8px;color:#d1d5db;}
 .__vdt-info-val{font-family:ui-monospace,'Cascadia Code',monospace;color:#9ca3af;font-size:12px;}
 .__vdt-dev-badge{display:flex;align-items:center;gap:8px;padding:10px 13px;background:#111211;border:1px solid #00e87a;border-radius:8px;color:#00e87a;font-size:12px;font-weight:500;margin-top:10px;}
 /* footer */
-.__vdt-footer{padding:10px 16px;border-top:1px solid #0F172A;display:flex;align-items:center;justify-content:space-between;}
+.__vdt-footer{padding:10px 16px;border-top:1px solid #1e201e;display:flex;align-items:center;justify-content:space-between;}
 .__vdt-host{color:#6b7280;font-size:11px;font-family:ui-monospace,'Cascadia Code',monospace;}
 .__vdt-conn{display:flex;align-items:center;gap:5px;font-size:11px;color:#00e87a;}
 .__vdt-conn-dot{width:6px;height:6px;border-radius:50%;background:#00e87a;}
 
 /* ── Widget state colors ── */
-.vdt-idle{border-color:#22D3EE !important;}
-.vdt-compiling{border-color:#38BDF8 !important;}
+.vdt-idle{border-color:#00e87a !important;}
+.vdt-compiling{border-color:#00e87a !important;}
 .vdt-rendering{border-color:#fb923c !important;}
-.vdt-navigating{border-color:#60a5fa !important;}
+.vdt-navigating{border-color:#00e87a !important;}
 .vdt-error{border-color:#f87171 !important;}
-#__vdt-dot.idle{background:#22D3EE;}
-#__vdt-dot.compiling{background:#38BDF8;}
+#__vdt-dot.idle{background:#00e87a;}
+#__vdt-dot.compiling{background:#00e87a;}
 #__vdt-dot.rendering{background:#fb923c;}
-#__vdt-dot.navigating{background:#60a5fa;}
+#__vdt-dot.navigating{background:#00e87a;}
 #__vdt-dot.error{background:#f87171;}
 @keyframes __vdt-pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 .vdt-compiling svg, .vdt-navigating svg{animation:__vdt-pulse .8s alternate infinite;}

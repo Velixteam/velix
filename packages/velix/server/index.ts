@@ -515,7 +515,7 @@ async function handlePageRoute(
     // Extract search params for the component
     const searchParams = Object.fromEntries(url.searchParams.entries());
 
-    let pageElement;
+    let pageElement: React.ReactElement;
     try {
       // Render the page component (supports async/server components)
       pageElement = await renderComponentAsync(PageComponent, { params: route.params, searchParams, query: searchParams });

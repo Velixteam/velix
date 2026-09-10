@@ -127,19 +127,9 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
           shell: true,
         });
 
-        watcher.stdout.on('data', (data) => {
-          const msg = data.toString().trim();
-          if (msg && !msg.includes('Rebuilding...') && !msg.includes('Done in')) {
-            logger.info(`Tailwind: ${msg}`);
-          }
-        });
-
-        watcher.stderr.on('data', (data) => {
-          const msg = data.toString().trim();
-          if (msg && !msg.includes('warn')) {
-            logger.warn(`Tailwind: ${msg}`);
-          }
-        });
+        // Silence verbose watcher logs to keep developer console clean
+        watcher.stdout.on('data', () => {});
+        watcher.stderr.on('data', () => {});
 
         watcher.on('error', (err) => {
           logger.error('Tailwind watcher error', err);

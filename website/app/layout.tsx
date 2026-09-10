@@ -21,11 +21,11 @@ function Navbar() {
         </a>
 
         <div className="flex items-center gap-8">
-          <a href="#framework" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Framework</a>
+          <a href="/framework" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors font-medium">Framework</a>
+          <a href="/docs" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Docs</a>
           <a href="#pack" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors flex items-center gap-1.5">
             Pack <span className="px-1.5 py-0.2 rounded bg-[#00e87a]/10 text-[#00e87a] text-[10px] font-mono">Beta</span>
           </a>
-          <a href="/docs" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Docs</a>
           <a href="#roadmap" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Roadmap</a>
           <a
             href="https://github.com/Velixteam/velix"

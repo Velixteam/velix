@@ -184,6 +184,65 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── 3.5 EVOLUTION: VELIX 5.0 VS VELIX 5.3 ─── */}
+      <section id="evolution" className="relative py-28 px-6 border-t border-[#1e201e] bg-[#0a0a0a]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#00e87a] mb-2 block">Evolution</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#e8ebe5] mb-4">
+              Velix v5.0 vs Velix v5.3
+            </h2>
+            <p className="text-base text-[#6b7068] max-w-xl mx-auto">
+              How Velix has evolved into a production-grade fullstack ecosystem.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-[#1e201e] bg-[#111211]">
+            <table className="w-full text-left font-mono text-xs">
+              <thead>
+                <tr className="border-b border-[#1e201e] bg-[#0a0a0a]">
+                  <th className="p-4 text-[#6b7068] font-semibold uppercase">Feature</th>
+                  <th className="p-4 text-[#6b7068] font-semibold uppercase">Velix v5.0</th>
+                  <th className="p-4 text-[#00e87a] font-bold uppercase bg-[#00e87a]/5">Velix v5.3 (Current)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#1e201e] text-[#e8ebe5]">
+                <tr>
+                  <td className="p-4 font-bold">Build System</td>
+                  <td className="p-4 text-[#6b7068]">Monolithic esbuild pass</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Velix Pack Beta (Incremental Graph)</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">Server/Client Guard</td>
+                  <td className="p-4 text-[#6b7068]">Manual file conventions</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Automated Boundary Guard & Build Error</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">HMR & DevTools</td>
+                  <td className="p-4 text-[#6b7068]">Standard dev reload</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Enhanced DevTools with Vitals & HMR WS</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">Caching Layer</td>
+                  <td className="p-4 text-[#6b7068]">Memory LRU only</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Persistent FS Cache + Redis Pub/Sub</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">Error Handling</td>
+                  <td className="p-4 text-[#6b7068]">Basic status error</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Cascade Error Boundaries + Source Snippets</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold">Project Creation</td>
+                  <td className="p-4 text-[#6b7068]">Standard scaffolding</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">AI-Native Scaffold + Velix Pack Option</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       {/* ─── 4. ARCHITECTURE SECTION ─── */}
       <section id="architecture" className="relative py-28 px-6 border-t border-[#1e201e] bg-[#0a0a0a]">
         <div className="max-w-5xl mx-auto">
