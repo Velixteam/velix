@@ -7,13 +7,15 @@ const pkgPaths = [
   'packages/velix-cli/package.json',
   'packages/velix-core/package.json',
   'packages/velix-react/package.json',
+  'packages/cache-redis/package.json',
+  'packages/velix-pack/package.json',
   'website/package.json'
 ];
 
 pkgPaths.forEach(p => {
   if (fs.existsSync(p)) {
     const data = JSON.parse(fs.readFileSync(p, 'utf8'));
-    data.version = '5.2.3';
+    data.version = '5.3.3';
     if (data.dependencies) {
       for (const dep in data.dependencies) {
         if (dep.startsWith('@teamvelix/') || dep === 'velix' || dep === 'create-velix-app') {
@@ -46,7 +48,7 @@ const versionPaths = [
 versionPaths.forEach(p => {
   if (fs.existsSync(p)) {
     let content = fs.readFileSync(p, 'utf8');
-    content = content.replace(/export const VERSION = '.*';/g, "export const VERSION = '5.2.3';");
+    content = content.replace(/export const VERSION = '.*';/g, "export const VERSION = '5.3.3';");
     fs.writeFileSync(p, content);
     console.log('Updated ' + p);
   }
