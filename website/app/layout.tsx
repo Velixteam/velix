@@ -11,12 +11,14 @@ function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#1e201e]">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="/" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 rounded-lg bg-[#00e87a] flex items-center justify-center font-bold text-[#0a0a0a] text-lg shadow-[0_0_15px_rgba(0,232,122,0.3)] group-hover:scale-105 transition-transform">
-            V
-          </div>
+          <img
+            src="/favicon.webp"
+            alt="Velix Logo"
+            className="w-8 h-8 rounded-lg object-contain shadow-[0_0_15px_rgba(0,232,122,0.25)] group-hover:scale-105 transition-transform"
+          />
           <span className="text-[#e8ebe5] font-bold text-xl tracking-tight">Velix</span>
           <span className="px-2 py-0.5 rounded-full bg-[#111211] border border-[#1e201e] text-[11px] font-mono text-[#00e87a]">
-            v5.3
+            v5.3.4
           </span>
         </a>
 
@@ -77,17 +79,18 @@ function Footer() {
             </div>
           </div>
           <div>
-            <h4 className="text-[#e8ebe5] font-semibold text-sm mb-4">Legal</h4>
+            <h4 className="text-[#e8ebe5] font-semibold text-sm mb-4">Legal & Organization</h4>
             <div className="space-y-2">
               <span className="block text-sm text-[#6b7068]">MIT License</span>
+              <span className="block text-sm text-[#00e87a] font-mono">Florynx Labs</span>
             </div>
           </div>
         </div>
-        <div className="border-t border-[#1e201e] pt-8 flex items-center justify-between">
+        <div className="border-t border-[#1e201e] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[#6b7068]">&copy; 2026 Velix Team. All rights reserved.</p>
-          <div className="flex items-center gap-2 text-xs text-[#6b7068]">
-            <span className="w-2 h-2 rounded-full bg-[#00e87a]"></span>
-            Built with Velix v5.3 + Velix Pack
+          <div className="flex items-center gap-2 text-xs text-[#6b7068] font-mono">
+            <span className="w-2 h-2 rounded-full bg-[#00e87a] animate-pulse"></span>
+            Built with Velix v5.3.4 &bull; Powered by <span className="text-[#00e87a] font-semibold">Florynx Labs</span>
           </div>
         </div>
       </div>
