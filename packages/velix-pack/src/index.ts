@@ -82,6 +82,7 @@ export class VelixPack {
       for (const v of violations) {
         console.error(`ERROR [VELIX_PACK]\nServer module imported from client module.\nclient: ${v.clientModule}\nserver: ${v.serverModule}\n`);
       }
+      throw new Error(`[VELIX_PACK] Build failed due to ${violations.length} server/client boundary violation(s).`);
     }
 
     // 4. Bundle & split chunks
@@ -139,39 +140,48 @@ export class VelixPack {
     return this.moduleGraph.getAffectedModules(filePath);
   }
 
+  private processingSet = new Set<string>();
+
   private async processFile(filePath: string): Promise<void> {
-    const relativeId = this.moduleGraph.toRelativeId(filePath);
+    if (this.processingSet.has(filePath)) return;
+    this.processingSet.add(filePath);
 
-    // Transform
-    const transformResult = await this.pipeline.transform(filePath);
+    try {
+      const relativeId = this.moduleGraph.toRelativeId(filePath);
 
-    // Check cache
-    let cached = this.cache.get(relativeId, transformResult.hash);
-    if (!cached) {
-      cached = {
-        hash: transformResult.hash,
-        code: transformResult.code,
-        imports: transformResult.imports,
-        type: transformResult.type,
-        timestamp: Date.now(),
-      };
-      this.cache.set(relativeId, cached);
-    }
+      // Transform
+      const transformResult = await this.pipeline.transform(filePath);
 
-    // Add to graph
-    const mod = this.moduleGraph.addModule(filePath, transformResult.type);
-    mod.hash = transformResult.hash;
+      // Check cache
+      let cached = this.cache.get(relativeId, transformResult.hash);
+      if (!cached) {
+        cached = {
+          hash: transformResult.hash,
+          code: transformResult.code,
+          imports: transformResult.imports,
+          type: transformResult.type,
+          timestamp: Date.now(),
+        };
+        this.cache.set(relativeId, cached);
+      }
 
-    // Update dependencies graph
-    this.moduleGraph.updateDependencies(filePath, transformResult.imports);
+      // Add to graph
+      const mod = this.moduleGraph.addModule(filePath, transformResult.type);
+      mod.hash = transformResult.hash;
 
-    // Recursively process unvisited imports
-    for (const importPath of transformResult.imports) {
-      if (!this.moduleGraph.getModuleByPath(importPath)) {
-        if (fs.existsSync(importPath)) {
-          await this.processFile(importPath);
+      // Update dependencies graph
+      this.moduleGraph.updateDependencies(filePath, transformResult.imports);
+
+      // Recursively process unvisited imports
+      for (const importPath of transformResult.imports) {
+        if (!this.moduleGraph.getModuleByPath(importPath)) {
+          if (fs.existsSync(importPath)) {
+            await this.processFile(importPath);
+          }
         }
       }
+    } finally {
+      this.processingSet.delete(filePath);
     }
   }
 

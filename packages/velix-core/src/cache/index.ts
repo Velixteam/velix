@@ -13,6 +13,26 @@ export class VelixCache {
     this.deduplicator = new RequestDeduplicator();
   }
 
+  async get<T = unknown>(key: string): Promise<T | null> {
+    return await this.adapter.get<T>(key);
+  }
+
+  async set<T = unknown>(key: string, value: T, options?: CacheSetOptions): Promise<void> {
+    await this.adapter.set(key, value, options);
+  }
+
+  async has(key: string): Promise<boolean> {
+    return await this.adapter.has(key);
+  }
+
+  async delete(key: string): Promise<void> {
+    await this.adapter.delete(key);
+  }
+
+  async clear(): Promise<void> {
+    await this.adapter.clear();
+  }
+
   async revalidatePath(path: string): Promise<void> {
     await this.adapter.deleteByPrefix(`route:${path}`);
   }

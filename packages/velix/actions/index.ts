@@ -85,7 +85,8 @@ export async function executeAction(actionId: string, args: unknown[], context?:
     const error = err as Error;
     if (error instanceof RedirectError) return { success: true, redirect: error.url };
     if (error instanceof NotFoundError) return { success: false, error: 'Not found' };
-    return { success: false, error: error.message || 'Action failed' };
+    const isProd = typeof process !== 'undefined' && process.env?.NODE_ENV === 'production';
+    return { success: false, error: isProd ? 'An unexpected error occurred' : (error.message || 'Action failed') };
   } finally {
     globalThis.__VELIX_ACTION_CONTEXT__ = null;
   }
@@ -137,7 +138,11 @@ const MAX_DEPTH = 10;
 function validateInput(obj: unknown, depth = 0): boolean {
   if (depth > MAX_DEPTH) throw new Error('Payload too deeply nested');
   if (obj === null || obj === undefined || typeof obj !== 'object') return true;
-  if ('__proto__' in obj || 'constructor' in obj || 'prototype' in obj) {
+  if (
+    Object.prototype.hasOwnProperty.call(obj, '__proto__') ||
+    Object.prototype.hasOwnProperty.call(obj, 'constructor') ||
+    Object.prototype.hasOwnProperty.call(obj, 'prototype')
+  ) {
     throw new Error('Invalid payload: prototype pollution attempt detected');
   }
   if ('$$type' in (obj as Record<string, unknown>) && !ALLOWED_TYPES.has((obj as { $$type: string }).$$type)) {
@@ -168,7 +173,14 @@ export function deserializeArgs(args: unknown[]): unknown[] {
   });
 }
 
-function generateActionId(): string { return Math.random().toString(36).substring(2, 10); }
+function generateActionId(): string {
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const bytes = new Uint8Array(8);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return Math.random().toString(36).substring(2, 10);
+}
 
 export function useActionContext(): ActionContext | null { return globalThis.__VELIX_ACTION_CONTEXT__; }
 

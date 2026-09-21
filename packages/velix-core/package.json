@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./cache": "./dist/cache/index.js"
   },
   "files": [
     "dist",

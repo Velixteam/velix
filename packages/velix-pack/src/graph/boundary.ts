@@ -20,6 +20,10 @@ export function isServerModule(filePath: string, content?: string): boolean {
  * Checks if a module is classified as client-only
  */
 export function isClientModule(filePath: string, content?: string): boolean {
+  const normalized = filePath.replace(/\\/g, '/');
+  if (normalized.includes('/components/') || normalized.startsWith('components/') || normalized.includes('/client/')) {
+    return true;
+  }
   if (content) {
     const firstLines = content.split('\n').slice(0, 5).map(l => l.trim());
     if (firstLines.some(l => l === "'use client'" || l === '"use client"' || l === "'use island'" || l === '"use island"')) {

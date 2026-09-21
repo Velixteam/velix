@@ -12,7 +12,20 @@ export class MemoryCacheAdapter implements ICacheAdapter {
   private tagIndex: Map<string, Set<string>> = new Map();
 
   constructor(options: { maxSize?: number } = {}) {
-    this.lru = new LRUCache({ max: options.maxSize ?? 500 });
+    this.lru = new LRUCache({
+      max: options.maxSize ?? 500,
+      dispose: (entry, key) => {
+        if (entry && entry.tags) {
+          entry.tags.forEach(tag => {
+            const set = this.tagIndex.get(tag);
+            if (set) {
+              set.delete(key);
+              if (set.size === 0) this.tagIndex.delete(tag);
+            }
+          });
+        }
+      },
+    });
   }
 
   async get<T>(key: string): Promise<T | null> {

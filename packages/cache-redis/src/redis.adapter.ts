@@ -107,9 +107,15 @@ export class RedisCacheAdapter implements ICacheAdapter {
 
     // Indexer la clé dans chaque tag (Redis Set pour invalidation rapide)
     if (options.tags?.length) {
-      await Promise.all(
-        options.tags.map(tag => this.redis.sadd(this.tagKey(tag), k))
-      );
+      const pipeline = this.redis.pipeline();
+      for (const tag of options.tags) {
+        const tKey = this.tagKey(tag);
+        pipeline.sadd(tKey, k);
+        if (ttlMs) {
+          pipeline.pexpire(tKey, ttlMs * 2); // Expire tag set slightly after items
+        }
+      }
+      await pipeline.exec();
     }
   }
 

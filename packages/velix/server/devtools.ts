@@ -141,6 +141,7 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
   <div class="__vdt-tabs">
     <button class="__vdt-tab active" id="__vtab-btn-route" onclick="__vdtTab('route')">${ICON_ROUTE} Route</button>
     <button class="__vdt-tab" id="__vtab-btn-perf"  onclick="__vdtTab('perf')">${ICON_PERF} Performance</button>
+    <button class="__vdt-tab" id="__vtab-btn-inspector" onclick="__vdtTab('inspector')">${ICON_GEAR} Inspector</button>
     <button class="__vdt-tab" id="__vtab-btn-info"  onclick="__vdtTab('info')">${ICON_INFO} Info</button>
   </div>
 
@@ -193,6 +194,28 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
     </div>
   </div>
 
+  <!-- Tab: Inspector -->
+  <div class="__vdt-body" id="__vtab-inspector" style="display:none;">
+    <div class="__vdt-section">
+      <div class="__vdt-label">Velix Cache Authority</div>
+      <div class="__vdt-row">
+        <div class="__vdt-row-left"><span>Status</span></div>
+        <span class="__vdt-pill __vdt-pill-green">Active (Memory LRU)</span>
+      </div>
+    </div>
+    <div class="__vdt-section">
+      <div class="__vdt-label">Active Islands</div>
+      <div class="__vdt-box" id="__vdt-islands-count">0 islands detected</div>
+    </div>
+    <div class="__vdt-section">
+      <div class="__vdt-label">CSRF Security</div>
+      <div class="__vdt-row">
+        <div class="__vdt-row-left"><span>/__velix/action protection</span></div>
+        <span class="__vdt-pill __vdt-pill-green">Enforced</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Tab: Info -->
   <div class="__vdt-body" id="__vtab-info" style="display:none;">
     <div class="__vdt-info-row">
@@ -230,7 +253,7 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
 (function(){
   /* ── Tab switching ── */
   window.__vdtTab = function(name){
-    ['route','perf','info'].forEach(function(t){
+    ['route','perf','inspector','info'].forEach(function(t){
       var body = document.getElementById('__vtab-' + t);
       var btn  = document.getElementById('__vtab-btn-' + t);
       if(!body || !btn) return;

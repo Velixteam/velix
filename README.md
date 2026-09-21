@@ -192,8 +192,20 @@ velix ui add button        # Add button component
 ### Other
 
 ```bash
-velix analyze      # Bundle analysis (coming soon)
+velix analyze      # Bundle analysis and asset size breakdown
 ```
+
+## 🟢 Feature Stability Matrix
+
+| Feature | Stability | Description |
+|---|---|---|
+| **File-based Routing & Layouts** | `Stable` | Next.js-style nested layouts and dynamic routes |
+| **Unified Cache (`VelixCache`)** | `Stable` | Framework-wide caching, `revalidatePath`, `revalidateTag`, `unstable_cache` |
+| **Server Actions v2 & Security** | `Stable` | React 19 actions with CSRF/Origin checks & prototype protection |
+| **Server Loaders (`defineLoader`)** | `Stable` | Data loading with SWR, `maxAge`, `tags`, and `noStore` options |
+| **Islands Architecture** | `Stable` | Hashed static client bundles and deterministic hydration |
+| **Velix Pack (`--pack`)** | `Beta` | High-speed AST module graph and incremental bundler |
+| **Velix Inspector** | `Experimental` | Runtime telemetry overlay & route explorer |
 
 ## 📚 Documentation
 

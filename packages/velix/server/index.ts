@@ -260,24 +260,49 @@ export async function createServer(options: {
 }
 
 // ============================================================================
-// SSR Module Import (handles CSS imports gracefully)
+// SSR Module Import (handles CSS imports gracefully with production caching)
 // ============================================================================
 
-async function importModuleSSR(filePath: string): Promise<unknown> {
+const ssrModuleCache = new Map<string, unknown>();
+
+async function importModuleSSR(filePath: string, isDev: boolean = false): Promise<unknown> {
+  if (!isDev && process.env.NODE_ENV === 'production') {
+    if (ssrModuleCache.has(filePath)) {
+      return ssrModuleCache.get(filePath);
+    }
+  }
+
   const fileUrl = pathToFileURL(filePath).href;
+  const importUrl = isDev ? `${fileUrl}?t=${Date.now()}` : fileUrl;
+
   try {
-    return await import(`${fileUrl}?t=${Date.now()}`);
+    const mod = await import(importUrl);
+    if (!isDev && process.env.NODE_ENV === 'production') {
+      ssrModuleCache.set(filePath, mod);
+    }
+    return mod;
   } catch (err) {
     // Check if this might be a CSS import issue
     const source = fs.readFileSync(filePath, 'utf-8');
     if (source.match(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/m)) {
       const stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '// [velix:ssr] css import stripped');
       const ext = path.extname(filePath);
-      const tmpPath = filePath.replace(ext, `.__velix_ssr${ext}`);
+      
+      // Save temp file in .velix/tmp instead of the source tree
+      const tmpDir = path.join(process.cwd(), '.velix', 'tmp');
+      if (!fs.existsSync(tmpDir)) {
+        fs.mkdirSync(tmpDir, { recursive: true });
+      }
+      const fileHash = path.basename(filePath, ext);
+      const tmpPath = path.join(tmpDir, `${fileHash}_ssr_${Date.now()}${ext}`);
+      
       fs.writeFileSync(tmpPath, stripped);
       try {
-        const mod = await import(`${pathToFileURL(tmpPath).href}?t=${Date.now()}`);
+        const mod = await import(pathToFileURL(tmpPath).href);
         try { fs.unlinkSync(tmpPath); } catch {}
+        if (!isDev && process.env.NODE_ENV === 'production') {
+          ssrModuleCache.set(filePath, mod);
+        }
         return mod;
       } catch (e2) {
         try { fs.unlinkSync(tmpPath); } catch {}
@@ -409,10 +434,36 @@ async function handleApiRoute(route: { filePath: string, params?: Record<string,
 
 async function handleServerAction(req: http.IncomingMessage, res: http.ServerResponse) {
   try {
+    // 1. Origin / CSRF validation
+    const origin = req.headers.origin;
+    const host = req.headers.host;
+    if (origin && host) {
+      try {
+        const originUrl = new URL(origin);
+        if (originUrl.host !== host) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: false, error: 'Forbidden: Invalid request origin' }));
+          return;
+        }
+      } catch {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: false, error: 'Forbidden: Malformed origin' }));
+        return;
+      }
+    }
+
+    // 2. Enforce custom header requirement to prevent simple form CSRF POSTs
+    const actionHeader = req.headers['x-velix-action'];
+    if (!actionHeader) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Missing X-Velix-Action header' }));
+      return;
+    }
+
     const body = await parseRequestBody(req) as { actionId?: string, args?: string };
     if (!body?.actionId || typeof body.actionId !== 'string') {
       res.writeHead(400, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ error: 'Missing actionId' }));
+      res.end(JSON.stringify({ success: false, error: 'Missing actionId' }));
       return;
     }
 
@@ -423,8 +474,12 @@ async function handleServerAction(req: http.IncomingMessage, res: http.ServerRes
     res.end(JSON.stringify(result));
   } catch (err: unknown) {
     const error = err as Error;
+    const isProd = process.env.NODE_ENV === 'production';
     res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ success: false, error: error.message }));
+    res.end(JSON.stringify({
+      success: false,
+      error: isProd ? 'An unexpected server error occurred' : (error.message || 'Action failed')
+    }));
   }
 }
 
@@ -434,8 +489,7 @@ async function handlePageRoute(
   url: URL, config: VelixConfig, isDev: boolean, projectRoot: string
 ) {
   try {
-    const fileUrl = pathToFileURL(route.filePath).href;
-    const mod = await import(`${fileUrl}?t=${Date.now()}`);
+    const mod = await importModuleSSR(route.filePath, isDev) as { default?: React.ComponentType<unknown>; metadata?: Record<string, unknown>; generateMetadata?: (params: unknown) => Record<string, unknown> };
     const PageComponent = mod.default;
     let metadata = mod.metadata || mod.generateMetadata?.(route.params) || {};
 
@@ -447,7 +501,7 @@ async function handlePageRoute(
     const layoutModules: { default?: React.ComponentType<unknown>; metadata?: Record<string, unknown> }[] = [];
     for (const lp of layoutPaths) {
       try {
-        const layoutMod = await importModuleSSR(lp) as { default?: React.ComponentType<unknown>; metadata?: Record<string, unknown> };
+        const layoutMod = await importModuleSSR(lp, isDev) as { default?: React.ComponentType<unknown>; metadata?: Record<string, unknown> };
         layoutModules.push(layoutMod);
         if (layoutMod.metadata) {
           metadata = { ...layoutMod.metadata, ...metadata };

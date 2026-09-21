@@ -1,8 +1,14 @@
+import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+    alias: {
+      '@teamvelix/velix-core': path.resolve(__dirname, 'packages/velix-core/src/index.ts'),
+      '@teamvelix/velix-react': path.resolve(__dirname, 'packages/velix-react/src/index.ts'),
+      '@teamvelix/velix-pack': path.resolve(__dirname, 'packages/velix-pack/src/index.ts'),
+    },
   },
   test: {
     globals: true,

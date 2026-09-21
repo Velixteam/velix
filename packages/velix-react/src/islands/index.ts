@@ -12,10 +12,15 @@ import crypto from 'crypto';
 
 // Island registry for tracking all islands in a render
 const islandRegistry = new Map();
+let islandCounter = 0;
+
+export function resetIslandCounter(): void {
+  islandCounter = 0;
+}
 
 function generateIslandId(componentName: string): string {
-  const hash = crypto.randomBytes(4).toString('hex');
-  return `island-${componentName}-${hash}`;
+  islandCounter += 1;
+  return `island-${componentName}-${islandCounter}`;
 }
 
 /**
@@ -44,6 +49,7 @@ export function Island({ component: Component, props = {}, name, clientPath }: {
 export function getRegisteredIslands() {
   const islands = Array.from(islandRegistry.values());
   islandRegistry.clear();
+  islandCounter = 0;
   return islands;
 }
 

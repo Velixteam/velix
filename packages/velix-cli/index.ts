@@ -104,9 +104,11 @@ async function main() {
       await infoCommand();
       break;
     }
-    case 'analyze':
-      log.info('Bundle analysis coming soon...');
+    case 'analyze': {
+      const { analyzeCommand } = await import('./commands/analyze.js');
+      await analyzeCommand();
       break;
+    }
     case 'pack': {
       const { packCommand } = await import('./commands/pack.js');
       await packCommand(args.slice(1));

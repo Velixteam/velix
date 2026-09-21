@@ -29,11 +29,14 @@ export class Bundler {
     const splitter = new CodeSplitter(moduleGraph);
     const chunks = splitter.splitIntoChunks();
 
-    const entryFiles = Array.from(moduleGraph.getAllModules().values())
-      .map(m => m.path)
-      .filter(p => fs.existsSync(p));
+    const allModules = Array.from(moduleGraph.getAllModules().values());
+    const serverFiles = allModules
+      .filter(m => m.type !== 'client' && fs.existsSync(m.path))
+      .map(m => m.path);
 
-    if (entryFiles.length === 0) return chunks;
+    const clientFiles = allModules
+      .filter(m => m.type === 'client' && fs.existsSync(m.path))
+      .map(m => m.path);
 
     const serverOutDir = path.join(this.outDir, 'server');
     const clientOutDir = path.join(this.outDir, 'client');
@@ -41,19 +44,37 @@ export class Bundler {
     if (!fs.existsSync(serverOutDir)) fs.mkdirSync(serverOutDir, { recursive: true });
     if (!fs.existsSync(clientOutDir)) fs.mkdirSync(clientOutDir, { recursive: true });
 
-    // Bundle via esbuild
-    await esbuild.build({
-      entryPoints: entryFiles,
-      outdir: serverOutDir,
-      bundle: false,
-      format: 'esm',
-      platform: 'node',
-      target: 'es2022',
-      minify: this.minify,
-      sourcemap: this.sourcemap,
-      jsx: 'automatic',
-      logLevel: 'silent',
-    });
+    // 1. Bundle server modules
+    if (serverFiles.length > 0) {
+      await esbuild.build({
+        entryPoints: serverFiles,
+        outdir: serverOutDir,
+        bundle: false,
+        format: 'esm',
+        platform: 'node',
+        target: 'es2022',
+        minify: this.minify,
+        sourcemap: this.sourcemap,
+        jsx: 'automatic',
+        logLevel: 'silent',
+      });
+    }
+
+    // 2. Bundle client modules
+    if (clientFiles.length > 0) {
+      await esbuild.build({
+        entryPoints: clientFiles,
+        outdir: clientOutDir,
+        bundle: false,
+        format: 'esm',
+        platform: 'browser',
+        target: 'es2022',
+        minify: this.minify,
+        sourcemap: this.sourcemap,
+        jsx: 'automatic',
+        logLevel: 'silent',
+      });
+    }
 
     return chunks;
   }

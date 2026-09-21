@@ -19,6 +19,8 @@
     "baseUrl": ".",
     "paths": {
       "@velix/*": ["./*"],
+      "@teamvelix/velix-core": ["../velix-core/src/index.ts"],
+      "@teamvelix/velix-core/*": ["../velix-core/src/*"],
       "@teamvelix/velix-pack": ["../velix-pack/src/index.ts"],
       "@teamvelix/velix-pack/*": ["../velix-pack/src/*"]
     },
