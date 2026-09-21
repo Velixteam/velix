@@ -1,3 +1,4 @@
+import React from "react";
 import "./globals.css";
 
 export const metadata = {
@@ -18,7 +19,7 @@ function Navbar() {
           />
           <span className="text-[#e8ebe5] font-bold text-xl tracking-tight">Velix</span>
           <span className="px-2 py-0.5 rounded-full bg-[#111211] border border-[#1e201e] text-[11px] font-mono text-[#00e87a]">
-            v5.3.4
+            v5.3.6
           </span>
         </a>
 
@@ -90,7 +91,7 @@ function Footer() {
           <p className="text-xs text-[#6b7068]">&copy; 2026 Velix Team. All rights reserved.</p>
           <div className="flex items-center gap-2 text-xs text-[#6b7068] font-mono">
             <span className="w-2 h-2 rounded-full bg-[#00e87a] animate-pulse"></span>
-            Built with Velix v5.3.4 &bull; Powered by <span className="text-[#00e87a] font-semibold">Florynx Labs</span>
+            Built with Velix v5.3.6 &bull; Powered by <span className="text-[#00e87a] font-semibold">Florynx Labs</span>
           </div>
         </div>
       </div>
@@ -104,7 +105,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <meta name="google-site-verification" content="mguAwrwKCuA9Ex9w0wPe13hKCGnFN-sTFi-4AKvl16g" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap"
           rel="stylesheet"

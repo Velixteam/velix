@@ -285,7 +285,10 @@ async function importModuleSSR(filePath: string, isDev: boolean = false): Promis
     // Check if this might be a CSS import issue
     const source = fs.readFileSync(filePath, 'utf-8');
     if (source.match(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/m)) {
-      const stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '// [velix:ssr] css import stripped');
+      let stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '// [velix:ssr] css import stripped');
+      if (!stripped.includes("import React") && !stripped.includes("import * as React")) {
+        stripped = `import React from 'react';\n${stripped}`;
+      }
       const ext = path.extname(filePath);
       
       // Save temp file in .velix/tmp instead of the source tree
