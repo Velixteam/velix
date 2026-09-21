@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
 import type { ErrorProps } from '@teamvelix/velix-core'
 
-export interface ErrorPageProps extends ErrorProps {}
+export interface ErrorPageProps {
+  error: Error;
+  reset: () => void;
+}
 
 const STATUS_CONFIG: Record<number, { label: string; color: string; glow: string }> = {
   400: { label: 'Bad Request',           color: '#f59e0b', glow: 'rgba(245,158,11,0.06)' },
