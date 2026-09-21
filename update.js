@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-const VERSION = '5.3.5';
+const VERSION = '5.3.6';
 
 const pkgPaths = [
   'package.json',

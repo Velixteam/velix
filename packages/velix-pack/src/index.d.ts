@@ -20,6 +20,7 @@ export declare class VelixPack {
     build(): Promise<BuildStats>;
     watch(onRebuild?: (affectedModules: string[]) => void): FileWatcher;
     private rebuildIncremental;
+    private processingSet;
     private processFile;
     private findSourceFiles;
     getHMR(): HMRBridge;

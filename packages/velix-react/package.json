@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/velix-react",
-  "version": "5.3.5",
+  "version": "5.3.6",
   "description": "React bindings and SSR rendering for Velix",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -32,7 +32,7 @@
     "react-dom": ">=19.0.1"
   },
   "dependencies": {
-    "@teamvelix/velix-core": "^5.3.5"
+    "@teamvelix/velix-core": "^5.3.6"
   },
   "engines": {
     "node": ">=18.0.0"

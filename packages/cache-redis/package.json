@@ -1,6 +1,6 @@
 {
   "name": "@teamvelix/cache-redis",
-  "version": "5.3.5",
+  "version": "5.3.6",
   "description": "Redis cache adapter for Velix — implements ICacheAdapter via ioredis",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
