@@ -7,7 +7,7 @@ import path from 'path';
 import { VERSION } from '../version.js';
 
 export const log = {
-  info: (msg: string) => console.log(`  ${pc.cyan('ℹ')} ${msg}`),
+  info: (msg: string) => console.log(`  ${pc.green('ℹ')} ${msg}`),
   success: (msg: string) => console.log(`  ${pc.green('✔')} ${msg}`),
   warn: (msg: string) => console.log(`  ${pc.yellow('⚠')} ${pc.yellow(msg)}`),
   error: (msg: string) => console.log(`  ${pc.red('✖')} ${pc.red(msg)}`),
@@ -16,7 +16,7 @@ export const log = {
 
 export function showBanner() {
   console.log('');
-  console.log(`  ${pc.cyan('▲')} ${pc.bold('Velix')} ${pc.dim(`v${VERSION}`)}`);
+  console.log(`  ${pc.green('▲')} ${pc.bold('Velix')} ${pc.dim(`v${VERSION}`)}`);
   console.log(`  ${pc.dim('──────────────────────────────────────────────')}`);
   console.log('');
 }

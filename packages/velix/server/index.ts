@@ -10,8 +10,12 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { createRequire } from 'module';
-import React from 'react';
-import { renderToString } from 'react-dom/server';
+import { createRequire as _createRequireForReact } from 'module';
+import { pathToFileURL as _pfu } from 'url';
+// Load React from the project root to avoid duplicate-React-instance errors
+const _projectRequire = _createRequireForReact(_pfu(path.join(process.cwd(), 'package.json')).href);
+const React = _projectRequire('react') as typeof import('react');
+const { renderToString } = _projectRequire('react-dom/server') as typeof import('react-dom/server');
 import { loadConfig, resolvePaths, type VelixConfig } from '../config.js';
 import { buildRouteTree, matchRoute } from '../router/index.js';
 import { runMiddleware, loadMiddleware, type MiddlewareFunction } from '../middleware/index.js';

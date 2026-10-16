@@ -208,7 +208,7 @@ export default defineConfig({
   }
 
   fs.mkdirSync(path.join(dir, 'app'), { recursive: true });
-  writeFile(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-deep: #0B1120;\n  --color-velix-dark: #0F172A;\n  --color-velix-accent: #2563EB;\n  --color-velix-cyan: #22D3EE;\n  --color-velix-glow: #38BDF8;\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
+  writeFile(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-deep: #0a0a0a;\n  --color-velix-dark: #111211;\n  --color-velix-accent: #00e87a;\n  --color-velix-cyan: #39ffa0;\n  --color-velix-glow: rgba(0,232,122,0.15);\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
 
   writeFile(path.join(dir, 'app', 'layout.tsx'), `import "./globals.css";
 
@@ -227,17 +227,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 `);
 
   if (template === 'minimal') {
-    writeFile(path.join(dir, 'app', 'page.tsx'), `export const metadata = {\n  title: "${name}",\n};\n\nexport default function MinimalPage() {\n  return (\n    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0F172A] text-slate-100 font-sans">\n      <h1 className="text-4xl font-bold tracking-tight text-white mb-2">Velix</h1>\n      <p className="text-slate-400">Minimal starter.</p>\n    </main>\n  );\n}\n`);
+    writeFile(path.join(dir, 'app', 'page.tsx'), `export const metadata = {\n  title: "${name}",\n};\n\nexport default function MinimalPage() {\n  return (\n    <main className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a0a] text-slate-100 font-sans">\n      <h1 className="text-4xl font-bold tracking-tight text-[#00e87a] mb-2">Velix</h1>\n      <p className="text-slate-400">Minimal starter.</p>\n    </main>\n  );\n}\n`);
   } else {
     // Full template with components...
     fs.mkdirSync(path.join(dir, 'components', 'ui'), { recursive: true });
 
-    let buttonCode = `import React from 'react';\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className = '', variant = 'primary', ...props }, ref) => {\n    const base = "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-velix-cyan/50";\n    const variants = {\n      primary: "bg-gradient-to-r from-velix-accent to-velix-cyan text-white shadow-[0_0_20px_rgba(34,211,238,0.25)] hover:shadow-[0_0_30px_rgba(34,211,238,0.45)]",\n      secondary: "bg-white/5 text-slate-200 border border-white/10 hover:bg-white/10 hover:border-velix-cyan/30"\n    };\n    return <button ref={ref} className={\`\${base} \${variants[variant]} \${className}\`} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
+    let buttonCode = `import React from 'react';\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className = '', variant = 'primary', ...props }, ref) => {\n    const base = "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-velix-cyan/50";\n    const variants = {\n      primary: "bg-gradient-to-r from-velix-accent to-velix-cyan text-[#0a0a0a] font-bold shadow-[0_0_20px_rgba(0,232,122,0.25)] hover:shadow-[0_0_30px_rgba(0,232,122,0.45)]",\n      secondary: "bg-white/5 text-slate-200 border border-white/10 hover:bg-white/10 hover:border-velix-cyan/30"\n    };\n    return <button ref={ref} className={\`\${base} \${variants[variant]} \${className}\`} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
 
     if (useShadcn) {
       fs.mkdirSync(path.join(dir, 'lib'), { recursive: true });
       writeFile(path.join(dir, 'lib', 'utils.ts'), `import { clsx, type ClassValue } from "clsx";\nimport { twMerge } from "tailwind-merge";\n\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n`);
-      buttonCode = `import * as React from "react";\nimport { cn } from "../../lib/utils";\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className, variant = 'primary', ...props }, ref) => {\n    const classes = cn(\n      "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-velix-cyan/50",\n      variant === 'primary' ? "bg-gradient-to-r from-velix-accent to-velix-cyan text-white shadow-[0_0_20px_rgba(34,211,238,0.25)] hover:shadow-[0_0_30px_rgba(34,211,238,0.45)]" : "bg-white/5 text-slate-200 border border-white/10 hover:bg-white/10 hover:border-velix-cyan/30",\n      className\n    );\n    return <button className={classes} ref={ref} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
+      buttonCode = `import * as React from "react";\nimport { cn } from "../../lib/utils";\n\nexport interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {\n  variant?: 'primary' | 'secondary';\n}\n\nexport const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className, variant = 'primary', ...props }, ref) => {\n    const classes = cn(\n      "inline-flex flex-row gap-2 items-center justify-center font-medium transition-all duration-300 h-12 rounded-xl px-8 focus:outline-none focus:ring-2 focus:ring-velix-cyan/50",\n      variant === 'primary' ? "bg-gradient-to-r from-velix-accent to-velix-cyan text-[#0a0a0a] font-bold shadow-[0_0_20px_rgba(0,232,122,0.25)] hover:shadow-[0_0_30px_rgba(0,232,122,0.45)]" : "bg-white/5 text-slate-200 border border-white/10 hover:bg-white/10 hover:border-velix-cyan/30",\n      className\n    );\n    return <button className={classes} ref={ref} {...props} />;\n  }\n);\nButton.displayName = "Button";\n`;
     }
     writeFile(path.join(dir, 'components', 'ui', 'button.tsx'), buttonCode);
 
@@ -258,13 +258,13 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-[#0B1628] via-velix-dark to-velix-deep text-slate-100 font-sans relative overflow-hidden">
+    <main className="min-h-screen flex flex-col items-center justify-center p-8 bg-gradient-to-b from-[#0A1610] via-velix-dark to-velix-deep text-slate-100 font-sans relative overflow-hidden">
       <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] bg-velix-accent/15 rounded-full blur-[140px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-velix-cyan/10 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="z-10 flex flex-col items-center max-w-5xl w-full text-center mt-12 mb-auto">
-        <div className="mb-10 w-24 h-24 bg-gradient-to-br from-velix-accent to-velix-cyan rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.3)] flex items-center justify-center relative group">
+        <div className="mb-10 w-24 h-24 bg-gradient-to-br from-velix-accent to-velix-cyan rounded-2xl shadow-[0_0_50px_rgba(0,232,122,0.3)] flex items-center justify-center relative group">
           <div className="absolute inset-0 bg-velix-cyan/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-          <span className="text-5xl font-black text-white relative z-10 tracking-tighter">V</span>
+          <span className="text-5xl font-black text-[#0a0a0a] relative z-10 tracking-tighter">V</span>
         </div>
         <h1 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">Welcome to</span>{" "}
