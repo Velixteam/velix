@@ -289,7 +289,7 @@ async function importModuleSSR(filePath: string, isDev: boolean = false): Promis
     // Check if this might be a CSS import issue
     const source = fs.readFileSync(filePath, 'utf-8');
     if (source.match(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/m)) {
-      let stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '// [velix:ssr] css import stripped');
+      let stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '/* velix-ssr: css import stripped */');
       if (!stripped.includes("import React") && !stripped.includes("import * as React")) {
         stripped = `import React from 'react';\n${stripped}`;
       }
@@ -514,8 +514,27 @@ async function handlePageRoute(
           metadata = { ...layoutMod.metadata, ...metadata };
         }
       } catch (e) {
-        // Skip broken layouts gracefully
-        logger.warn?.(`Failed to load layout: ${lp}`);
+        const layoutErr = e as Error;
+        // Fail loudly — a broken layout hides all CSS and structure from the page.
+        // Never silently skip: log the full stack so the developer can act on it.
+        logger.error(`Failed to load layout ${lp}: ${layoutErr.message}`, layoutErr);
+        if (isDev) {
+          // In development, surface the layout error as a 500 overlay immediately.
+          if (!res.headersSent) {
+            res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+            res.end(generate500Page({
+              statusCode: 500,
+              title: 'Layout Error',
+              message: `Failed to load layout: ${lp}\n\n${layoutErr.message}`,
+              stack: layoutErr.stack,
+              isDev: true,
+              pathname: url.pathname,
+            }));
+          }
+          return;
+        }
+        // In production, throw — let the outer handler send a clean 500 page.
+        throw layoutErr;
       }
     }
 
