@@ -153,9 +153,9 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
         }
       },
 
-      [PluginHooks.BUILD_START]: async (configArg: unknown, projectRoot_: unknown) => {
-        const projectRoot = (projectRoot_ as string) || process.cwd();
-        const config = (configArg as import('../config.js').VelixConfig) || activeConfig;
+      [PluginHooks.BUILD_START]: async () => {
+        const projectRoot = process.cwd();
+        const config = activeConfig;
         const { input, output } = resolvePaths(projectRoot);
         const { cmd } = getCli(projectRoot);
 
@@ -223,11 +223,10 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
         }
       },
 
-      [PluginHooks.SERVER_START]: async (server: unknown, isDevArg: unknown, projectRoot_: unknown) => {
-        const isDev = isDevArg as boolean;
+      [PluginHooks.SERVER_START]: async (context: { config: import('../config.js').VelixConfig; isDev: boolean; projectRoot: string }, isDev: boolean) => {
         if (!isDev) return;
 
-        const projectRoot = (projectRoot_ as string) || process.cwd();
+        const projectRoot = context.projectRoot || process.cwd();
         const { input, output } = resolvePaths(projectRoot);
         const { cmd } = getCli(projectRoot);
 
