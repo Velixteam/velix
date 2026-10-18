@@ -3,7 +3,7 @@
  * scripts/check-imports.ts
  *
  * CI guard: resolve every relative import inside website/app and
- * templates/*/app; fail loudly if any target file is absent from the
+ * templates/<name>/app; fail loudly if any target file is absent from the
  * git index (i.e. untracked or gitignored).
  *
  * Usage:
@@ -41,16 +41,18 @@ const trackedFiles = new Set<string>(
 const SCAN_ROOTS: string[] = [
   path.join(ROOT, 'website', 'app'),
   // templates glob
-  ...fs
-    .readdirSync(path.join(ROOT, 'templates'))
-    .filter((d) => {
-      try {
-        return fs.statSync(path.join(ROOT, 'templates', d)).isDirectory();
-      } catch {
-        return false;
-      }
-    })
-    .map((d) => path.join(ROOT, 'templates', d, 'app')),
+  ...(fs.existsSync(path.join(ROOT, 'templates'))
+    ? fs
+        .readdirSync(path.join(ROOT, 'templates'))
+        .filter((d) => {
+          try {
+            return fs.statSync(path.join(ROOT, 'templates', d)).isDirectory();
+          } catch {
+            return false;
+          }
+        })
+        .map((d) => path.join(ROOT, 'templates', d, 'app'))
+    : []),
 ].filter((p) => {
   try {
     return fs.statSync(p).isDirectory();
