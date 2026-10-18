@@ -1,0 +1,1180 @@
+diff --git a/.gitignore b/.gitignore
+index fcdd7f6..3e0973f 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -22,8 +22,9 @@ npm-debug.log*
+ 
+ # Test apps
+ test-*/
+-website/
+-templates/my-saas
++# NOTE: `website/` and `templates/my-saas` used to be ignored here. That kept website/components/
++# (and any other new file) out of git, so clones and deployments failed with
++# "Cannot find module .../website/components/DocsComponents". They are real sources: keep them tracked.
+ 
+ # Environment
+ .env
+diff --git a/packages/velix-core/src/plugins/tailwind.ts b/packages/velix-core/src/plugins/tailwind.ts
+index 3cecbe9..c49c887 100644
+--- a/packages/velix-core/src/plugins/tailwind.ts
++++ b/packages/velix-core/src/plugins/tailwind.ts
+@@ -1,6 +1,6 @@
+-import { spawnSync, spawn } from 'child_process';
+-import fs from 'fs';
+-import path from 'path';
++import { spawnSync, spawn, type ChildProcess } from 'node:child_process';
++import fs from 'node:fs';
++import path from 'node:path';
+ import { PluginHooks, definePlugin } from './index.js';
+ import logger from '../logger.js';
+ 
+@@ -11,20 +11,158 @@ export interface TailwindPluginOptions {
+   minify?: boolean;
+ }
+ 
++export interface TailwindCli {
++  /** Absolute path to the CLI entry file, run with `process.execPath` (no npx, no shell). */
++  bin: string;
++  /** Major version of the CLI that was found. */
++  major: 3 | 4;
++}
++
++export type TailwindCliResult = TailwindCli | { error: string };
++
++/**
++ * Walk up from `startDir` looking for `node_modules/<pkg>/package.json`.
++ * Works with npm, pnpm (symlinks) and hoisted monorepos, and costs a few
++ * `fs.existsSync` calls instead of spawning `npx` (which took 3–15 s).
++ */
++function findPackageDir(pkg: string, startDir: string): string | null {
++  let dir = path.resolve(startDir);
++  while (true) {
++    const candidate = path.join(dir, 'node_modules', pkg);
++    if (fs.existsSync(path.join(candidate, 'package.json'))) return candidate;
++    const parent = path.dirname(dir);
++    if (parent === dir) return null;
++    dir = parent;
++  }
++}
++
++function readPackageJson(dir: string): { version?: string; bin?: string | Record<string, string> } {
++  return JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8'));
++}
++
++function binPath(dir: string, bin: string | Record<string, string> | undefined): string | null {
++  if (!bin) return null;
++  const rel = typeof bin === 'string' ? bin : bin.tailwindcss ?? Object.values(bin)[0];
++  if (!rel) return null;
++  const abs = path.resolve(dir, rel);
++  return fs.existsSync(abs) ? abs : null;
++}
++
++/**
++ * Locate the Tailwind CLI installed in the project (v4: @tailwindcss/cli, v3: tailwindcss).
++ * Never touches the network and never fails silently: when nothing usable is
++ * installed the result carries an actionable error message.
++ */
++export function resolveTailwindCli(projectRoot: string): TailwindCliResult {
++  const v4Dir = findPackageDir('@tailwindcss/cli', projectRoot);
++  if (v4Dir) {
++    const bin = binPath(v4Dir, readPackageJson(v4Dir).bin);
++    if (bin) return { bin, major: 4 };
++  }
++
++  const twDir = findPackageDir('tailwindcss', projectRoot);
++  if (twDir) {
++    const pkg = readPackageJson(twDir);
++    const major = parseInt(pkg.version ?? '0', 10);
++    if (major >= 4) {
++      return {
++        error:
++          `Tailwind CSS v${pkg.version} is installed but "@tailwindcss/cli" is missing. ` +
++          `Run: pnpm add -D @tailwindcss/cli (or npm i -D @tailwindcss/cli)`,
++      };
++    }
++    const bin = binPath(twDir, pkg.bin);
++    if (bin) return { bin, major: 3 };
++  }
++
++  return {
++    error:
++      'Tailwind CSS is not installed in this project. ' +
++      'Run: pnpm add -D tailwindcss @tailwindcss/cli (or npm i -D tailwindcss @tailwindcss/cli)',
++  };
++}
++
++interface CompileResult {
++  ok: boolean;
++  stderr: string;
++  ms: number;
++}
++
++function compileOnce(cli: TailwindCli, input: string, output: string, cwd: string, minify: boolean): CompileResult {
++  const started = Date.now();
++  const args = [cli.bin, '-i', input, '-o', output];
++  if (minify) args.push('--minify');
++  const result = spawnSync(process.execPath, args, {
++    cwd,
++    encoding: 'utf-8',
++    windowsHide: true,
++    stdio: ['ignore', 'pipe', 'pipe'],
++  });
++  const stderr = `${result.stderr ?? ''}${result.error ? `\n${result.error.message}` : ''}`.trim();
++  return { ok: result.status === 0, stderr, ms: Date.now() - started };
++}
++
++function outputIsUsable(output: string): boolean {
++  try {
++    return fs.statSync(output).size > 0;
++  } catch {
++    return false;
++  }
++}
++
+ /**
+- * Detect which Tailwind CLI is available (v4: @tailwindcss/cli, v3: tailwindcss)
++ * Start `tailwindcss --watch`. The watcher performs the initial build itself,
++ * so dev mode compiles once instead of "build, then watch (which rebuilds)".
+  */
+-function detectTailwindCli(): string {
+-  // Try v4 CLI first
+-  const v4 = spawnSync('npx @tailwindcss/cli --help', {
+-    stdio: 'pipe',
+-    timeout: 15000,
+-    shell: true,
++function startWatcher(cli: TailwindCli, input: string, output: string, cwd: string) {
++  // NOTE: stdin must stay open — Tailwind v4's `--watch` exits when stdin closes.
++  const child: ChildProcess = spawn(process.execPath, [cli.bin, '-i', input, '-o', output, '--watch'], {
++    cwd,
++    windowsHide: true,
++    stdio: ['pipe', 'pipe', 'pipe'],
++  });
++
++  let settled = false;
++  let tail = '';
++  let resolveReady!: (ok: boolean) => void;
++  const ready = new Promise<boolean>((resolve) => (resolveReady = resolve));
++  const settle = (ok: boolean) => {
++    if (settled) return;
++    settled = true;
++    resolveReady(ok);
++  };
++
++  const onData = (chunk: Buffer) => {
++    const text = chunk.toString();
++    tail = (tail + text).slice(-4000);
++    if (/done in|rebuilt|built in/i.test(text)) settle(true);
++    // Surface compile errors (e.g. invalid CSS) instead of swallowing them.
++    for (const line of text.split('\n')) {
++      if (/\berror\b/i.test(line) && line.trim()) logger.error(`Tailwind: ${line.trim()}`);
++    }
++  };
++  child.stdout?.on('data', onData);
++  child.stderr?.on('data', onData);
++
++  child.on('error', (err) => {
++    logger.error('Tailwind watcher could not start', err);
++    settle(false);
++  });
++  child.on('exit', (code) => {
++    if (code !== 0 && code !== null) {
++      logger.error(`Tailwind watcher exited with code ${code}${tail ? `:\n${tail.trim()}` : ''}`);
++    }
++    settle(false);
+   });
+-  if (v4.status === 0) return '@tailwindcss/cli';
+ 
+-  // Fallback to v3 CLI
+-  return 'tailwindcss';
++  const stop = () => {
++    if (!child.killed) child.kill();
++  };
++  process.on('exit', stop);
++  process.on('SIGINT', stop);
++  process.on('SIGTERM', stop);
++
++  return { ready, stop };
+ }
+ 
+ /**
+@@ -35,13 +173,9 @@ function detectTailwindCli(): string {
+ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
+   const input = options.input || './app/globals.css';
+   const output = options.output || './public/tailwind.css';
+-  const configPath = options.config || './tailwind.config.ts';
+-  let cliCmd: string | null = null;
++  let root = process.cwd();
+ 
+-  function getCli(): string {
+-    if (!cliCmd) cliCmd = detectTailwindCli();
+-    return cliCmd;
+-  }
++  const abs = (p: string) => path.resolve(root, p);
+ 
+   return definePlugin({
+     name: 'velix:tailwind',
+@@ -51,106 +185,71 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
+         // Automatically ensure the output CSS is in the styles array
+         const relativeOutput = output.startsWith('./') ? output.substring(1) : output;
+         const stylePath = relativeOutput.startsWith('/public') ? relativeOutput.substring(7) : relativeOutput;
+-        
++
+         if (!config.styles) config.styles = [];
+         if (!config.styles.includes(stylePath)) {
+           config.styles.push(stylePath);
+         }
+       },
+ 
++      // Production build: one compilation, and a failure fails the build.
+       [PluginHooks.BUILD_START]: async () => {
+-        logger.info('Building Tailwind CSS...');
+-        try {
+-          const cli = getCli();
+-          let cmd = `npx ${cli} -i "${input}" -o "${output}"`;
+-          if (options.minify !== false) cmd += ' --minify';
+-          spawnSync(cmd, { 
+-            stdio: 'inherit',
+-            cwd: process.cwd(),
+-            shell: true,
+-          });
+-          logger.success('Tailwind CSS built successfully');
+-        } catch (err: unknown) {
+-          logger.error('Tailwind build failed', err as Error);
++        const cli = resolveTailwindCli(root);
++        if ('error' in cli) throw new Error(cli.error);
++
++        const inputAbs = abs(input);
++        const outputAbs = abs(output);
++        if (!fs.existsSync(inputAbs)) {
++          throw new Error(`Tailwind input file not found: ${input}`);
++        }
++        fs.mkdirSync(path.dirname(outputAbs), { recursive: true });
++
++        const result = compileOnce(cli, inputAbs, outputAbs, root, options.minify !== false);
++        if (!result.ok) {
++          throw new Error(`Tailwind CSS compilation failed:\n${result.stderr || '(no output from the Tailwind CLI)'}`);
+         }
++        if (!outputIsUsable(outputAbs)) {
++          throw new Error(`Tailwind CSS produced an empty file: ${output}`);
++        }
++        logger.success(`Tailwind CSS built in ${result.ms}ms`);
+       },
+ 
+-      [PluginHooks.SERVER_START]: async (server: unknown, isDevArg: unknown) => {
++      [PluginHooks.SERVER_START]: async (ctx: unknown, isDevArg: unknown) => {
+         const isDev = isDevArg as boolean;
+         if (!isDev) return;
+ 
+-        // Check if input file exists
+-        if (!fs.existsSync(input)) {
++        const projectRoot = (ctx as { projectRoot?: string } | undefined)?.projectRoot;
++        if (projectRoot) root = projectRoot;
++
++        const inputAbs = abs(input);
++        const outputAbs = abs(output);
++
++        if (!fs.existsSync(inputAbs)) {
+           logger.warn(`Tailwind input file not found: ${input}`);
+           return;
+         }
+ 
+-        // Ensure output directory exists
+-        const outputDir = path.dirname(output);
+-        if (!fs.existsSync(outputDir)) {
+-          fs.mkdirSync(outputDir, { recursive: true });
+-        }
+-
+-        // Build initial CSS synchronously
+-        logger.info('Building initial Tailwind CSS...');
+-        try {
+-          const cli = getCli();
+-          const buildResult = spawnSync(`npx ${cli} -i "${input}" -o "${output}"`, {
+-            cwd: process.cwd(),
+-            stdio: 'pipe',
+-            shell: true,
+-          });
+-
+-          if (buildResult.status !== 0) {
+-            const stderr = buildResult.stderr?.toString() || '';
+-            // Only show 'not installed' if we actually can't find the CLI command
+-            if (buildResult.error || stderr.includes('not found') || stderr.includes('ENOENT')) {
+-              logger.warn('Tailwind CSS CLI not found — skipping. CSS will still be served if pre-built.');
+-            } else if (stderr.trim()) {
+-              logger.warn(`Tailwind build warning: ${stderr.trim().split('\n')[0]}`);
+-            }
+-            return;
+-          }
+-
+-          logger.success('Tailwind CSS built successfully');
+-        } catch (err: unknown) {
+-          logger.error('Failed to build Tailwind CSS', err as Error);
++        const cli = resolveTailwindCli(root);
++        if ('error' in cli) {
++          logger.error(cli.error);
+           return;
+         }
+ 
+-        // Start watcher
+-        logger.info('Starting Tailwind CSS watcher...');
+-        const cli = getCli();
+-        const watcher = spawn(`npx ${cli} -i "${input}" -o "${output}" --watch`, {
+-          stdio: 'pipe',
+-          cwd: process.cwd(),
+-          shell: true,
+-        });
+-
+-        // Silence verbose watcher logs to keep developer console clean
+-        watcher.stdout.on('data', () => {});
+-        watcher.stderr.on('data', () => {});
+-
+-        watcher.on('error', (err) => {
+-          logger.error('Tailwind watcher error', err);
+-        });
+-
+-        watcher.on('exit', (code) => {
+-          if (code !== 0 && code !== null) {
+-            logger.error(`Tailwind watcher exited with code ${code}`);
+-          }
+-        });
++        fs.mkdirSync(path.dirname(outputAbs), { recursive: true });
+ 
+-        const cleanup = () => {
+-          if (watcher && !watcher.killed) {
+-            watcher.kill();
+-          }
+-        };
++        // Warm start: a CSS file from the previous run is already usable, so the
++        // server does not wait for Tailwind (the watcher refreshes it right after).
++        const warm = outputIsUsable(outputAbs);
++        const watcher = startWatcher(cli, inputAbs, outputAbs, root);
+ 
+-        process.on('exit', cleanup);
+-        process.on('SIGINT', cleanup);
+-        process.on('SIGTERM', cleanup);
+-      }
+-    }
++        if (!warm) {
++          const timeout = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 60_000));
++          const ok = await Promise.race([watcher.ready, timeout]);
++          if (!ok || !outputIsUsable(outputAbs)) {
++            logger.warn(`Tailwind CSS is not ready yet (${output}). Pages may render without styles until it finishes.`);
++          }
++        }
++      },
++    },
+   });
+ }
+diff --git a/packages/velix-react/package.json b/packages/velix-react/package.json
+index 67b8892..7ecd795 100644
+--- a/packages/velix-react/package.json
++++ b/packages/velix-react/package.json
+@@ -10,6 +10,7 @@
+   },
+   "files": [
+     "dist",
++    "src/hmr",
+     "README.md",
+     "LICENSE"
+   ],
+diff --git a/packages/velix/plugins/tailwind.ts b/packages/velix/plugins/tailwind.ts
+index 767b0b3..c49c887 100644
+--- a/packages/velix/plugins/tailwind.ts
++++ b/packages/velix/plugins/tailwind.ts
+@@ -1,6 +1,6 @@
+-import { spawnSync, spawn } from 'child_process';
+-import fs from 'fs';
+-import path from 'path';
++import { spawnSync, spawn, type ChildProcess } from 'node:child_process';
++import fs from 'node:fs';
++import path from 'node:path';
+ import { PluginHooks, definePlugin } from './index.js';
+ import logger from '../logger.js';
+ 
+@@ -11,20 +11,158 @@ export interface TailwindPluginOptions {
+   minify?: boolean;
+ }
+ 
++export interface TailwindCli {
++  /** Absolute path to the CLI entry file, run with `process.execPath` (no npx, no shell). */
++  bin: string;
++  /** Major version of the CLI that was found. */
++  major: 3 | 4;
++}
++
++export type TailwindCliResult = TailwindCli | { error: string };
++
++/**
++ * Walk up from `startDir` looking for `node_modules/<pkg>/package.json`.
++ * Works with npm, pnpm (symlinks) and hoisted monorepos, and costs a few
++ * `fs.existsSync` calls instead of spawning `npx` (which took 3–15 s).
++ */
++function findPackageDir(pkg: string, startDir: string): string | null {
++  let dir = path.resolve(startDir);
++  while (true) {
++    const candidate = path.join(dir, 'node_modules', pkg);
++    if (fs.existsSync(path.join(candidate, 'package.json'))) return candidate;
++    const parent = path.dirname(dir);
++    if (parent === dir) return null;
++    dir = parent;
++  }
++}
++
++function readPackageJson(dir: string): { version?: string; bin?: string | Record<string, string> } {
++  return JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8'));
++}
++
++function binPath(dir: string, bin: string | Record<string, string> | undefined): string | null {
++  if (!bin) return null;
++  const rel = typeof bin === 'string' ? bin : bin.tailwindcss ?? Object.values(bin)[0];
++  if (!rel) return null;
++  const abs = path.resolve(dir, rel);
++  return fs.existsSync(abs) ? abs : null;
++}
++
++/**
++ * Locate the Tailwind CLI installed in the project (v4: @tailwindcss/cli, v3: tailwindcss).
++ * Never touches the network and never fails silently: when nothing usable is
++ * installed the result carries an actionable error message.
++ */
++export function resolveTailwindCli(projectRoot: string): TailwindCliResult {
++  const v4Dir = findPackageDir('@tailwindcss/cli', projectRoot);
++  if (v4Dir) {
++    const bin = binPath(v4Dir, readPackageJson(v4Dir).bin);
++    if (bin) return { bin, major: 4 };
++  }
++
++  const twDir = findPackageDir('tailwindcss', projectRoot);
++  if (twDir) {
++    const pkg = readPackageJson(twDir);
++    const major = parseInt(pkg.version ?? '0', 10);
++    if (major >= 4) {
++      return {
++        error:
++          `Tailwind CSS v${pkg.version} is installed but "@tailwindcss/cli" is missing. ` +
++          `Run: pnpm add -D @tailwindcss/cli (or npm i -D @tailwindcss/cli)`,
++      };
++    }
++    const bin = binPath(twDir, pkg.bin);
++    if (bin) return { bin, major: 3 };
++  }
++
++  return {
++    error:
++      'Tailwind CSS is not installed in this project. ' +
++      'Run: pnpm add -D tailwindcss @tailwindcss/cli (or npm i -D tailwindcss @tailwindcss/cli)',
++  };
++}
++
++interface CompileResult {
++  ok: boolean;
++  stderr: string;
++  ms: number;
++}
++
++function compileOnce(cli: TailwindCli, input: string, output: string, cwd: string, minify: boolean): CompileResult {
++  const started = Date.now();
++  const args = [cli.bin, '-i', input, '-o', output];
++  if (minify) args.push('--minify');
++  const result = spawnSync(process.execPath, args, {
++    cwd,
++    encoding: 'utf-8',
++    windowsHide: true,
++    stdio: ['ignore', 'pipe', 'pipe'],
++  });
++  const stderr = `${result.stderr ?? ''}${result.error ? `\n${result.error.message}` : ''}`.trim();
++  return { ok: result.status === 0, stderr, ms: Date.now() - started };
++}
++
++function outputIsUsable(output: string): boolean {
++  try {
++    return fs.statSync(output).size > 0;
++  } catch {
++    return false;
++  }
++}
++
+ /**
+- * Detect which Tailwind CLI is available (v4: @tailwindcss/cli, v3: tailwindcss)
++ * Start `tailwindcss --watch`. The watcher performs the initial build itself,
++ * so dev mode compiles once instead of "build, then watch (which rebuilds)".
+  */
+-function detectTailwindCli(): string {
+-  // Try v4 CLI first — use pipe to suppress npm warnings from appearing in console
+-  const v4 = spawnSync('npx --no-warnings @tailwindcss/cli --help', {
+-    stdio: 'pipe',
+-    timeout: 15000,
+-    shell: true,
++function startWatcher(cli: TailwindCli, input: string, output: string, cwd: string) {
++  // NOTE: stdin must stay open — Tailwind v4's `--watch` exits when stdin closes.
++  const child: ChildProcess = spawn(process.execPath, [cli.bin, '-i', input, '-o', output, '--watch'], {
++    cwd,
++    windowsHide: true,
++    stdio: ['pipe', 'pipe', 'pipe'],
++  });
++
++  let settled = false;
++  let tail = '';
++  let resolveReady!: (ok: boolean) => void;
++  const ready = new Promise<boolean>((resolve) => (resolveReady = resolve));
++  const settle = (ok: boolean) => {
++    if (settled) return;
++    settled = true;
++    resolveReady(ok);
++  };
++
++  const onData = (chunk: Buffer) => {
++    const text = chunk.toString();
++    tail = (tail + text).slice(-4000);
++    if (/done in|rebuilt|built in/i.test(text)) settle(true);
++    // Surface compile errors (e.g. invalid CSS) instead of swallowing them.
++    for (const line of text.split('\n')) {
++      if (/\berror\b/i.test(line) && line.trim()) logger.error(`Tailwind: ${line.trim()}`);
++    }
++  };
++  child.stdout?.on('data', onData);
++  child.stderr?.on('data', onData);
++
++  child.on('error', (err) => {
++    logger.error('Tailwind watcher could not start', err);
++    settle(false);
++  });
++  child.on('exit', (code) => {
++    if (code !== 0 && code !== null) {
++      logger.error(`Tailwind watcher exited with code ${code}${tail ? `:\n${tail.trim()}` : ''}`);
++    }
++    settle(false);
+   });
+-  if (v4.status === 0) return '@tailwindcss/cli';
+ 
+-  // Fallback to v3 CLI
+-  return 'tailwindcss';
++  const stop = () => {
++    if (!child.killed) child.kill();
++  };
++  process.on('exit', stop);
++  process.on('SIGINT', stop);
++  process.on('SIGTERM', stop);
++
++  return { ready, stop };
+ }
+ 
+ /**
+@@ -35,13 +173,9 @@ function detectTailwindCli(): string {
+ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
+   const input = options.input || './app/globals.css';
+   const output = options.output || './public/tailwind.css';
+-  const configPath = options.config || './tailwind.config.ts';
+-  let cliCmd: string | null = null;
++  let root = process.cwd();
+ 
+-  function getCli(): string {
+-    if (!cliCmd) cliCmd = detectTailwindCli();
+-    return cliCmd;
+-  }
++  const abs = (p: string) => path.resolve(root, p);
+ 
+   return definePlugin({
+     name: 'velix:tailwind',
+@@ -51,101 +185,71 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
+         // Automatically ensure the output CSS is in the styles array
+         const relativeOutput = output.startsWith('./') ? output.substring(1) : output;
+         const stylePath = relativeOutput.startsWith('/public') ? relativeOutput.substring(7) : relativeOutput;
+-        
++
+         if (!config.styles) config.styles = [];
+         if (!config.styles.includes(stylePath)) {
+           config.styles.push(stylePath);
+         }
+       },
+ 
++      // Production build: one compilation, and a failure fails the build.
+       [PluginHooks.BUILD_START]: async () => {
+-        try {
+-          const cli = getCli();
+-          let cmd = `npx --no-warnings ${cli} -i "${input}" -o "${output}"`;
+-          if (options.minify !== false) cmd += ' --minify';
+-          const result = spawnSync(cmd, { 
+-            stdio: 'pipe',
+-            cwd: process.cwd(),
+-            shell: true,
+-          });
+-          if (result.status !== 0) {
+-            const stderr = result.stderr?.toString().trim();
+-            if (stderr) logger.warn(`Tailwind build: ${stderr.split('\n')[0]}`);
+-          }
+-        } catch (err: unknown) {
+-          logger.error('Tailwind build failed', err as Error);
++        const cli = resolveTailwindCli(root);
++        if ('error' in cli) throw new Error(cli.error);
++
++        const inputAbs = abs(input);
++        const outputAbs = abs(output);
++        if (!fs.existsSync(inputAbs)) {
++          throw new Error(`Tailwind input file not found: ${input}`);
+         }
++        fs.mkdirSync(path.dirname(outputAbs), { recursive: true });
++
++        const result = compileOnce(cli, inputAbs, outputAbs, root, options.minify !== false);
++        if (!result.ok) {
++          throw new Error(`Tailwind CSS compilation failed:\n${result.stderr || '(no output from the Tailwind CLI)'}`);
++        }
++        if (!outputIsUsable(outputAbs)) {
++          throw new Error(`Tailwind CSS produced an empty file: ${output}`);
++        }
++        logger.success(`Tailwind CSS built in ${result.ms}ms`);
+       },
+ 
+-      [PluginHooks.SERVER_START]: async (server: unknown, isDevArg: unknown) => {
++      [PluginHooks.SERVER_START]: async (ctx: unknown, isDevArg: unknown) => {
+         const isDev = isDevArg as boolean;
+         if (!isDev) return;
+ 
+-        // Check if input file exists
+-        if (!fs.existsSync(input)) {
++        const projectRoot = (ctx as { projectRoot?: string } | undefined)?.projectRoot;
++        if (projectRoot) root = projectRoot;
++
++        const inputAbs = abs(input);
++        const outputAbs = abs(output);
++
++        if (!fs.existsSync(inputAbs)) {
+           logger.warn(`Tailwind input file not found: ${input}`);
+           return;
+         }
+ 
+-        // Ensure output directory exists
+-        const outputDir = path.dirname(output);
+-        if (!fs.existsSync(outputDir)) {
+-          fs.mkdirSync(outputDir, { recursive: true });
+-        }
+-
+-        // Build initial CSS synchronously (silent — no console noise)
+-        try {
+-          const cli = getCli();
+-          const buildResult = spawnSync(`npx --no-warnings ${cli} -i "${input}" -o "${output}"`, {
+-            cwd: process.cwd(),
+-            stdio: 'pipe',
+-            shell: true,
+-          });
+-
+-          if (buildResult.status !== 0) {
+-            const stderr = buildResult.stderr?.toString() || '';
+-            if (buildResult.error || stderr.includes('not found') || stderr.includes('ENOENT')) {
+-              logger.warn('Tailwind CSS CLI not found — skipping. CSS will still be served if pre-built.');
+-            }
+-            return;
+-          }
+-        } catch (err: unknown) {
+-          logger.error('Failed to build Tailwind CSS', err as Error);
++        const cli = resolveTailwindCli(root);
++        if ('error' in cli) {
++          logger.error(cli.error);
+           return;
+         }
+ 
+-        // Start watcher silently
+-        const cli = getCli();
+-        const watcher = spawn(`npx ${cli} -i "${input}" -o "${output}" --watch`, {
+-          stdio: 'pipe',
+-          cwd: process.cwd(),
+-          shell: true,
+-        });
+-
+-        // Silence verbose watcher logs to keep developer console clean
+-        watcher.stdout.on('data', () => {});
+-        watcher.stderr.on('data', () => {});
+-
+-        watcher.on('error', (err) => {
+-          logger.error('Tailwind watcher error', err);
+-        });
+-
+-        watcher.on('exit', (code) => {
+-          if (code !== 0 && code !== null) {
+-            logger.error(`Tailwind watcher exited with code ${code}`);
+-          }
+-        });
++        fs.mkdirSync(path.dirname(outputAbs), { recursive: true });
+ 
+-        const cleanup = () => {
+-          if (watcher && !watcher.killed) {
+-            watcher.kill();
+-          }
+-        };
++        // Warm start: a CSS file from the previous run is already usable, so the
++        // server does not wait for Tailwind (the watcher refreshes it right after).
++        const warm = outputIsUsable(outputAbs);
++        const watcher = startWatcher(cli, inputAbs, outputAbs, root);
+ 
+-        process.on('exit', cleanup);
+-        process.on('SIGINT', cleanup);
+-        process.on('SIGTERM', cleanup);
+-      }
+-    }
++        if (!warm) {
++          const timeout = new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 60_000));
++          const ok = await Promise.race([watcher.ready, timeout]);
++          if (!ok || !outputIsUsable(outputAbs)) {
++            logger.warn(`Tailwind CSS is not ready yet (${output}). Pages may render without styles until it finishes.`);
++          }
++        }
++      },
++    },
+   });
+ }
+diff --git a/packages/velix/server/error-pages.ts b/packages/velix/server/error-pages.ts
+index 6fe7d23..b7a03b6 100644
+--- a/packages/velix/server/error-pages.ts
++++ b/packages/velix/server/error-pages.ts
+@@ -3,6 +3,7 @@
+  * Pixel-perfect error overlay inspired by Next.js 16 design
+  */
+ 
++import fs from 'node:fs';
+ import { VERSION } from '../version.js';
+ 
+ export interface ErrorPageOptions {
+@@ -259,30 +260,30 @@ export function generate500Page(options: ErrorPageOptions): string {
+         return { call: frame.replace(/^\s*at\s+/, '').trim(), file: '', line: null };
+       });
+ 
+-    const firstUserFrame = frames.find(f => f.file && !f.file.includes('node_modules')) || frames[0];
++    const firstUserFrame = frames.find(f => f.file && !f.file.startsWith('node:') && !f.file.includes('node_modules')) || frames[0];
+     if (firstUserFrame) {
+       errorFile = firstUserFrame.file;
+       errorLine = firstUserFrame.line || 0;
+       if (errorFile && errorLine > 0) {
+         try {
+-          const fs = require('fs');
++          // `fs` is imported at the top of the file: this module is ESM, where require() does not
++          // exist. The old require('fs') threw a ReferenceError that the catch below swallowed,
++          // so the source snippet never showed up.
+           if (fs.existsSync(errorFile)) {
+             const src: string[] = fs.readFileSync(errorFile, 'utf-8').split('\n');
+             const start = Math.max(0, errorLine - 4);
+             const end = Math.min(src.length, errorLine + 3);
+-            
+-            const syntaxHighlight = (code: string) => {
+-              let hl = code;
+-              // Keywords
+-              hl = hl.replace(/\\b(let|const|function|return|import|export|if|else|for|while|await|async|class|var)\\b/g, '<span style="color:#c084fc">$1</span>');
+-              // Strings
+-              hl = hl.replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g, '<span style="color:#86efac">$1</span>');
+-              // Comments
+-              hl = hl.replace(/(\\&#x2F;\\&#x2F;.*)$/g, '<span style="color:#94A3B8">$1</span>');
+-              // Numbers
+-              hl = hl.replace(/\\b(\\d+)\\b/g, '<span style="color:#f59e0b">$1</span>');
+-              return hl;
+-            };
++
++            // Single pass over the already-escaped line, so earlier replacements cannot be
++            // re-matched by later ones (and the regexes use real \b word boundaries).
++            const TOKEN = /(\/\/.*$)|(&quot;.*?&quot;|'.*?'|`.*?`)|\b(let|const|function|return|import|export|from|default|if|else|for|while|await|async|class|var|new|throw|try|catch)\b|\b(\d+)\b/g;
++            const syntaxHighlight = (code: string) =>
++              code.replace(TOKEN, (_m, comment, str, kw, num) => {
++                if (comment) return `<span style="color:#94A3B8">${comment}</span>`;
++                if (str) return `<span style="color:#86efac">${str}</span>`;
++                if (kw) return `<span style="color:#c084fc">${kw}</span>`;
++                return `<span style="color:#f59e0b">${num}</span>`;
++              });
+ 
+             sourceSnippet = src.slice(start, end).map((l: string, i: number) => {
+               const num = start + i + 1;
+@@ -311,8 +312,15 @@ export function generate500Page(options: ErrorPageOptions): string {
+     return formatted;
+   };
+ 
+-  const userFrames = frames.filter(f => f.file && !f.file.includes('node_modules'));
+-  const ignoredFrames = frames.filter(f => !f.file || f.file.includes('node_modules'));
++  // Frames that are not the developer's code: Node internals (node:internal/...), dependencies,
++  // and the framework itself. They go in the collapsed "ignore-listed" section.
++  const isIgnoredFrame = (f: StackFrame) =>
++    !f.file ||
++    f.file.startsWith('node:') ||
++    f.file.includes('node_modules') ||
++    /[\\/]@teamvelix[\\/]/.test(f.file);
++  const userFrames = frames.filter(f => !isIgnoredFrame(f));
++  const ignoredFrames = frames.filter(isIgnoredFrame);
+ 
+   const shortFile = errorFile
+     .replace(/\\/g, '/')
+@@ -720,7 +728,7 @@ export function generate500Page(options: ErrorPageOptions): string {
+       <div class="status-bar">
+         <div class="status-badge">${options.statusCode || 500}</div>
+         <div class="separator">·</div>
+-        <div class="route-badge">Route: ${pathname || '/'}</div>
++        <div class="route-badge">Route: ${escapeHtml(pathname || '/')}</div>
+         <div class="separator">·</div>
+         <div class="timestamp">just now</div>
+       </div>
+diff --git a/packages/velix/server/index.ts b/packages/velix/server/index.ts
+index 2359bf4..4d4e119 100644
+--- a/packages/velix/server/index.ts
++++ b/packages/velix/server/index.ts
+@@ -179,7 +179,7 @@ export async function createServer(options: {
+ 
+       // ── Static files ──
+       const publicDir = (config as unknown as { resolvedPublicDir?: string }).resolvedPublicDir || path.join(projectRoot, 'public');
+-      if (await serveStaticFile(pathname, publicDir, res, isDev)) {
++      if (await serveStaticFile(pathname, publicDir, res, isDev, req)) {
+         if (isDev) logger.request(req.method || 'GET', pathname, 200, Date.now() - requestStart, { type: 'static' });
+         return;
+       }
+@@ -289,7 +289,9 @@ async function importModuleSSR(filePath: string, isDev: boolean = false): Promis
+     // Check if this might be a CSS import issue
+     const source = fs.readFileSync(filePath, 'utf-8');
+     if (source.match(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/m)) {
+-      let stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '// [velix:ssr] css import stripped');
++      // NB: keep this comment free of "[word:word]" patterns — Tailwind's scanner reads them as
++      // arbitrary-property utilities and emits junk like `.\[velix\:ssr\]{velix:ssr}` into the CSS.
++      let stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '/* velix-ssr css import stripped */');
+       if (!stripped.includes("import React") && !stripped.includes("import * as React")) {
+         stripped = `import React from 'react';\n${stripped}`;
+       }
+@@ -365,22 +367,55 @@ async function renderComponentAsync(Component: unknown, props: Record<string, un
+ // Handlers
+ // ============================================================================
+ 
+-async function serveStaticFile(pathname: string, publicDir: string, res: http.ServerResponse, isDev: boolean = false): Promise<boolean> {
+-  const filePath = path.join(publicDir, pathname);
++// A content hash in the file name (e.g. app.3f9a1c2b.js) makes the URL change with the
++// content, which is the only case where "immutable, 1 year" is safe.
++const HASHED_ASSET = /[.-][0-9a-f]{8,}\.[a-z0-9]+$/i;
+ 
+-  // Prevent directory traversal
+-  if (!filePath.startsWith(publicDir)) return false;
++async function serveStaticFile(
++  pathname: string,
++  publicDir: string,
++  res: http.ServerResponse,
++  isDev: boolean = false,
++  req?: http.IncomingMessage,
++): Promise<boolean> {
++  let decoded = pathname;
++  try { decoded = decodeURIComponent(pathname); } catch { return false; }
+ 
+-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) return false;
++  const root = path.resolve(publicDir);
++  const filePath = path.resolve(root, '.' + path.sep + decoded);
++
++  // Prevent directory traversal (a plain startsWith() would also accept "public-evil/")
++  const rel = path.relative(root, filePath);
++  if (rel.startsWith('..') || path.isAbsolute(rel)) return false;
++
++  let stat: fs.Stats;
++  try { stat = fs.statSync(filePath); } catch { return false; }
++  if (stat.isDirectory()) return false;
+ 
+   const ext = path.extname(filePath);
+   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+-  const content = fs.readFileSync(filePath);
+ 
++  // Un-hashed files (public/tailwind.css, favicon…) must be revalidated on every deploy,
++  // otherwise browsers and CDNs keep serving the old file for a year.
++  const etag = `W/"${stat.size.toString(16)}-${Math.floor(stat.mtimeMs).toString(16)}"`;
++  const cacheControl = isDev
++    ? 'no-store, no-cache, must-revalidate'
++    : HASHED_ASSET.test(path.basename(filePath))
++      ? 'public, max-age=31536000, immutable'
++      : 'public, max-age=0, must-revalidate';
++
++  if (!isDev && req?.headers['if-none-match'] === etag) {
++    res.writeHead(304, { ETag: etag, 'Cache-Control': cacheControl });
++    res.end();
++    return true;
++  }
++
++  const content = fs.readFileSync(filePath);
+   res.writeHead(200, {
+     'Content-Type': contentType,
+     'Content-Length': content.length,
+-    'Cache-Control': isDev ? 'no-store, no-cache, must-revalidate' : 'public, max-age=31536000, immutable',
++    'Cache-Control': cacheControl,
++    ETag: etag,
+   });
+   res.end(content);
+   return true;
+@@ -514,8 +549,10 @@ async function handlePageRoute(
+           metadata = { ...layoutMod.metadata, ...metadata };
+         }
+       } catch (e) {
+-        // Skip broken layouts gracefully
+-        logger.warn?.(`Failed to load layout: ${lp}`);
++        // A layout that cannot load means the page would render without its html/body, classes
++        // and providers. Fail loudly with the real error instead of silently degrading.
++        logger.error(`Failed to load layout: ${lp}`, e as Error);
++        throw e;
+       }
+     }
+ 
+@@ -626,7 +663,7 @@ async function handlePageRoute(
+     
+     // Inject Head & Body (Surgical insertion)
+     const headInjectionsHtml = `\n    ${headInjections}\n    `;
+-    const hmrScript = isDev ? `\n    <script type="module">\n      import { initHMRClient, VelixDevOverlay } from '/__velix/hmr-client.js';\n      initHMRClient();\n    </script>` : '';
++    const hmrScript = isDev && findHmrClientSource(projectRoot) ? `\n    <script type="module">\n      import { initHMRClient, VelixDevOverlay } from '/__velix/hmr-client.js';\n      initHMRClient();\n    </script>` : '';
+     const bodyInjectionsHtml = `\n    <div id="__velix-islands"></div>\n    ${hydrationScript}${devToolsHtml}${hmrScript}\n    `;
+     if (finalHtml.includes('<html')) {
+       // 1. Inject Head
+@@ -685,6 +722,23 @@ async function handlePageRoute(
+   }
+ }
+ 
++// The dev HMR client is bundled on demand from velix-react's sources. It used to be rebuilt with
++// esbuild on every request; keep the result until the source file changes.
++let hmrClientCache: { src: string; mtime: number; code: string } | null = null;
++let hmrClientSourceMemo: string | null | undefined;
++
++function findHmrClientSource(projectRoot: string): string | null {
++  if (hmrClientSourceMemo && fs.existsSync(hmrClientSourceMemo)) return hmrClientSourceMemo;
++  const candidates = [
++    path.join(projectRoot, 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
++    path.join(projectRoot, 'node_modules', '@teamvelix', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
++    path.join(__dirname, '..', '..', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
++    path.join(__dirname, '..', 'node_modules', '@teamvelix', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
++  ];
++  hmrClientSourceMemo = candidates.find(p => fs.existsSync(p)) ?? null;
++  return hmrClientSourceMemo;
++}
++
+ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, res: http.ServerResponse, projectRoot: string) {
+   // HMR endpoint for dev mode
+   if (pathname === '/__velix/hmr') {
+@@ -731,33 +785,34 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
+   // HMR Client Serving
+   if (pathname === '/__velix/hmr-client.js') {
+     try {
+-      const candidates = [
+-        path.join(process.cwd(), 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+-        path.join(process.cwd(), 'node_modules', '@teamvelix', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+-        path.join(__dirname, '..', '..', 'velix-react', 'src', 'hmr', 'hmr-client.ts')
+-      ];
+-      const hmrClientSrc = candidates.find(p => fs.existsSync(p));
++      const hmrClientSrc = findHmrClientSource(projectRoot);
+       if (!hmrClientSrc) {
+-        res.writeHead(404);
+-        res.end();
++        // Always send a Content-Type: an empty one makes browsers refuse the module script
++        // with "disallowed MIME type ('')" and hides the real problem.
++        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
++        res.end('Velix HMR client source not found. Reinstall @teamvelix/velix-react.');
+         return;
+       }
+-      const result = await esbuild.build({
+-        entryPoints: [hmrClientSrc],
+-        bundle: true,
+-        format: 'esm',
+-        platform: 'browser',
+-        target: ['es2022'],
+-        minify: true,
+-        write: false,
+-      });
+-      res.writeHead(200, { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache' });
+-      res.end(result.outputFiles[0].text);
++      const mtime = fs.statSync(hmrClientSrc).mtimeMs;
++      if (!hmrClientCache || hmrClientCache.src !== hmrClientSrc || hmrClientCache.mtime !== mtime) {
++        const result = await esbuild.build({
++          entryPoints: [hmrClientSrc],
++          bundle: true,
++          format: 'esm',
++          platform: 'browser',
++          target: ['es2022'],
++          minify: true,
++          write: false,
++        });
++        hmrClientCache = { src: hmrClientSrc, mtime, code: result.outputFiles[0].text };
++      }
++      res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
++      res.end(hmrClientCache.code);
+       return;
+     } catch (err) {
+       console.error('HMR Client build failed', err);
+-      res.writeHead(500);
+-      res.end();
++      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
++      res.end('Velix HMR client build failed. See the server console.');
+       return;
+     }
+   }
+diff --git a/scripts/bench-build.mjs b/scripts/bench-build.mjs
+new file mode 100644
+index 0000000..9398086
+--- /dev/null
++++ b/scripts/bench-build.mjs
+@@ -0,0 +1,83 @@
++#!/usr/bin/env node
++/**
++ * Velix build/dev benchmark.
++ *
++ *   node scripts/bench-build.mjs <project-dir> [--runs 3]
++ *
++ * Measures, on a real project (website/, templates/my-saas, your own app):
++ *   - dev cold start : `velix dev` with no compiled CSS      -> time until "Ready in …"
++ *   - dev warm start : `velix dev` with CSS from a prior run -> time until "Ready in …"
++ *   - build          : `velix build` wall-clock time
++ * and prints min / median per scenario so before/after comparisons are easy.
++ * Run it once on `main` and once on your branch, then compare the two tables.
++ */
++import { spawn, spawnSync } from 'node:child_process';
++import fs from 'node:fs';
++import path from 'node:path';
++
++const args = process.argv.slice(2);
++const dir = path.resolve(args.find((a) => !a.startsWith('--')) ?? '.');
++const runs = Number(args[args.indexOf('--runs') + 1]) || 3;
++const css = path.join(dir, 'public', 'tailwind.css');
++const isWin = process.platform === 'win32';
++
++if (!fs.existsSync(path.join(dir, 'package.json'))) {
++  console.error(`No package.json in ${dir}`);
++  process.exit(1);
++}
++
++const stats = (xs) => {
++  const s = [...xs].sort((a, b) => a - b);
++  return { min: s[0], median: s[Math.floor(s.length / 2)], max: s[s.length - 1] };
++};
++const fmt = (ms) => `${(ms / 1000).toFixed(2)}s`;
++
++function kill(child) {
++  if (isWin) spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F']);
++  else child.kill('SIGKILL');
++}
++
++/** Start `velix dev`, resolve with the wall-clock time until the server prints "Ready in". */
++function devStart(timeoutMs = 120_000) {
++  return new Promise((resolve, reject) => {
++    const started = Date.now();
++    const child = spawn('pnpm', ['exec', 'velix', 'dev'], { cwd: dir, shell: true, env: { ...process.env, FORCE_COLOR: '0' } });
++    const timer = setTimeout(() => { kill(child); reject(new Error('dev server did not become ready in time')); }, timeoutMs);
++    const onData = (buf) => {
++      if (/Ready in/i.test(buf.toString())) {
++        clearTimeout(timer);
++        const elapsed = Date.now() - started;
++        kill(child);
++        setTimeout(() => resolve(elapsed), 500); // let the process tree die before the next run
++      }
++    };
++    child.stdout.on('data', onData);
++    child.stderr.on('data', onData);
++    child.on('error', reject);
++  });
++}
++
++function build() {
++  const started = Date.now();
++  const r = spawnSync('pnpm', ['exec', 'velix', 'build'], { cwd: dir, shell: true, encoding: 'utf-8' });
++  if (r.status !== 0) throw new Error(`velix build failed:\n${r.stderr || r.stdout}`);
++  return Date.now() - started;
++}
++
++const results = { 'dev cold start': [], 'dev warm start': [], 'build': [] };
++
++for (let i = 0; i < runs; i++) {
++  process.stdout.write(`run ${i + 1}/${runs}: `);
++  fs.rmSync(css, { force: true });
++  results['dev cold start'].push(await devStart());
++  results['dev warm start'].push(await devStart()); // CSS from the cold run is still on disk
++  results['build'].push(build());
++  console.log('done');
++}
++
++console.log(`\nProject: ${dir}\n`);
++console.log('scenario'.padEnd(18), 'min'.padStart(8), 'median'.padStart(8), 'max'.padStart(8));
++for (const [name, xs] of Object.entries(results)) {
++  const s = stats(xs);
++  console.log(name.padEnd(18), fmt(s.min).padStart(8), fmt(s.median).padStart(8), fmt(s.max).padStart(8));
++}
+diff --git a/website/app/docs/page.tsx b/website/app/docs/page.tsx
+index 2d341ad..503aa17 100644
+--- a/website/app/docs/page.tsx
++++ b/website/app/docs/page.tsx
+@@ -8,7 +8,9 @@ export const metadata = {
+ 
+ export default function GettingStartedPage() {
+   return (
+-    <>
++    // Page container: without it the content sticks to the left edge of the window.
++    // `id` makes the navbar's "Get Started" link (/docs#getting-started) land here.
++    <div id="getting-started" className="max-w-4xl mx-auto w-full px-6 py-12">
+       {/* Breadcrumbs */}
+       <div className="flex items-center gap-2 text-xs text-[#6b7068] mb-8 font-mono">
+         <a href="/docs" className="hover:text-[#00e87a] transition-colors">Docs</a>
+@@ -151,6 +153,6 @@ export default function GettingStartedPage() {
+       <PageNavigation
+         next={{ title: "File-based Routing", href: "/docs/routing" }}
+       />
+-    </>
++    </div>
+   );
+ }
+diff --git a/website/app/globals.css b/website/app/globals.css
+index 7aaa22e..edde317 100644
+--- a/website/app/globals.css
++++ b/website/app/globals.css
+@@ -1,8 +1,14 @@
+-@import "tailwindcss";
+-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap');
+-
++/* Scan only what we own: no .velix/, dist/ or generated files (they produced a junk
++   `.[velix:ssr]` utility in the compiled CSS). */
++@import "tailwindcss" source(none);
++@source "../app";
+ @source "../components";
++
++/* Fonts are loaded with <link> in layout.tsx. An @import url() here ended up in the middle of
++   the compiled file (after ~1500 rules), which is invalid CSS and was ignored by browsers. */
++
+ @theme {
++  --color-velix-cyan: #39ffa0;
+   --color-velix-deep: #0a0a0a;
+   --color-velix-dark: #111211;
+   --color-velix-surface: #111211;
+diff --git a/website/app/layout.tsx b/website/app/layout.tsx
+index fab2113..b5a7f5d 100644
+--- a/website/app/layout.tsx
++++ b/website/app/layout.tsx
+@@ -24,12 +24,12 @@ function Navbar() {
+         </a>
+ 
+         <div className="flex items-center gap-8">
+-          <a href="/framework" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors font-medium">Framework</a>
++          <a href="/#architecture" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors font-medium">Framework</a>
+           <a href="/docs" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Docs</a>
+-          <a href="#pack" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors flex items-center gap-1.5">
++          <a href="/#pack" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors flex items-center gap-1.5">
+             Pack <span className="px-1.5 py-0.2 rounded bg-[#00e87a]/10 text-[#00e87a] text-[10px] font-mono">Beta</span>
+           </a>
+-          <a href="#roadmap" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Roadmap</a>
++          <a href="/#roadmap" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Roadmap</a>
+           <a
+             href="https://github.com/Velixteam/velix"
+             target="_blank"
+@@ -59,14 +59,14 @@ function Footer() {
+             <h4 className="text-[#e8ebe5] font-semibold text-sm mb-4">Framework</h4>
+             <div className="space-y-2">
+               <a href="/docs" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Documentation</a>
+-              <a href="#architecture" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Architecture</a>
+-              <a href="#performance" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Performance</a>
++              <a href="/#architecture" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Architecture</a>
++              <a href="/#performance" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Performance</a>
+             </div>
+           </div>
+           <div>
+             <h4 className="text-[#e8ebe5] font-semibold text-sm mb-4">Ecosystem</h4>
+             <div className="space-y-2">
+-              <a href="#pack" className="block text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors">Velix Pack Beta</a>
++              <a href="/#pack" className="block text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors">Velix Pack Beta</a>
+               <span className="block text-sm text-[#6b7068]/50">Velix Router (Soon)</span>
+               <span className="block text-sm text-[#6b7068]/50">Velix Query (Soon)</span>
+             </div>
+@@ -110,7 +110,9 @@ export default function RootLayout({ children }: { children: React.ReactNode })
+           href="https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap"
+           rel="stylesheet"
+         />
+-        <link rel="stylesheet" href={`/tailwind.css?v=${Date.now()}`} />
++        {/* The compiled stylesheet (/tailwind.css) is injected by Velix through tailwindPlugin().
++            The old manual <link href="/tailwind.css?v={Date.now()}"> loaded it a second time and
++            changed the URL on every render, which defeated HTTP caching. */}
+       </head>
+       <body className="bg-[#0a0a0a] text-[#e8ebe5] font-sans antialiased min-h-screen">
+         <Navbar />

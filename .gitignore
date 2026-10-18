@@ -7,6 +7,8 @@ packages/*/dist/
 .velix/
 coverage/
 packages/*/coverage/
+website/public/tailwind*.css
+templates/*/public/tailwind*.css
 
 # IDE
 .vscode/

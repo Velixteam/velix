@@ -40,7 +40,7 @@ export async function build(options: BuildOptions = {}) {
   logger.blank();
 
   // Run build:start hook (e.g., Tailwind CSS build)
-  await pluginManager.runHook(PluginHooks.BUILD_START);
+  await pluginManager.runHook(PluginHooks.BUILD_START, config, projectRoot);
 
   // Clean output directory
   cleanDir(outDir);

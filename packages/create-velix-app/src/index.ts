@@ -157,6 +157,7 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
 
   // app/
   fs.mkdirSync(path.join(dir, 'app'), { recursive: true });
+  write(path.join(dir, 'app', 'css.d.ts'), 'declare module "*.css";\n');
   write(path.join(dir, 'app', 'globals.css'), generateGlobalsCss(useTailwind));
   write(path.join(dir, 'app', 'layout.tsx'), generateLayoutTsx(name, template, useTailwind));
   write(path.join(dir, 'app', 'page.tsx'), generatePageTemplate(name, template, useTailwind));
@@ -321,9 +322,7 @@ export default function Counter() { ... }
 
 
 function generateGlobalsCss(useTailwind: boolean) {
-  const base = `@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap');
-
-:root {
+  const baseTokens = `:root {
   --velix-bg: #0a0a0a;
   --velix-surface: #111211;
   --velix-border: #1e201e;
@@ -339,7 +338,6 @@ function generateGlobalsCss(useTailwind: boolean) {
   --velix-text: #e8ebe5;
   --velix-error: #ff6b6b;
 }
-
 
 body {
   background-color: var(--velix-bg);
@@ -366,12 +364,20 @@ body {
 `;
 
   if (useTailwind) {
-    return `@import "tailwindcss";\n\n` + base;
+    return `@import "tailwindcss" source(none);
+@source "../app";
+@source "../components";
+
+` + baseTokens;
   }
-  return base;
+  return `@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap');\n\n` + baseTokens;
 }
 
 function generateLayoutTsx(name: string, template: string, useTailwind: boolean) {
+  const fontLinks = `<link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap" />`;
+
   if (template === 'default') {
     return `import "./globals.css";
 import Navbar from "../components/layout/navbar";
@@ -382,6 +388,9 @@ export const metadata = { title: "${name}", description: "Built with Velix v5.3"
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        ${fontLinks}
+      </head>
       <body className="min-h-screen antialiased bg-[#0a0a0a] text-[#e8ebe5]">
         <Navbar />
         {children}
@@ -400,6 +409,9 @@ export const metadata = { title: "${name}", description: "Built with Velix v5.3"
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        ${fontLinks}
+      </head>
       <body className="${useTailwind ? 'min-h-screen antialiased bg-[#0a0a0a] text-[#e8ebe5]' : ''}">
         {children}
       </body>

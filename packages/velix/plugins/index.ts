@@ -37,7 +37,7 @@ export interface PluginHookArgs {
   [PluginHooks.ROUTES_LOADED]: [routes: import('../types.js').RouteTree];
   [PluginHooks.BEFORE_RENDER]: [html: string, context: { route: import('../types.js').Route; config: import('../config.js').VelixConfig; isDev: boolean }];
   [PluginHooks.AFTER_RENDER]: [html: string, context: { route: import('../types.js').Route; config: import('../config.js').VelixConfig; isDev: boolean }];
-  [PluginHooks.BUILD_START]: [];
+  [PluginHooks.BUILD_START]: [config?: import('../config.js').VelixConfig, projectRoot?: string];
   [PluginHooks.BUILD_END]: [stats: { time: number }];
 }
 

@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node ./node_modules/@teamvelix/cli/dist/index.js dev",
-    "build": "npx tsx build-render.ts",
-    "start": "node ./node_modules/@teamvelix/cli/dist/index.js start"
+    "dev": "velix dev",
+    "build": "velix build",
+    "start": "velix start"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.0.0",

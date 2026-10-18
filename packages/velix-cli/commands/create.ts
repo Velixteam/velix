@@ -203,12 +203,14 @@ export default defineConfig({
     exclude: ['node_modules', '.velix']
   }, null, 2));
 
-  if (useTailwind) {
-    writeFile(path.join(dir, 'tailwind.config.ts'), `import type { Config } from "tailwindcss";\n\nexport default {\n  content: [\n    "./index.html",\n    "./app/**/*.{js,ts,jsx,tsx}",\n    "./components/**/*.{js,ts,jsx,tsx}",\n    "./lib/**/*.{js,ts,jsx,tsx}",\n    "./src/**/*.{js,ts,jsx,tsx}",\n  ],\n} satisfies Config;\n`);
-  }
-
   fs.mkdirSync(path.join(dir, 'app'), { recursive: true });
-  writeFile(path.join(dir, 'app', 'globals.css'), useTailwind ? `@import "tailwindcss";\n\n@theme {\n  --color-velix-deep: #0a0a0a;\n  --color-velix-dark: #111211;\n  --color-velix-accent: #00e87a;\n  --color-velix-cyan: #39ffa0;\n  --color-velix-glow: rgba(0,232,122,0.15);\n}\n` : `body { margin: 0; font-family: sans-serif; }\n`);
+  writeFile(path.join(dir, 'app', 'css.d.ts'), 'declare module "*.css";\n');
+  writeFile(
+    path.join(dir, 'app', 'globals.css'),
+    useTailwind
+      ? `@import "tailwindcss" source(none);\n@source "../app";\n@source "../components";\n\n@theme {\n  --color-velix-deep: #0a0a0a;\n  --color-velix-dark: #111211;\n  --color-velix-accent: #00e87a;\n  --color-velix-cyan: #39ffa0;\n  --color-velix-glow: rgba(0,232,122,0.15);\n}\n`
+      : `body { margin: 0; font-family: sans-serif; }\n`
+  );
 
   writeFile(path.join(dir, 'app', 'layout.tsx'), `import "./globals.css";
 

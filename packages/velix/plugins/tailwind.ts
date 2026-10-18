@@ -1,6 +1,7 @@
 import { spawnSync, spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { PluginHooks, definePlugin } from './index.js';
 import logger from '../logger.js';
 
@@ -90,11 +91,39 @@ function assertOutputExists(outputPath: string, context: 'build' | 'dev') {
  * - `velix build` fails (throws) if the output file is missing or empty.
  * - No duplicate with velix-core — this file is the single source of truth.
  */
+function checkMisplacedImports(outputPath: string) {
+  try {
+    const content = fs.readFileSync(outputPath, 'utf8');
+    const lines = content.split('\n');
+    let seenRule = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line || line.startsWith('/*') || line.startsWith('*') || line.startsWith('@layer') || line.startsWith('@charset')) {
+        continue;
+      }
+      if (line.startsWith('@import')) {
+        if (seenRule) {
+          logger.warn(
+            `[velix:tailwind] Misplaced @import at line ${i + 1} of ${path.basename(outputPath)}:\n` +
+            `  ${line}\n` +
+            `  CSS @import rules must precede all other rules in a stylesheet.\n` +
+            `  Browsers ignore @import that appear after style rules. Move fonts/external CSS to <link> in layout.tsx.`
+          );
+          break;
+        }
+      } else {
+        seenRule = true;
+      }
+    }
+  } catch {}
+}
+
 export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
   const rawInput  = options.input  ?? './app/globals.css';
   const rawOutput = options.output ?? './public/tailwind.css';
 
   let cliResolved: ReturnType<typeof detectTailwindCli> | null = null;
+  let activeConfig: import('../config.js').VelixConfig | null = null;
 
   function getCli(projectRoot: string) {
     if (!cliResolved) cliResolved = detectTailwindCli(projectRoot);
@@ -113,6 +142,7 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
     hooks: {
       [PluginHooks.CONFIG]: (configArg: unknown) => {
         const config = configArg as import('../config.js').VelixConfig;
+        activeConfig = config;
         // Ensure the compiled CSS is in the styles array so Velix injects
         // a <link> for it. Derive the URL path from rawOutput.
         const relOut = rawOutput.replace(/^\.\//, '').replace(/^public\//, '');
@@ -123,8 +153,9 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
         }
       },
 
-      [PluginHooks.BUILD_START]: async (_: unknown, projectRoot_: unknown) => {
+      [PluginHooks.BUILD_START]: async (configArg: unknown, projectRoot_: unknown) => {
         const projectRoot = (projectRoot_ as string) || process.cwd();
+        const config = (configArg as import('../config.js').VelixConfig) || activeConfig;
         const { input, output } = resolvePaths(projectRoot);
         const { cmd } = getCli(projectRoot);
 
@@ -162,7 +193,34 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
 
         // Verify output exists and is non-empty
         assertOutputExists(output, 'build');
-        logger.success(`Tailwind CSS built → ${path.relative(projectRoot, output)}`);
+        checkMisplacedImports(output);
+
+        // Generate hashed copy for production cache-busting
+        try {
+          const cssContent = fs.readFileSync(output);
+          const hash = crypto.createHash('md5').update(cssContent).digest('hex').slice(0, 8);
+          const ext = path.extname(output);
+          const baseName = path.basename(output, ext);
+          const hashedFileName = `${baseName}.${hash}${ext}`;
+          const hashedOutput = path.join(path.dirname(output), hashedFileName);
+          fs.writeFileSync(hashedOutput, cssContent);
+
+          const relOut = rawOutput.replace(/^\.\//, '').replace(/^public\//, '');
+          const unhashedStyle = relOut.startsWith('/') ? relOut : `/${relOut}`;
+          const hashedStyle = path.posix.join(path.posix.dirname(unhashedStyle), hashedFileName);
+
+          if (config && config.styles) {
+            const idx = config.styles.indexOf(unhashedStyle);
+            if (idx !== -1) {
+              config.styles[idx] = hashedStyle;
+            } else if (!config.styles.includes(hashedStyle)) {
+              config.styles.push(hashedStyle);
+            }
+          }
+          logger.success(`Tailwind CSS built & hashed → ${path.relative(projectRoot, hashedOutput)}`);
+        } catch (err: any) {
+          logger.warn(`[velix:tailwind] could not generate hashed CSS: ${err?.message}`);
+        }
       },
 
       [PluginHooks.SERVER_START]: async (server: unknown, isDevArg: unknown, projectRoot_: unknown) => {
@@ -194,9 +252,9 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
           logger.error(
             `[velix:tailwind] initial build failed:\n${stderr || buildResult.error?.message || '(no output)'}`
           );
-          // In dev don't hard-fail — the pre-built file (if any) will still be served.
         } else {
           assertOutputExists(output, 'dev');
+          checkMisplacedImports(output);
           logger.success(`Tailwind CSS built → ${path.relative(projectRoot, output)}`);
         }
 

@@ -1,6 +1,7 @@
 import { spawnSync, spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { PluginHooks, definePlugin } from './index.js';
 import logger from '../logger.js';
 
@@ -12,35 +13,108 @@ export interface TailwindPluginOptions {
 }
 
 /**
- * Detect which Tailwind CLI is available (v4: @tailwindcss/cli, v3: tailwindcss)
+ * Locate the Tailwind CLI binary from projectRoot's node_modules.
  */
-function detectTailwindCli(): string {
-  // Try v4 CLI first
-  const v4 = spawnSync('npx @tailwindcss/cli --help', {
+function detectTailwindCli(projectRoot: string): { cmd: string; isNpx: boolean } {
+  const binDir = path.join(projectRoot, 'node_modules', '.bin');
+
+  // v4 local binary
+  const v4Local = path.join(binDir, '@tailwindcss', 'cli');
+  const v4LocalFlat = path.join(binDir, 'tailwindcss-v4');
+  for (const p of [v4Local, v4LocalFlat]) {
+    if (fs.existsSync(p)) return { cmd: p, isNpx: false };
+  }
+
+  // v3 local binary
+  const v3Local = path.join(binDir, 'tailwindcss');
+  if (fs.existsSync(v3Local)) return { cmd: v3Local, isNpx: false };
+
+  // npx fallbacks (slow, log a warning)
+  const v4npx = spawnSync('npx --no-warnings @tailwindcss/cli --help', {
     stdio: 'pipe',
     timeout: 15000,
     shell: true,
+    cwd: projectRoot,
   });
-  if (v4.status === 0) return '@tailwindcss/cli';
+  if (v4npx.status === 0) {
+    logger.warn(
+      'Tailwind: using npx @tailwindcss/cli (slow). ' +
+      'Install @tailwindcss/cli as a local dependency to speed up builds.'
+    );
+    return { cmd: 'npx --no-warnings @tailwindcss/cli', isNpx: true };
+  }
 
-  // Fallback to v3 CLI
-  return 'tailwindcss';
+  logger.warn(
+    'Tailwind: falling back to npx tailwindcss (v3). ' +
+    'Install tailwindcss as a local dependency for faster builds.'
+  );
+  return { cmd: 'npx --no-warnings tailwindcss', isNpx: true };
 }
 
 /**
- * Native Velix Tailwind CSS Plugin
- * Automatically handles CSS compilation and injection.
- * Supports both Tailwind CSS v3 and v4.
+ * Verify that the compiled output file exists and is not empty.
  */
-export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
-  const input = options.input || './app/globals.css';
-  const output = options.output || './public/tailwind.css';
-  const configPath = options.config || './tailwind.config.ts';
-  let cliCmd: string | null = null;
+function assertOutputExists(outputPath: string, context: 'build' | 'dev') {
+  if (!fs.existsSync(outputPath)) {
+    const msg = `[velix:tailwind] ${context}: output file not created: ${outputPath}`;
+    logger.error(msg);
+    throw new Error(msg);
+  }
+  const stat = fs.statSync(outputPath);
+  if (stat.size === 0) {
+    const msg = `[velix:tailwind] ${context}: output file is empty (0 bytes): ${outputPath}`;
+    logger.error(msg);
+    throw new Error(msg);
+  }
+}
 
-  function getCli(): string {
-    if (!cliCmd) cliCmd = detectTailwindCli();
-    return cliCmd;
+/**
+ * Check if compiled CSS contains @import rules after standard style rules.
+ */
+function checkMisplacedImports(outputPath: string) {
+  try {
+    const content = fs.readFileSync(outputPath, 'utf8');
+    const lines = content.split('\n');
+    let seenRule = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line || line.startsWith('/*') || line.startsWith('*') || line.startsWith('@layer') || line.startsWith('@charset')) {
+        continue;
+      }
+      if (line.startsWith('@import')) {
+        if (seenRule) {
+          logger.warn(
+            `[velix:tailwind] Misplaced @import at line ${i + 1} of ${path.basename(outputPath)}:\n` +
+            `  ${line}\n` +
+            `  CSS @import rules must precede all other rules in a stylesheet.\n` +
+            `  Browsers ignore @import that appear after style rules. Move fonts/external CSS to <link> in layout.tsx.`
+          );
+          break;
+        }
+      } else {
+        seenRule = true;
+      }
+    }
+  } catch {}
+}
+
+export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
+  const rawInput  = options.input  ?? './app/globals.css';
+  const rawOutput = options.output ?? './public/tailwind.css';
+
+  let cliResolved: ReturnType<typeof detectTailwindCli> | null = null;
+  let activeConfig: import('../config.js').VelixConfig | null = null;
+
+  function getCli(projectRoot: string) {
+    if (!cliResolved) cliResolved = detectTailwindCli(projectRoot);
+    return cliResolved;
+  }
+
+  /** Resolve input/output relative to projectRoot (never process.cwd()) */
+  function resolvePaths(projectRoot: string) {
+    const input  = path.resolve(projectRoot, rawInput);
+    const output = path.resolve(projectRoot, rawOutput);
+    return { input, output };
   }
 
   return definePlugin({
@@ -48,109 +122,145 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
     hooks: {
       [PluginHooks.CONFIG]: (configArg: unknown) => {
         const config = configArg as import('../config.js').VelixConfig;
-        // Automatically ensure the output CSS is in the styles array
-        const relativeOutput = output.startsWith('./') ? output.substring(1) : output;
-        const stylePath = relativeOutput.startsWith('/public') ? relativeOutput.substring(7) : relativeOutput;
-        
+        activeConfig = config;
+        const relOut = rawOutput.replace(/^\.\//, '').replace(/^public\//, '');
+        const stylePath = relOut.startsWith('/') ? relOut : `/${relOut}`;
         if (!config.styles) config.styles = [];
         if (!config.styles.includes(stylePath)) {
           config.styles.push(stylePath);
         }
       },
 
-      [PluginHooks.BUILD_START]: async () => {
-        logger.info('Building Tailwind CSS...');
-        try {
-          const cli = getCli();
-          let cmd = `npx ${cli} -i "${input}" -o "${output}"`;
-          if (options.minify !== false) cmd += ' --minify';
-          spawnSync(cmd, { 
-            stdio: 'inherit',
-            cwd: process.cwd(),
-            shell: true,
-          });
-          logger.success('Tailwind CSS built successfully');
-        } catch (err: unknown) {
-          logger.error('Tailwind build failed', err as Error);
-        }
-      },
+      [PluginHooks.BUILD_START]: async (configArg: unknown, projectRoot_: unknown) => {
+        const projectRoot = (projectRoot_ as string) || process.cwd();
+        const config = (configArg as import('../config.js').VelixConfig) || activeConfig;
+        const { input, output } = resolvePaths(projectRoot);
+        const { cmd } = getCli(projectRoot);
 
-      [PluginHooks.SERVER_START]: async (server: unknown, isDevArg: unknown) => {
-        const isDev = isDevArg as boolean;
-        if (!isDev) return;
+        logger.info('Building Tailwind CSS (production)…');
 
-        // Check if input file exists
         if (!fs.existsSync(input)) {
-          logger.warn(`Tailwind input file not found: ${input}`);
-          return;
+          const msg = `[velix:tailwind] build: input file not found: ${input}`;
+          logger.error(msg);
+          throw new Error(msg);
         }
 
-        // Ensure output directory exists
-        const outputDir = path.dirname(output);
-        if (!fs.existsSync(outputDir)) {
-          fs.mkdirSync(outputDir, { recursive: true });
-        }
+        fs.mkdirSync(path.dirname(output), { recursive: true });
 
-        // Build initial CSS synchronously
-        logger.info('Building initial Tailwind CSS...');
-        try {
-          const cli = getCli();
-          const buildResult = spawnSync(`npx ${cli} -i "${input}" -o "${output}"`, {
-            cwd: process.cwd(),
-            stdio: 'pipe',
-            shell: true,
-          });
+        let command = `${cmd} -i "${input}" -o "${output}"`;
+        if (options.minify !== false) command += ' --minify';
 
-          if (buildResult.status !== 0) {
-            const stderr = buildResult.stderr?.toString() || '';
-            // Only show 'not installed' if we actually can't find the CLI command
-            if (buildResult.error || stderr.includes('not found') || stderr.includes('ENOENT')) {
-              logger.warn('Tailwind CSS CLI not found — skipping. CSS will still be served if pre-built.');
-            } else if (stderr.trim()) {
-              logger.warn(`Tailwind build warning: ${stderr.trim().split('\n')[0]}`);
-            }
-            return;
-          }
-
-          logger.success('Tailwind CSS built successfully');
-        } catch (err: unknown) {
-          logger.error('Failed to build Tailwind CSS', err as Error);
-          return;
-        }
-
-        // Start watcher
-        logger.info('Starting Tailwind CSS watcher...');
-        const cli = getCli();
-        const watcher = spawn(`npx ${cli} -i "${input}" -o "${output}" --watch`, {
+        const result = spawnSync(command, {
           stdio: 'pipe',
-          cwd: process.cwd(),
+          cwd: projectRoot,
           shell: true,
         });
 
-        // Silence verbose watcher logs to keep developer console clean
-        watcher.stdout.on('data', () => {});
-        watcher.stderr.on('data', () => {});
+        const stderr = result.stderr?.toString().trim() || '';
+        const stdout = result.stdout?.toString().trim() || '';
 
-        watcher.on('error', (err) => {
-          logger.error('Tailwind watcher error', err);
+        if (result.status !== 0 || result.error) {
+          logger.error(
+            `[velix:tailwind] build failed (exit ${result.status ?? 'signal'}):\n` +
+            (stderr || stdout || result.error?.message || '(no output)')
+          );
+          throw result.error ?? new Error(`Tailwind exited with code ${result.status}`);
+        }
+
+        assertOutputExists(output, 'build');
+        checkMisplacedImports(output);
+
+        try {
+          const cssContent = fs.readFileSync(output);
+          const hash = crypto.createHash('md5').update(cssContent).digest('hex').slice(0, 8);
+          const ext = path.extname(output);
+          const baseName = path.basename(output, ext);
+          const hashedFileName = `${baseName}.${hash}${ext}`;
+          const hashedOutput = path.join(path.dirname(output), hashedFileName);
+          fs.writeFileSync(hashedOutput, cssContent);
+
+          const relOut = rawOutput.replace(/^\.\//, '').replace(/^public\//, '');
+          const unhashedStyle = relOut.startsWith('/') ? relOut : `/${relOut}`;
+          const hashedStyle = path.posix.join(path.posix.dirname(unhashedStyle), hashedFileName);
+
+          if (config && config.styles) {
+            const idx = config.styles.indexOf(unhashedStyle);
+            if (idx !== -1) {
+              config.styles[idx] = hashedStyle;
+            } else if (!config.styles.includes(hashedStyle)) {
+              config.styles.push(hashedStyle);
+            }
+          }
+          logger.success(`Tailwind CSS built & hashed → ${path.relative(projectRoot, hashedOutput)}`);
+        } catch (err: any) {
+          logger.warn(`[velix:tailwind] could not generate hashed CSS: ${err?.message}`);
+        }
+      },
+
+      [PluginHooks.SERVER_START]: async (server: unknown, isDevArg: unknown, projectRoot_: unknown) => {
+        const isDev = isDevArg as boolean;
+        if (!isDev) return;
+
+        const projectRoot = (projectRoot_ as string) || process.cwd();
+        const { input, output } = resolvePaths(projectRoot);
+        const { cmd } = getCli(projectRoot);
+
+        if (!fs.existsSync(input)) {
+          logger.warn(`[velix:tailwind] dev: input file not found: ${input} — skipping watcher`);
+          return;
+        }
+
+        fs.mkdirSync(path.dirname(output), { recursive: true });
+
+        logger.info('Building Tailwind CSS (initial dev build)…');
+        const buildResult = spawnSync(`${cmd} -i "${input}" -o "${output}"`, {
+          cwd: projectRoot,
+          stdio: 'pipe',
+          shell: true,
         });
 
-        watcher.on('exit', (code) => {
+        if (buildResult.status !== 0) {
+          const stderr = buildResult.stderr?.toString().trim() || '';
+          logger.error(
+            `[velix:tailwind] initial build failed:\n${stderr || buildResult.error?.message || '(no output)'}`
+          );
+        } else {
+          assertOutputExists(output, 'dev');
+          checkMisplacedImports(output);
+          logger.success(`Tailwind CSS built → ${path.relative(projectRoot, output)}`);
+        }
+
+        const watcher = spawn(`${cmd} -i "${input}" -o "${output}" --watch`, {
+          stdio: ['ignore', 'pipe', 'pipe'],
+          cwd: projectRoot,
+          shell: true,
+        });
+
+        watcher.stdout?.on('data', () => {});
+        watcher.stderr?.on('data', (chunk: Buffer) => {
+          const msg = chunk.toString().trim();
+          if (msg && !msg.startsWith('Rebuilding') && !msg.startsWith('Done')) {
+            logger.warn(`[velix:tailwind] watcher: ${msg}`);
+          }
+        });
+
+        watcher.on('error', (err) => {
+          logger.error('[velix:tailwind] watcher process error', err);
+        });
+
+        watcher.on('exit', (code, signal) => {
           if (code !== 0 && code !== null) {
-            logger.error(`Tailwind watcher exited with code ${code}`);
+            logger.error(`[velix:tailwind] watcher exited unexpectedly (code ${code}, signal ${signal})`);
           }
         });
 
         const cleanup = () => {
-          if (watcher && !watcher.killed) {
-            watcher.kill();
-          }
+          if (!watcher.killed) watcher.kill();
         };
-
         process.on('exit', cleanup);
         process.on('SIGINT', cleanup);
         process.on('SIGTERM', cleanup);
-      }
-    }
+      },
+    },
   });
 }
