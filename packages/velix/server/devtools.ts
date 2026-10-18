@@ -312,12 +312,18 @@ export function generateDevToolsHtml(isDev: boolean, ctx: DevToolsContext = {}):
       var e = entries[entries.length-1]; if(e) setVital('__vdt-lcp', e.startTime, 2500, 4000);
     }).observe({ type:'largest-contentful-paint', buffered:true });
 
-    /* CLS */
+    /* CLS — guarded: Firefox does not support layout-shift and logs a
+       console warning when observe() is called with that entry type.
+       Use PerformanceObserver.supportedEntryTypes (spec §7.1) to check
+       before calling observe(). This warning is documented as harmless
+       in docs/troubleshooting.md §1.7. */
     var _cls = 0;
-    new PerformanceObserver(function(l){
-      l.getEntries().forEach(function(e){ if(!e.hadRecentInput) _cls += e.value; });
-      setVital('__vdt-cls', _cls, 0.1, 0.25);
-    }).observe({ type:'layout-shift', buffered:true });
+    if (PerformanceObserver.supportedEntryTypes?.includes('layout-shift')) {
+      new PerformanceObserver(function(l){
+        l.getEntries().forEach(function(e){ if(!e.hadRecentInput) _cls += e.value; });
+        setVital('__vdt-cls', _cls, 0.1, 0.25);
+      }).observe({ type:'layout-shift', buffered:true });
+    }
 
     /* TTFB */
     new PerformanceObserver(function(l){
