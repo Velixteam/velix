@@ -11,7 +11,7 @@ packages/*/coverage/
 # IDE
 .vscode/
 .idea/
-
+.errors
 # OS
 .DS_Store
 Thumbs.db
@@ -22,8 +22,6 @@ npm-debug.log*
 
 # Test apps
 test-*/
-website/
-templates/my-saas
 
 # Environment
 .env
