@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./hmr-client": "./dist/hmr-client.js"
   },
   "files": [
     "dist",

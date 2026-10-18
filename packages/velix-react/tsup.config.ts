@@ -20,5 +20,17 @@ export default defineConfig([
     minify: process.env.NODE_ENV === 'production',
     shims: true,
     external: ['react', 'react-dom', '@teamvelix/velix-core'],
+  },
+  {
+    entry: {
+      'hmr-client': 'src/hmr/hmr-client.ts',
+    },
+    format: ['esm'],
+    dts: true,
+    sourcemap: true,
+    target: 'es2022',
+    platform: 'browser',
+    bundle: true,
+    minify: process.env.NODE_ENV === 'production',
   }
 ]);
