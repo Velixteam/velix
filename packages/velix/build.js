@@ -55,6 +55,12 @@ async function main() {
     execSync('npx tsc --emitDeclarationOnly', { stdio: 'ignore' });
   } catch {}
 
+  // Copy hmr-client from velix-react if present
+  const reactHmr = '../velix-react/dist/hmr-client.js';
+  if (fs.existsSync(reactHmr)) {
+    fs.copyFileSync(reactHmr, 'dist/hmr-client.js');
+  }
+
   console.log('✓ @teamvelix/velix built cleanly to dist/');
 }
 

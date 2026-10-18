@@ -2,7 +2,7 @@ import React from 'react';
 import { Section, P, CodeBlock, Callout, IC, FeatureCard, StepItem, PageNavigation } from "../../components/DocsComponents";
 
 export const metadata = {
-  title: "Getting Started - Velix Documentation v5.3.4",
+  title: "Getting Started - Velix Documentation v5.3.7",
   description: "Learn how to build full-stack React applications with Velix framework."
 };
 
@@ -66,7 +66,7 @@ export default function GettingStartedPage() {
         <div className="space-y-4 my-8">
           <StepItem number="1" title="Scaffold a New Project">
             <P>Choose your preferred package manager to run the scaffold wizard:</P>
-            
+
             <CodeBlock filename="Terminal (pnpm - Recommended)">{`pnpm create velix-app my-app`}</CodeBlock>
             <CodeBlock filename="Terminal (npm)">{`npm create velix-app@latest my-app`}</CodeBlock>
           </StepItem>

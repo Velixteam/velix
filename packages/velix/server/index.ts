@@ -768,7 +768,13 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
       // Prefer a pre-bundled dist file so npm installs don't need esbuild-on-demand
       const distCandidates = [
         path.join(__dirnameHmr, '..', 'dist', 'hmr-client.js'),
+        path.join(__dirnameHmr, '..', 'hmr-client.js'),
+        path.join(__dirnameHmr, 'hmr-client.js'),
+        path.join(projectRoot, 'node_modules', '@teamvelix', 'velix-react', 'dist', 'hmr-client.js'),
+        path.join(projectRoot, '..', 'packages', 'velix-react', 'dist', 'hmr-client.js'),
         path.join(process.cwd(), 'node_modules', '@teamvelix', 'velix-react', 'dist', 'hmr-client.js'),
+        path.join(process.cwd(), '..', 'packages', 'velix-react', 'dist', 'hmr-client.js'),
+        path.join(process.cwd(), 'packages', 'velix-react', 'dist', 'hmr-client.js'),
       ];
       const distHmr = distCandidates.find(p => fs.existsSync(p));
       if (distHmr) {
@@ -779,9 +785,13 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
 
       // Fall back to building from source (monorepo / local dev)
       const srcCandidates = [
+        path.join(projectRoot, '..', 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+        path.join(projectRoot, 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
         path.join(process.cwd(), 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+        path.join(process.cwd(), '..', 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
         path.join(process.cwd(), 'node_modules', '@teamvelix', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
         path.join(__dirnameHmr, '..', '..', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+        path.join(__dirnameHmr, '..', '..', 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
       ];
       const hmrClientSrc = srcCandidates.find(p => fs.existsSync(p));
       if (!hmrClientSrc) {
@@ -789,7 +799,7 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
         // a MIME error (the <script type="module"> would block otherwise).
         logger.warn('HMR client source not found — serving no-op stub. Add dist/hmr-client.js to the package.');
         res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
-        res.end('// velix hmr-client not found — HMR disabled\nexport function initHMRClient() {}\nexport const VelixDevOverlay = { show(){}, hide(){}, showError(){}, showCompiling(){}, showSuccess(){} };\n');
+        res.end('// velix hmr-client not found — HMR disabled\nexport function initHMRClient() {}\nexport const VelixDevOverlay = { show(){}, hide(){}, showError(){}, showCompiling(){}, showSuccess(){} };\nexport default { initHMRClient, VelixDevOverlay };\n');
         return;
       }
       const result = await esbuild.build({
@@ -809,7 +819,7 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
       logger.error('HMR Client build failed', hmrErr);
       // Still serve a module so the browser doesn't report a MIME type error
       res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
-      res.end(`// velix hmr-client build error: ${hmrErr.message}\nexport function initHMRClient() {}\nexport const VelixDevOverlay = { show(){}, hide(){}, showError(){}, showCompiling(){}, showSuccess(){} };\n`);
+      res.end(`// velix hmr-client build error: ${hmrErr.message}\nexport function initHMRClient() {}\nexport const VelixDevOverlay = { show(){}, hide(){}, showError(){}, showCompiling(){}, showSuccess(){} };\nexport default { initHMRClient, VelixDevOverlay };\n`);
       return;
     }
   }

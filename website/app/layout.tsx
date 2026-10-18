@@ -19,7 +19,7 @@ function Navbar() {
           />
           <span className="text-[#e8ebe5] font-bold text-xl tracking-tight">Velix</span>
           <span className="px-2 py-0.5 rounded-full bg-[#111211] border border-[#1e201e] text-[11px] font-mono text-[#00e87a]">
-            v5.3.6
+            v5.3.7
           </span>
         </a>
 
@@ -91,7 +91,7 @@ function Footer() {
           <p className="text-xs text-[#6b7068]">&copy; 2026 Velix Team. All rights reserved.</p>
           <div className="flex items-center gap-2 text-xs text-[#6b7068] font-mono">
             <span className="w-2 h-2 rounded-full bg-[#00e87a] animate-pulse"></span>
-            Built with Velix v5.3.6 &bull; Powered by <span className="text-[#00e87a] font-semibold">Florynx Labs</span>
+            Built with Velix v5.3.7 &bull; Powered by <span className="text-[#00e87a] font-semibold">Florynx Labs</span>
           </div>
         </div>
       </div>

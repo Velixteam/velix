@@ -283,11 +283,11 @@ importers:
   packages/velix:
     dependencies:
       '@teamvelix/velix-core':
-        specifier: ^5.3.6
-        version: 5.3.6(supports-color@7.2.0)
+        specifier: workspace:*
+        version: link:../velix-core
       '@teamvelix/velix-react':
-        specifier: ^5.3.6
-        version: 5.3.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(supports-color@7.2.0)
+        specifier: workspace:*
+        version: link:../velix-react
       chokidar:
         specifier: ^3.6.0
         version: 3.6.0
@@ -313,11 +313,11 @@ importers:
   packages/velix-cli:
     dependencies:
       '@teamvelix/velix':
-        specifier: ^5.3.6
-        version: 5.3.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(supports-color@7.2.0)
+        specifier: workspace:*
+        version: link:../velix
       '@teamvelix/velix-core':
-        specifier: ^5.3.6
-        version: 5.3.6(supports-color@7.2.0)
+        specifier: workspace:*
+        version: link:../velix-core
       ora:
         specifier: ^8.1.1
         version: 8.2.0
@@ -381,8 +381,8 @@ importers:
   packages/velix-pack:
     dependencies:
       '@teamvelix/velix-core':
-        specifier: ^5.3.6
-        version: 5.3.6(supports-color@7.2.0)
+        specifier: workspace:*
+        version: link:../velix-core
       chokidar:
         specifier: ^3.6.0
         version: 3.6.0
@@ -406,8 +406,8 @@ importers:
   packages/velix-react:
     dependencies:
       '@teamvelix/velix-core':
-        specifier: ^5.3.6
-        version: 5.3.6(supports-color@7.2.0)
+        specifier: workspace:*
+        version: link:../velix-core
       react:
         specifier: '>=19.0.1'
         version: 19.2.3
@@ -492,11 +492,11 @@ importers:
         specifier: ^4.0.0
         version: 4.2.2
       '@teamvelix/cli':
-        specifier: ^5.3.6
-        version: 5.3.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(supports-color@7.2.0)
+        specifier: workspace:*
+        version: link:../packages/velix-cli
       '@teamvelix/velix':
-        specifier: ^5.3.6
-        version: 5.3.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(supports-color@7.2.0)
+        specifier: workspace:*
+        version: link:../packages/velix
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.7
@@ -4006,7 +4006,7 @@ snapshots:
       chokidar: 3.6.0
       glob: 13.0.6
       ioredis: 5.11.1(supports-color@7.2.0)
-      lru-cache: 11.2.4
+      lru-cache: 11.5.3
       picocolors: 1.1.1
       ws: 8.21.3
       zod: 3.25.76
