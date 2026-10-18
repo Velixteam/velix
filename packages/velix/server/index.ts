@@ -9,11 +9,43 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { createRequire } from 'module';
-import { createRequire as _createRequireForReact } from 'module';
+import { createRequire, register } from 'module';
 import { pathToFileURL as _pfu } from 'url';
+
+// Register Node module hook for CSS and assets so SSR imports never fail and never write temp files
+try {
+  if (typeof register === 'function') {
+    const loaderCode = `
+      export async function resolve(specifier, context, nextResolve) {
+        if (/\\.(css|scss|less|sass|svg|png|jpg|jpeg|gif|webp|ico)(\\?.*)?$/i.test(specifier)) {
+          const parent = context.parentURL || 'file://' + process.cwd() + '/';
+          return {
+            url: new URL(specifier, parent).href,
+            shortCircuit: true,
+          };
+        }
+        return nextResolve(specifier, context);
+      }
+      export async function load(url, context, nextLoad) {
+        if (/\\.(css|scss|less|sass|svg|png|jpg|jpeg|gif|webp|ico)(\\?.*)?$/i.test(url)) {
+          return {
+            format: 'module',
+            shortCircuit: true,
+            source: 'export default {};',
+          };
+        }
+        return nextLoad(url, context);
+      }
+    `;
+    const loaderUrl = 'data:text/javascript;base64,' + Buffer.from(loaderCode).toString('base64');
+    register(loaderUrl, import.meta.url);
+  }
+} catch {
+  // Ignore if already registered or unsupported
+}
+
 // Load React from the project root to avoid duplicate-React-instance errors
-const _projectRequire = _createRequireForReact(_pfu(path.join(process.cwd(), 'package.json')).href);
+const _projectRequire = createRequire(_pfu(path.join(process.cwd(), 'package.json')).href);
 const React = _projectRequire('react') as typeof import('react');
 const { renderToString } = _projectRequire('react-dom/server') as typeof import('react-dom/server');
 import { loadConfig, resolvePaths, type VelixConfig } from '../config.js';
@@ -178,7 +210,9 @@ export async function createServer(options: {
       }
 
       // ── Static files ──
-      const publicDir = (config as unknown as { resolvedPublicDir?: string }).resolvedPublicDir || path.join(projectRoot, 'public');
+      const distPublic = path.join(projectRoot, 'dist', 'public');
+      const defaultPublic = (!isDev && fs.existsSync(distPublic)) ? distPublic : path.join(projectRoot, 'public');
+      const publicDir = (config as unknown as { resolvedPublicDir?: string }).resolvedPublicDir || defaultPublic;
       if (await serveStaticFile(pathname, publicDir, res, isDev)) {
         if (isDev) logger.request(req.method || 'GET', pathname, 200, Date.now() - requestStart, { type: 'static' });
         return;
@@ -286,36 +320,6 @@ async function importModuleSSR(filePath: string, isDev: boolean = false): Promis
     }
     return mod;
   } catch (err) {
-    // Check if this might be a CSS import issue
-    const source = fs.readFileSync(filePath, 'utf-8');
-    if (source.match(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/m)) {
-      let stripped = source.replace(/^import\s+['"][^'"]+\.(css|scss|less|sass)['"];?\s*$/gm, '/* velix-ssr: css import stripped */');
-      if (!stripped.includes("import React") && !stripped.includes("import * as React")) {
-        stripped = `import React from 'react';\n${stripped}`;
-      }
-      const ext = path.extname(filePath);
-      
-      // Save temp file in .velix/tmp instead of the source tree
-      const tmpDir = path.join(process.cwd(), '.velix', 'tmp');
-      if (!fs.existsSync(tmpDir)) {
-        fs.mkdirSync(tmpDir, { recursive: true });
-      }
-      const fileHash = path.basename(filePath, ext);
-      const tmpPath = path.join(tmpDir, `${fileHash}_ssr_${Date.now()}${ext}`);
-      
-      fs.writeFileSync(tmpPath, stripped);
-      try {
-        const mod = await import(pathToFileURL(tmpPath).href);
-        try { fs.unlinkSync(tmpPath); } catch {}
-        if (!isDev && process.env.NODE_ENV === 'production') {
-          ssrModuleCache.set(filePath, mod);
-        }
-        return mod;
-      } catch (e2) {
-        try { fs.unlinkSync(tmpPath); } catch {}
-        throw e2;
-      }
-    }
     throw err;
   }
 }
@@ -377,10 +381,18 @@ async function serveStaticFile(pathname: string, publicDir: string, res: http.Se
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
   const content = fs.readFileSync(filePath);
 
+  // Hashed files (chunks, tailwind.[hash].css) are immutable. Unhashed files must revalidate.
+  const isHashed = /[.-][a-f0-9]{8,}\./i.test(pathname) || /chunks\/.*-[a-f0-9]{8,}/i.test(pathname);
+  const cacheControl = isDev
+    ? 'no-store, no-cache, must-revalidate'
+    : (isHashed
+        ? 'public, max-age=31536000, immutable'
+        : 'public, max-age=0, must-revalidate');
+
   res.writeHead(200, {
     'Content-Type': contentType,
     'Content-Length': content.length,
-    'Cache-Control': isDev ? 'no-store, no-cache, must-revalidate' : 'public, max-age=31536000, immutable',
+    'Cache-Control': cacheControl,
   });
   res.end(content);
   return true;
