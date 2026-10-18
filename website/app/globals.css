@@ -1,5 +1,8 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap');
+/* Fonts are loaded via <link rel="stylesheet"> in layout.tsx — do NOT add
+   @import url() here. CSS @import must precede all other rules; placing it
+   after @import "tailwindcss" is spec-invalid and Firefox silently ignores
+   it, causing the font to never load. */
 
 @source "../components";
 @theme {
