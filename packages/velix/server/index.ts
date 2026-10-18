@@ -741,24 +741,43 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
       res.writeHead(200, { 'Content-Type': 'image/webp', 'Cache-Control': 'public, max-age=31536000, immutable' });
       res.end(fs.readFileSync(logoPath));
     } else {
-      res.writeHead(404);
-      res.end();
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not found');
     }
     return;
   }
 
   // HMR Client Serving
+  // Look for: (1) pre-compiled dist file (npm installs), (2) monorepo src (dev)
   if (pathname === '/__velix/hmr-client.js') {
+    const __filenameHmr = fileURLToPath(import.meta.url);
+    const __dirnameHmr = path.dirname(__filenameHmr);
     try {
-      const candidates = [
+      // Prefer a pre-bundled dist file so npm installs don't need esbuild-on-demand
+      const distCandidates = [
+        path.join(__dirnameHmr, '..', 'dist', 'hmr-client.js'),
+        path.join(process.cwd(), 'node_modules', '@teamvelix', 'velix-react', 'dist', 'hmr-client.js'),
+      ];
+      const distHmr = distCandidates.find(p => fs.existsSync(p));
+      if (distHmr) {
+        res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
+        res.end(fs.readFileSync(distHmr, 'utf-8'));
+        return;
+      }
+
+      // Fall back to building from source (monorepo / local dev)
+      const srcCandidates = [
         path.join(process.cwd(), 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
         path.join(process.cwd(), 'node_modules', '@teamvelix', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
-        path.join(__dirname, '..', '..', 'velix-react', 'src', 'hmr', 'hmr-client.ts')
+        path.join(__dirnameHmr, '..', '..', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
       ];
-      const hmrClientSrc = candidates.find(p => fs.existsSync(p));
+      const hmrClientSrc = srcCandidates.find(p => fs.existsSync(p));
       if (!hmrClientSrc) {
-        res.writeHead(404);
-        res.end();
+        // Serve a no-op stub so the browser can parse it as a module without
+        // a MIME error (the <script type="module"> would block otherwise).
+        logger.warn('HMR client source not found — serving no-op stub. Add dist/hmr-client.js to the package.');
+        res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
+        res.end('// velix hmr-client not found — HMR disabled\nexport function initHMRClient() {}\nexport const VelixDevOverlay = { show(){}, hide(){}, showError(){}, showCompiling(){}, showSuccess(){} };\n');
         return;
       }
       const result = await esbuild.build({
@@ -770,13 +789,15 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
         minify: true,
         write: false,
       });
-      res.writeHead(200, { 'Content-Type': 'application/javascript', 'Cache-Control': 'no-cache' });
+      res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
       res.end(result.outputFiles[0].text);
       return;
     } catch (err) {
-      console.error('HMR Client build failed', err);
-      res.writeHead(500);
-      res.end();
+      const hmrErr = err as Error;
+      logger.error('HMR Client build failed', hmrErr);
+      // Still serve a module so the browser doesn't report a MIME type error
+      res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
+      res.end(`// velix hmr-client build error: ${hmrErr.message}\nexport function initHMRClient() {}\nexport const VelixDevOverlay = { show(){}, hide(){}, showError(){}, showCompiling(){}, showSuccess(){} };\n`);
       return;
     }
   }
