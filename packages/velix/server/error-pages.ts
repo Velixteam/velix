@@ -1,9 +1,20 @@
 /**
  * Velix v5 Error Pages
- * Pixel-perfect error overlay inspired by Next.js 16 design
+ * Next.js-style error overlay with source frame inspector,
+ * ignore-listed stack frame folding, multi-error pagination,
+ * copy error button, and reflected XSS protection.
  */
 
+import fs from 'fs';
 import { VERSION } from '../version.js';
+
+export interface ErrorItem {
+  statusCode?: number;
+  title?: string;
+  message: string;
+  stack?: string;
+  pathname?: string;
+}
 
 export interface ErrorPageOptions {
   statusCode: number;
@@ -12,20 +23,136 @@ export interface ErrorPageOptions {
   stack?: string;
   isDev?: boolean;
   pathname?: string;
+  errors?: ErrorItem[];
 }
 
-function escapeHtml(str: string): string {
-  return str
+export function escapeHtml(str: string): string {
+  if (!str) return '';
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+export function isIgnoredPath(filePath: string): boolean {
+  if (!filePath) return true;
+  const normalized = filePath.replace(/\\/g, '/');
+  return (
+    normalized.startsWith('node:') ||
+    normalized.includes('node:internal') ||
+    normalized.includes('node_modules') ||
+    normalized.includes('packages/velix') ||
+    normalized.includes('@teamvelix') ||
+    normalized.includes('/dist/') ||
+    normalized.includes('internal/modules')
+  );
+}
+
+export interface ParsedStackFrame {
+  call: string;
+  file: string;
+  line: number | null;
+  column: number | null;
+  isIgnored: boolean;
+}
+
+export function parseStack(stack?: string): ParsedStackFrame[] {
+  if (!stack) return [];
+  const lines = stack.split('\n').filter(l => l.trim().startsWith('at '));
+  return lines.map(line => {
+    // at fn (path/to/file.ts:12:34)
+    const m1 = line.match(/^\s*at\s+(.+?)\s+\((.+?):(\d+):(\d+)\)$/);
+    if (m1) {
+      const file = m1[2].trim();
+      return {
+        call: m1[1].trim(),
+        file,
+        line: parseInt(m1[3], 10),
+        column: parseInt(m1[4], 10),
+        isIgnored: isIgnoredPath(file),
+      };
+    }
+    // at path/to/file.ts:12:34
+    const m2 = line.match(/^\s*at\s+(.+?):(\d+):(\d+)$/);
+    if (m2) {
+      const file = m2[1].trim();
+      return {
+        call: '(anonymous)',
+        file,
+        line: parseInt(m2[2], 10),
+        column: parseInt(m2[3], 10),
+        isIgnored: isIgnoredPath(file),
+      };
+    }
+    const clean = line.replace(/^\s*at\s+/, '').trim();
+    return {
+      call: clean,
+      file: '',
+      line: null,
+      column: null,
+      isIgnored: true,
+    };
+  });
+}
+
+export function syntaxHighlight(rawCode: string): string {
+  const tokenRegex = /(\/\/[^\n]*|\/\*[\s\S]*?\*\/)|(".*?"|'.*?'|`[\s\S]*?`)|(\b(?:let|const|var|function|return|import|export|from|default|if|else|for|while|await|async|class|try|catch|throw|new|typeof|instanceof|interface|type)\b)|(\b\d+(?:\.\d+)?\b)/g;
+
+  let lastIndex = 0;
+  let result = '';
+  let match: RegExpExecArray | null;
+
+  while ((match = tokenRegex.exec(rawCode)) !== null) {
+    result += escapeHtml(rawCode.slice(lastIndex, match.index));
+    lastIndex = match.index + match[0].length;
+
+    const [, comment, str, kw, num] = match;
+    if (comment) {
+      result += `<span class="tok-comment">${escapeHtml(comment)}</span>`;
+    } else if (str) {
+      result += `<span class="tok-string">${escapeHtml(str)}</span>`;
+    } else if (kw) {
+      result += `<span class="tok-keyword">${escapeHtml(kw)}</span>`;
+    } else if (num) {
+      result += `<span class="tok-number">${escapeHtml(num)}</span>`;
+    }
+  }
+
+  result += escapeHtml(rawCode.slice(lastIndex));
+  return result;
+}
+
+export function getSourceSnippet(file: string, line: number, contextLines: number = 3): { snippet: string; startLine: number } | null {
+  if (!file || line <= 0) return null;
+  try {
+    if (!fs.existsSync(file)) return null;
+    const content = fs.readFileSync(file, 'utf-8');
+    const lines = content.split('\n');
+    const start = Math.max(0, line - 1 - contextLines);
+    const end = Math.min(lines.length, line + contextLines);
+    const slice = lines.slice(start, end);
+
+    const formatted = slice.map((l, idx) => {
+      const lineNum = start + idx + 1;
+      const isErr = lineNum === line;
+      const numStr = String(lineNum).padStart(4, ' ');
+      const codeHtml = syntaxHighlight(l);
+      return `<div class="src-line ${isErr ? 'src-err' : ''}"><span class="ln">${numStr}</span><span class="pointer">${isErr ? '▶' : ' '}</span><span class="code">${codeHtml}</span></div>`;
+    }).join('');
+
+    return { snippet: formatted, startLine: start + 1 };
+  } catch {
+    return null;
+  }
 }
 
 /**
  * Generate a styled 404 error page — Velix branding
  */
 export function generate404Page(pathname: string = '/'): string {
+  const safePath = escapeHtml(pathname);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,197 +164,32 @@ export function generate404Page(pathname: string = '/'): string {
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
-
         body {
           background-color: #0a0a0a;
           background-image:
-            linear-gradient(to right,  rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
             linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
           background-size: 60px 60px;
           color: #e8ebe5;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          min-height: 100vh;
-          padding: 2rem;
-          -webkit-font-smoothing: antialiased;
+          display: flex; flex-direction: column; align-items: center; justify-content: center;
+          min-height: 100vh; padding: 2rem; -webkit-font-smoothing: antialiased;
         }
-
-        /* radial vignette over the grid */
-        body::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, #0a0a0a 80%);
-          pointer-events: none;
-          z-index: 0;
-        }
-
-        .card {
-          position: relative;
-          z-index: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
-          max-width: 480px;
-          animation: fadeUp 0.25s ease forwards;
-        }
-
-        /* ── glowing 404 number ── */
-        .status-number {
-          font-family: 'DM Mono', monospace;
-          font-size: clamp(80px, 18vw, 140px);
-          font-weight: 500;
-          line-height: 1;
-          letter-spacing: -0.04em;
-          color: #e8ebe5;
-          position: relative;
-          margin-bottom: 8px;
-        }
-        .status-number::after {
-          content: attr(data-value);
-          position: absolute;
-          inset: 0;
-          color: #00e87a;
-          opacity: 0.18;
-          filter: blur(24px);
-          pointer-events: none;
-        }
-
-        /* ── accent line ── */
-        .accent-line {
-          width: 40px;
-          height: 3px;
-          background: #00e87a;
-          border-radius: 9999px;
-          margin-bottom: 24px;
-        }
-
-        /* ── heading ── */
-        h1 {
-          font-size: 22px;
-          font-weight: 700;
-          color: #e8ebe5;
-          margin-bottom: 10px;
-          letter-spacing: -0.01em;
-        }
-
-        /* ── route badge ── */
-        .route-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          font-family: 'DM Mono', monospace;
-          font-size: 13px;
-          color: #6b7068;
-          background: #111211;
-          border: 1px solid #1e201e;
-          padding: 5px 14px;
-          border-radius: 9999px;
-          margin-bottom: 32px;
-        }
-        .route-badge .dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #ff6b6b;
-          animation: pulse 1.8s ease-in-out infinite;
-          flex-shrink: 0;
-        }
-
-        /* ── actions ── */
-        .actions {
-          display: flex;
-          gap: 12px;
-        }
-        .btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 10px 22px;
-          border-radius: 10px;
-          font-size: 14px;
-          font-weight: 600;
-          text-decoration: none;
-          transition: all 0.15s ease;
-        }
-        .btn-primary {
-          background: #00e87a;
-          color: #0a0a0a;
-          border: 1px solid #00e87a;
-        }
-        .btn-primary:hover {
-          background: #00ff87;
-          transform: translateY(-1px);
-          box-shadow: 0 0 20px rgba(0, 232, 122, 0.35);
-        }
-        .btn-secondary {
-          background: transparent;
-          color: #e8ebe5;
-          border: 1px solid #1e201e;
-        }
-        .btn-secondary:hover {
-          background: #111211;
-          border-color: #2e322e;
-        }
-
-        /* ── footer branding ── */
-        .brand {
-          position: fixed;
-          bottom: 28px;
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 12px;
-          color: #6b7068;
-          font-family: 'DM Mono', monospace;
-        }
-        .brand-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #00e87a;
-        }
+        .card { text-align: center; max-width: 480px; }
+        .status-number { font-family: 'DM Mono', monospace; font-size: clamp(80px, 18vw, 140px); font-weight: 500; line-height: 1; color: #e8ebe5; margin-bottom: 8px; }
+        h1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; }
+        p { color: #888; font-size: 14px; margin-bottom: 24px; }
+        .path { font-family: 'DM Mono', monospace; color: #00e87a; background: #111; padding: 2px 8px; border-radius: 4px; }
+        .btn { display: inline-block; padding: 10px 20px; background: #00e87a; color: #000; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px; }
+        .btn:hover { background: #39ffa0; }
     </style>
 </head>
 <body>
     <div class="card">
-      <div class="status-number" data-value="404">404</div>
-      <div class="accent-line"></div>
-      <h1>Page not found</h1>
-      <div class="route-badge">
-        <span class="dot"></span>
-        <span>${escapeHtml(pathname)}</span>
-      </div>
-      <div class="actions">
-        <a href="/" class="btn btn-primary">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Home
-        </a>
-        <a href="javascript:history.back()" class="btn btn-secondary">
-          <svg width="14" height="14" fill="none" viewBox="0 0 24 24"><path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Go back
-        </a>
-      </div>
-    </div>
-
-    <div class="brand">
-      <span class="brand-dot"></span>
-      Velix v${VERSION}
+        <div class="status-number">404</div>
+        <h1>Page Not Found</h1>
+        <p>The requested route <span class="path">${safePath}</span> does not exist.</p>
+        <a href="/" class="btn">Return Home</a>
     </div>
 </body>
 </html>`;
@@ -237,86 +199,7 @@ export function generate404Page(pathname: string = '/'): string {
  * Generate a styled 500 error page — Next.js 16 dev overlay style
  */
 export function generate500Page(options: ErrorPageOptions): string {
-  const { message, stack, isDev, pathname } = options;
-
-  type StackFrame = { call: string; file: string; line: number | null };
-
-  // Parse stack frames
-  let frames: StackFrame[] = [];
-  let sourceSnippet = '';
-  let errorLine = 0;
-  let errorFile = '';
-
-  if (isDev && stack) {
-    const stackLines = stack.split('\n').filter((l: string) => l.trim());
-    frames = stackLines.slice(1)
-      .filter((line: string) => line.includes('at '))
-      .map((frame: string): StackFrame => {
-        const m1 = frame.match(/at\s+(.+?)\s+\((.+?):(\d+):\d+\)/);
-        if (m1) return { call: m1[1].trim(), file: m1[2], line: parseInt(m1[3], 10) };
-        const m2 = frame.match(/at\s+(.+?):(\d+):\d+/);
-        if (m2) return { call: '(anonymous)', file: m2[1].trim(), line: parseInt(m2[2], 10) };
-        return { call: frame.replace(/^\s*at\s+/, '').trim(), file: '', line: null };
-      });
-
-    const firstUserFrame = frames.find(f => f.file && !f.file.includes('node_modules')) || frames[0];
-    if (firstUserFrame) {
-      errorFile = firstUserFrame.file;
-      errorLine = firstUserFrame.line || 0;
-      if (errorFile && errorLine > 0) {
-        try {
-          const fs = require('fs');
-          if (fs.existsSync(errorFile)) {
-            const src: string[] = fs.readFileSync(errorFile, 'utf-8').split('\n');
-            const start = Math.max(0, errorLine - 4);
-            const end = Math.min(src.length, errorLine + 3);
-            
-            const syntaxHighlight = (code: string) => {
-              let hl = code;
-              // Keywords
-              hl = hl.replace(/\\b(let|const|function|return|import|export|if|else|for|while|await|async|class|var)\\b/g, '<span style="color:#c084fc">$1</span>');
-              // Strings
-              hl = hl.replace(/(&quot;.*?&quot;|&#39;.*?&#39;|`.*?`)/g, '<span style="color:#86efac">$1</span>');
-              // Comments
-              hl = hl.replace(/(\\&#x2F;\\&#x2F;.*)$/g, '<span style="color:#94A3B8">$1</span>');
-              // Numbers
-              hl = hl.replace(/\\b(\\d+)\\b/g, '<span style="color:#f59e0b">$1</span>');
-              return hl;
-            };
-
-            sourceSnippet = src.slice(start, end).map((l: string, i: number) => {
-              const num = start + i + 1;
-              const isErr = num === errorLine;
-              const numStr = String(num).padStart(3, ' ');
-              const highlightedLine = syntaxHighlight(escapeHtml(l));
-              
-              if (isErr) {
-                return `<div class="src-line src-err"><span class="ln">${numStr}</span><span class="active-arrow">▶</span><span class="code-content">${highlightedLine}</span></div>`;
-              }
-              return `<div class="src-line"><span class="ln">${numStr}</span><span class="active-arrow"> </span><span class="code-content">${highlightedLine}</span></div>`;
-            }).join('');
-          }
-        } catch (_) {}
-      }
-    }
-  }
-
-  const formatErrorMessage = (msg: string): string => {
-    let formatted = escapeHtml(msg);
-    // Render Windows and Unix absolute paths in green
-    const pathSpan = '<span style="color:#2563EB;cursor:pointer;" onclick="console.log(\'open in editor\')">';
-    formatted = formatted.replace(/([A-Z]:\\[^\s<]+|\/(?:Users|home|var|srv)\/[^\s<]+)/g, pathSpan + '$1</span>');
-    // Render ERROR: in red
-    formatted = formatted.replace(/(ERROR:)/g, '<strong style="color:#ff6b6b">$1</strong>');
-    return formatted;
-  };
-
-  const userFrames = frames.filter(f => f.file && !f.file.includes('node_modules'));
-  const ignoredFrames = frames.filter(f => !f.file || f.file.includes('node_modules'));
-
-  const shortFile = errorFile
-    .replace(/\\/g, '/')
-    .replace(/.*\/(?=app\/|server\/|src\/|pages\/)/, '');
+  const { isDev } = options;
 
   // ── PRODUCTION mode: clean page ────────────────────────────────────────────
   if (!isDev) {
@@ -330,12 +213,11 @@ export function generate500Page(options: ErrorPageOptions): string {
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-          background: #0B1120;
+          background: #0a0a0a;
           color: #ededed;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           display: flex; align-items: center; justify-content: center;
-          min-height: 100vh;
-          -webkit-font-smoothing: antialiased;
+          min-height: 100vh; -webkit-font-smoothing: antialiased;
         }
         .container { display: flex; align-items: center; gap: 32px; padding: 32px; }
         .code { font-size: 48px; font-weight: 700; color: #fff; border-right: 1px solid rgba(255,255,255,0.15); padding-right: 32px; }
@@ -358,468 +240,581 @@ export function generate500Page(options: ErrorPageOptions): string {
 </html>`;
   }
 
-  // ── DEVELOPMENT mode: full overlay ─────────────────────────────────────────
+  // ── DEVELOPMENT mode: full Next.js-style overlay ───────────────────────────
+  const errorList: ErrorItem[] = options.errors && options.errors.length > 0
+    ? options.errors
+    : [{
+        statusCode: options.statusCode,
+        title: options.title || 'Runtime Error',
+        message: options.message,
+        stack: options.stack,
+        pathname: options.pathname,
+      }];
+
+  const serializedErrors = JSON.stringify(errorList.map(err => {
+    const frames = parseStack(err.stack);
+    const userFrames = frames.filter(f => !f.isIgnored);
+    const ignoredFrames = frames.filter(f => f.isIgnored);
+    const leadFrame = userFrames[0] || frames[0];
+    const errorFile = leadFrame?.file || '';
+    const errorLine = leadFrame?.line || 0;
+    const errorCol = leadFrame?.column || 0;
+    const snippetObj = errorFile && errorLine > 0 ? getSourceSnippet(errorFile, errorLine) : null;
+
+    return {
+      title: err.title || 'Runtime Error',
+      message: err.message,
+      stack: err.stack || '',
+      pathname: err.pathname || options.pathname || '/',
+      errorFile,
+      errorLine,
+      errorCol,
+      snippetHtml: snippetObj?.snippet || '',
+      userFrames,
+      ignoredFrames,
+    };
+  }));
+
+  const initialErr = JSON.parse(serializedErrors)[0];
+  const totalCount = errorList.length;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error | Velix v${VERSION}</title>
+    <title>Error Overlay | Velix v${VERSION}</title>
     <link rel="icon" href="/favicon.webp">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
+      :root {
+        --overlay-bg: rgba(0, 0, 0, 0.72);
+        --box-bg: #111213;
+        --box-border: #27272a;
+        --text-primary: #f4f4f5;
+        --text-secondary: #a1a1aa;
+        --text-muted: #71717a;
+        --accent-red: #ef4444;
+        --accent-red-bg: rgba(239, 68, 68, 0.12);
+        --accent-green: #00e87a;
+        --code-bg: #09090b;
+        --frame-bg: #18181b;
+        --frame-border: #27272a;
+        --frame-hover: #27272a;
+        --tok-keyword: #c084fc;
+        --tok-string: #86efac;
+        --tok-comment: #71717a;
+        --tok-number: #f59e0b;
+      }
 
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+      @media (prefers-color-scheme: light) {
+        :root {
+          --overlay-bg: rgba(255, 255, 255, 0.75);
+          --box-bg: #ffffff;
+          --box-border: #e4e4e7;
+          --text-primary: #09090b;
+          --text-secondary: #52525b;
+          --text-muted: #a1a1aa;
+          --accent-red: #dc2626;
+          --accent-red-bg: rgba(220, 38, 38, 0.08);
+          --accent-green: #059669;
+          --code-bg: #f4f4f5;
+          --frame-bg: #fafafa;
+          --frame-border: #e4e4e7;
+          --frame-hover: #f4f4f5;
+          --tok-keyword: #7c3aed;
+          --tok-string: #047857;
+          --tok-comment: #a1a1aa;
+          --tok-number: #d97706;
+        }
+      }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-          background-color: #0B1120;
-          background-image: 
-            linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-          background-size: 60px 60px;
-          color: #F8FAFC;
-          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-          min-height: 100vh;
-          display: flex;
-          align-items: flex-start;
-          justify-content: center;
-          padding: 2rem;
-          -webkit-font-smoothing: antialiased;
-        }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background: transparent;
+        color: var(--text-primary);
+        -webkit-font-smoothing: antialiased;
+      }
 
-        /* Radial mask for the grid background */
-        .bg-mask {
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: radial-gradient(circle at center, transparent 0%, #0B1120 80%);
-          z-index: -1;
-          pointer-events: none;
-        }
+      /* Fixed overlay backdrop: background page remains visible through blur */
+      .velix-overlay-backdrop {
+        position: fixed;
+        inset: 0;
+        background: var(--overlay-bg);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 32px 16px;
+        z-index: 999999;
+      }
 
-        /* ── Main Container ── */
-        .container {
-          width: 100%;
-          max-width: 780px;
-          margin-top: 4vh;
-          animation: fadeIn 0.2s ease forwards;
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
+      .velix-dialog {
+        background: var(--box-bg);
+        border: 1px solid var(--box-border);
+        border-radius: 14px;
+        width: 100%;
+        max-width: 860px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
 
-        /* ── Header Bar ── */
-        .header {
-          position: relative;
-          background: transparent;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding-top: 12px;
-        }
-        .header::before {
-          content: '';
-          position: absolute;
-          top: -12px; left: 0; right: 0;
-          height: 4px;
-          background: #ff6b6b;
-          border-radius: 4px;
-        }
-        .header-left {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .header-icon {
-          width: 20px;
-          height: 20px;
-          fill: #ff6b6b;
-        }
-        .header-title {
-          font-size: 18px;
-          font-weight: 700;
-          color: #fff;
-        }
-        .dev-badge {
-          background: rgba(255, 107, 107, 0.1);
-          border: 1px solid rgba(255, 107, 107, 0.2);
-          color: #ff6b6b;
-          padding: 2px 10px;
-          border-radius: 9999px;
-          font-size: 12px;
-          font-weight: 600;
-          letter-spacing: 0.05em;
-        }
+      /* Header */
+      .dialog-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--box-border);
+        background: var(--box-bg);
+      }
 
-        /* ── Status & Route ── */
-        .status-bar {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin-top: 8px;
-          font-family: 'DM Mono', monospace;
-          font-size: 13px;
-        }
-        .status-badge {
-          background: #0F172A;
-          border: 1px solid #1E293B;
-          color: #ff6b6b;
-          padding: 4px 10px;
-          border-radius: 6px;
-        }
-        .route-badge {
-          background: #0F172A;
-          border: 1px solid #1E293B;
-          color: #00e87a;
-          padding: 4px 10px;
-          border-radius: 6px;
-        }
-        .separator { color: #94A3B8; }
-        .timestamp { color: #94A3B8; font-family: system-ui; font-size: 13px; }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
 
-        /* ── Error Message ── */
-        .error-message-box {
-          background: #0F172A;
-          border: 1px solid #1E293B;
-          border-left: 3px solid #ff6b6b;
-          border-radius: 10px;
-          padding: 1rem 1.25rem;
-          font-family: 'DM Mono', monospace;
-          font-size: 14px;
-          color: #F8FAFC;
-          line-height: 1.6;
-          white-space: pre-wrap;
-          word-break: break-word;
-        }
+      .error-badge {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--accent-red);
+        background: var(--accent-red-bg);
+        padding: 3px 8px;
+        border-radius: 6px;
+      }
 
-        /* ── Source Code Viewer ── */
-        .source-viewer {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .source-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .source-filepath {
-          font-family: 'DM Mono', monospace;
-          font-size: 13px;
-          color: #00e87a;
-        }
-        .open-in-editor {
-          color: #94A3B8;
-          cursor: pointer;
-          transition: color 0.15s;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          font-size: 13px;
-          text-decoration: none;
-        }
-        .open-in-editor:hover { color: #F8FAFC; }
-        .open-in-editor svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+      .version-badge {
+        font-size: 12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        color: var(--text-muted);
+      }
 
-        .source-body {
-          background: #020617;
-          border: 1px solid #1E293B;
-          border-radius: 8px;
-          padding: 16px 0;
-          overflow-x: auto;
-          font-family: 'DM Mono', monospace;
-          font-size: 13px;
-          line-height: 1.6;
-        }
-        .src-line {
-          display: flex;
-          padding: 0 16px;
-        }
-        .ln {
-          color: #475569;
-          width: 32px;
-          text-align: right;
-          margin-right: 16px;
-          user-select: none;
-          flex-shrink: 0;
-        }
-        .active-arrow {
-          color: transparent;
-          margin-right: 12px;
-          width: 14px;
-          text-align: center;
-          flex-shrink: 0;
-        }
-        .code-content { white-space: pre; }
-        
-        .src-err {
-          background: rgba(0, 232, 122, 0.08);
-        }
-        .src-err .ln { color: #00e87a; }
-        .src-err .active-arrow { color: #00e87a; }
-        .src-err .code-content { color: #F8FAFC; }
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-        /* ── Call Stack ── */
-        .callstack-section {
-          margin-top: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .callstack-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .callstack-title {
-          font-size: 16px;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-        .callstack-count {
-          background: #1E293B;
-          color: #F8FAFC;
-          padding: 2px 10px;
-          border-radius: 9999px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-        
-        .toggle-node-modules {
-          color: #94A3B8;
-          font-size: 13px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          transition: color 0.15s;
-        }
-        .toggle-node-modules:hover { color: #F8FAFC; }
+      .nav-counter {
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-variant-numeric: tabular-nums;
+        margin-right: 4px;
+      }
 
-        .frame {
-          background: #0F172A;
-          border: 1px solid #1E293B;
-          border-radius: 8px;
-          padding: 0.875rem 1rem;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          transition: background-color 0.15s, transform 0.15s;
-        }
-        .frame:hover { background: #1E293B; }
-        
-        .frame-info {
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .frame-call {
-          font-family: 'DM Mono', monospace;
-          font-size: 14px;
-          font-weight: 700;
-          color: #00e87a;
-        }
-        .frame-file {
-          font-family: 'DM Mono', monospace;
-          font-size: 13px;
-          color: #94A3B8;
-        }
-        
-        .frame.node-modules .frame-call { color: #94A3B8; font-weight: 400; }
-        .frame.node-modules .frame-file { color: #475569; }
-        
-        .frame-number {
-          background: #1E293B;
-          color: #94A3B8;
-          padding: 2px 8px;
-          border-radius: 6px;
-          font-size: 12px;
-          font-variant-numeric: tabular-nums;
-        }
+      .btn-icon {
+        background: var(--frame-bg);
+        border: 1px solid var(--box-border);
+        color: var(--text-secondary);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.15s, color 0.15s;
+      }
+      .btn-icon:hover:not(:disabled) {
+        background: var(--frame-hover);
+        color: var(--text-primary);
+      }
+      .btn-icon:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
 
-        .pagination {
-          display: flex;
-          justify-content: flex-end;
-          gap: 8px;
-          margin-top: 8px;
-        }
-        .page-btn {
-          background: transparent;
-          border: 1px solid #1E293B;
-          color: #F8FAFC;
-          padding: 6px 14px;
-          border-radius: 6px;
-          font-size: 13px;
-          cursor: pointer;
-          transition: all 0.15s;
-        }
-        .page-btn:hover:not(:disabled) { background: #1E293B; }
-        .page-btn:disabled { opacity: 0.3; cursor: default; }
-        
-        .node-modules-list { display: none; flex-direction: column; gap: 12px; margin-top: 12px; }
-        .node-modules-list.visible { display: flex; }
+      /* Body */
+      .dialog-body {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
 
-        /* ── Footer ── */
-        .footer {
-          margin-top: 32px;
-          padding-top: 24px;
-          border-top: 1px solid #1E293B;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .footer-left {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          font-weight: 600;
-          color: #F8FAFC;
-        }
-        .velix-dot { width: 8px; height: 8px; border-radius: 50%; background: #00e87a; }
-        .footer-right {
-          display: flex;
-          align-items: center;
-          gap: 16px;
-        }
-        .footer-link {
-          color: #94A3B8;
-          text-decoration: none;
-          font-size: 13px;
-          transition: color 0.15s;
-        }
-        .footer-link:hover { color: #F8FAFC; }
-        .dev-pill {
-          background: #1E293B;
-          color: #F8FAFC;
-          padding: 4px 12px;
-          border-radius: 9999px;
-          font-size: 12px;
-        }
+      .message-box {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--accent-red);
+        font-weight: 600;
+        word-break: break-word;
+        white-space: pre-wrap;
+      }
+
+      .route-info {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .route-path {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        color: var(--accent-green);
+        background: var(--frame-bg);
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid var(--box-border);
+      }
+
+      /* Source frame viewer */
+      .source-box {
+        border: 1px solid var(--box-border);
+        border-radius: 8px;
+        background: var(--code-bg);
+        overflow: hidden;
+      }
+
+      .source-bar {
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--box-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        background: var(--frame-bg);
+      }
+
+      .source-path {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        color: var(--text-secondary);
+      }
+
+      .open-editor-link {
+        color: var(--accent-green);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 500;
+      }
+      .open-editor-link:hover {
+        text-decoration: underline;
+      }
+
+      .source-code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        padding: 12px 0;
+        overflow-x: auto;
+      }
+
+      .src-line {
+        display: flex;
+        padding: 0 16px;
+      }
+      .src-line.src-err {
+        background: var(--accent-red-bg);
+      }
+      .ln {
+        color: var(--text-muted);
+        width: 36px;
+        text-align: right;
+        margin-right: 12px;
+        user-select: none;
+        flex-shrink: 0;
+      }
+      .pointer {
+        width: 14px;
+        color: var(--accent-red);
+        font-weight: bold;
+        flex-shrink: 0;
+        margin-right: 8px;
+      }
+      .code {
+        white-space: pre;
+      }
+
+      .tok-keyword { color: var(--tok-keyword); font-weight: 600; }
+      .tok-string { color: var(--tok-string); }
+      .tok-comment { color: var(--tok-comment); font-style: italic; }
+      .tok-number { color: var(--tok-number); }
+
+      /* Stack section */
+      .stack-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .stack-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .stack-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .toggle-ignored-btn {
+        background: none;
+        border: none;
+        font-size: 12px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 2px 4px;
+      }
+      .toggle-ignored-btn:hover {
+        color: var(--text-primary);
+        text-decoration: underline;
+      }
+
+      .frame-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .frame-item {
+        background: var(--frame-bg);
+        border: 1px solid var(--frame-border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 13px;
+      }
+      .frame-item:hover {
+        background: var(--frame-hover);
+      }
+      .frame-call {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      .frame-loc {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .frame-item.ignored {
+        opacity: 0.65;
+      }
+      .frame-item.ignored .frame-call {
+        font-weight: 400;
+        color: var(--text-secondary);
+      }
+
+      .ignored-frames-container {
+        display: none;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 4px;
+      }
+      .ignored-frames-container.open {
+        display: flex;
+      }
+
+      /* Footer */
+      .dialog-footer {
+        padding: 12px 20px;
+        border-top: 1px solid var(--box-border);
+        background: var(--box-bg);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .footer-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .footer-actions a {
+        color: var(--text-secondary);
+        text-decoration: none;
+      }
+      .footer-actions a:hover {
+        color: var(--text-primary);
+        text-decoration: underline;
+      }
     </style>
 </head>
 <body>
-    <div class="bg-mask"></div>
-    <div class="container">
-      
-      <!-- Header -->
-      <div class="header">
-        <div class="header-left">
-          <svg class="header-icon" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.83L19.17 19H4.83L12 5.83zM11 10h2v5h-2v-5zm0 6h2v2h-2v-2z"/></svg>
-          <div class="header-title">Unhandled Runtime Error</div>
-        </div>
-        <div class="dev-badge">DEV</div>
-      </div>
-
-      <!-- Status & Route -->
-      <div class="status-bar">
-        <div class="status-badge">${options.statusCode || 500}</div>
-        <div class="separator">·</div>
-        <div class="route-badge">Route: ${pathname || '/'}</div>
-        <div class="separator">·</div>
-        <div class="timestamp">just now</div>
-      </div>
-
-      <!-- Error Message -->
-      <div class="error-message-box">
-        ${formatErrorMessage(message)}
-      </div>
-
-      ${sourceSnippet ? `
-      <!-- Source Viewer -->
-      <div class="source-viewer">
-        <div class="source-header">
-          <div class="source-filepath">${escapeHtml(shortFile)}${errorLine ? ` (${errorLine})` : ''} @ runtime</div>
-          <a href="#" class="open-in-editor" onclick="console.log('Open in editor clicked')">
-            Open in editor
-            <svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-          </a>
-        </div>
-        <div class="source-body">
-          ${sourceSnippet}
-        </div>
-      </div>
-      ` : ''}
-
-      <!-- Call Stack -->
-      <div class="callstack-section">
-        <div class="callstack-header">
-          <div class="callstack-title">
-            Call Stack
-            <div class="callstack-count">${frames.length}</div>
+    <div class="velix-overlay-backdrop">
+      <div class="velix-dialog" role="dialog" aria-modal="true">
+        <!-- Header -->
+        <div class="dialog-header">
+          <div class="header-left">
+            <span class="error-badge" id="errorBadge">${escapeHtml(initialErr.title)}</span>
+            <span class="version-badge">Velix v${VERSION}</span>
           </div>
-          ${ignoredFrames.length > 0 ? `
-          <button class="toggle-node-modules" id="toggleNodeModules" onclick="toggleNodeModules()">
-            Show ${ignoredFrames.length} node_modules frames
-          </button>
-          ` : ''}
-        </div>
-
-        ${userFrames.map((f: StackFrame, i: number) => `
-        <div class="frame">
-          <div class="frame-info">
-            <div class="frame-call">${escapeHtml(f.call)}</div>
-            <div class="frame-file">${escapeHtml(f.file.replace(/\\\\/g, '/'))}${f.line ? `:${f.line}` : ''}</div>
+          <div class="header-right">
+            <span class="nav-counter" id="navCounter">1 of ${totalCount}</span>
+            <button class="btn-icon" id="prevBtn" onclick="navigateError(-1)" ${totalCount <= 1 ? 'disabled' : ''}>←</button>
+            <button class="btn-icon" id="nextBtn" onclick="navigateError(1)" ${totalCount <= 1 ? 'disabled' : ''}>→</button>
+            <button class="btn-icon" id="copyBtn" onclick="copyErrorToClipboard()">Copy Error</button>
           </div>
-          <div class="frame-number">${i + 1}</div>
         </div>
-        `).join('')}
 
-        ${ignoredFrames.length > 0 ? `
-        <div class="node-modules-list" id="nodeModulesList">
-          ${ignoredFrames.map((f: StackFrame, i: number) => `
-          <div class="frame node-modules">
-            <div class="frame-info">
-              <div class="frame-call">${escapeHtml(f.call)}</div>
-              <div class="frame-file">${escapeHtml(f.file)}${f.line ? `:${f.line}` : ''}</div>
+        <!-- Body -->
+        <div class="dialog-body">
+          <div class="route-info">
+            Route: <span class="route-path" id="routeDisplay">${escapeHtml(initialErr.pathname)}</span>
+          </div>
+
+          <div class="message-box" id="messageDisplay">${escapeHtml(initialErr.message)}</div>
+
+          <!-- Source Viewer -->
+          <div class="source-box" id="sourceBox" style="${initialErr.snippetHtml ? '' : 'display:none;'}">
+            <div class="source-bar">
+              <span class="source-path" id="sourcePathDisplay">${escapeHtml(initialErr.errorFile)}${initialErr.errorLine ? `:${initialErr.errorLine}` : ''}</span>
+              <a href="vscode://file/${escapeHtml(initialErr.errorFile)}:${initialErr.errorLine}" id="editorLink" class="open-editor-link">
+                Open in editor ↗
+              </a>
             </div>
-            <div class="frame-number">${userFrames.length + i + 1}</div>
+            <div class="source-code" id="sourceSnippetDisplay">${initialErr.snippetHtml}</div>
           </div>
-          `).join('')}
+
+          <!-- Stack Trace -->
+          <div class="stack-section">
+            <div class="stack-header">
+              <span class="stack-title">Call Stack</span>
+              <button class="toggle-ignored-btn" id="toggleIgnoredBtn" onclick="toggleIgnoredFrames()" style="${initialErr.ignoredFrames.length ? '' : 'display:none;'}">
+                Show ${initialErr.ignoredFrames.length} ignore-listed frames
+              </button>
+            </div>
+
+            <div class="frame-list" id="userFramesList">
+              ${initialErr.userFrames.map((f: ParsedStackFrame) => `
+                <div class="frame-item">
+                  <div class="frame-call">${escapeHtml(f.call)}</div>
+                  <div class="frame-loc">${escapeHtml(f.file)}${f.line ? `:${f.line}:${f.column || 0}` : ''}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="ignored-frames-container" id="ignoredFramesList">
+              ${initialErr.ignoredFrames.map((f: ParsedStackFrame) => `
+                <div class="frame-item ignored">
+                  <div class="frame-call">${escapeHtml(f.call)}</div>
+                  <div class="frame-loc">${escapeHtml(f.file)}${f.line ? `:${f.line}:${f.column || 0}` : ''}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
         </div>
-        ` : ''}
-        
-        <div class="pagination">
-          <button class="page-btn" disabled>Previous</button>
-          <button class="page-btn" disabled>Next</button>
+
+        <!-- Footer -->
+        <div class="dialog-footer">
+          <span>Velix Development Overlay</span>
+          <div class="footer-actions">
+            <a href="https://velixcloud.io/docs" target="_blank" rel="noreferrer">Documentation</a>
+            <a href="javascript:location.reload()">Reload Page</a>
+          </div>
         </div>
       </div>
-
-      <!-- Footer -->
-      <div class="footer">
-        <div class="footer-left">
-          <div class="velix-dot"></div>
-          Velix v${VERSION}
-        </div>
-        <div class="footer-right">
-          <a href="/" class="footer-link">Home</a>
-          <a href="#" class="footer-link" onclick="window.location.reload()">Reload</a>
-          <a href="https://velixcloud.io/docs" class="footer-link" target="_blank">Documentation</a>
-          <div class="dev-pill">Development Mode</div>
-        </div>
-      </div>
-
     </div>
 
     <script>
-      function toggleNodeModules() {
-        const list = document.getElementById('nodeModulesList');
-        const btn = document.getElementById('toggleNodeModules');
-        if (!list || !btn) return;
-        
-        const isVisible = list.classList.contains('visible');
-        if (isVisible) {
-          list.classList.remove('visible');
-          btn.textContent = 'Show ' + list.children.length + ' node_modules frames';
+      const errorsData = ${serializedErrors};
+      let currentIndex = 0;
+      let ignoredOpen = false;
+
+      function renderCurrentError() {
+        const item = errorsData[currentIndex];
+        document.getElementById('navCounter').textContent = (currentIndex + 1) + ' of ' + errorsData.length;
+        document.getElementById('errorBadge').textContent = item.title;
+        document.getElementById('routeDisplay').textContent = item.pathname;
+        document.getElementById('messageDisplay').textContent = item.message;
+
+        const sourceBox = document.getElementById('sourceBox');
+        if (item.snippetHtml) {
+          sourceBox.style.display = '';
+          document.getElementById('sourcePathDisplay').textContent = item.errorFile + (item.errorLine ? ':' + item.errorLine : '');
+          document.getElementById('editorLink').href = 'vscode://file/' + encodeURI(item.errorFile) + ':' + item.errorLine;
+          document.getElementById('sourceSnippetDisplay').innerHTML = item.snippetHtml;
         } else {
-          list.classList.add('visible');
-          btn.textContent = 'Hide node_modules frames';
+          sourceBox.style.display = 'none';
         }
+
+        // Render user frames
+        const userList = document.getElementById('userFramesList');
+        userList.innerHTML = item.userFrames.map(function(f) {
+          return '<div class="frame-item">' +
+            '<div class="frame-call">' + escapeText(f.call) + '</div>' +
+            '<div class="frame-loc">' + escapeText(f.file) + (f.line ? ':' + f.line + ':' + (f.column || 0) : '') + '</div>' +
+          '</div>';
+        }).join('');
+
+        // Render ignored frames
+        const ignList = document.getElementById('ignoredFramesList');
+        ignList.innerHTML = item.ignoredFrames.map(function(f) {
+          return '<div class="frame-item ignored">' +
+            '<div class="frame-call">' + escapeText(f.call) + '</div>' +
+            '<div class="frame-loc">' + escapeText(f.file) + (f.line ? ':' + f.line + ':' + (f.column || 0) : '') + '</div>' +
+          '</div>';
+        }).join('');
+
+        const toggleBtn = document.getElementById('toggleIgnoredBtn');
+        if (item.ignoredFrames.length > 0) {
+          toggleBtn.style.display = '';
+          toggleBtn.textContent = ignoredOpen
+            ? 'Hide ignore-listed frames'
+            : 'Show ' + item.ignoredFrames.length + ' ignore-listed frames';
+        } else {
+          toggleBtn.style.display = 'none';
+        }
+
+        document.getElementById('prevBtn').disabled = currentIndex === 0;
+        document.getElementById('nextBtn').disabled = currentIndex === errorsData.length - 1;
+      }
+
+      function escapeText(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function navigateError(delta) {
+        const next = currentIndex + delta;
+        if (next >= 0 && next < errorsData.length) {
+          currentIndex = next;
+          renderCurrentError();
+        }
+      }
+
+      function toggleIgnoredFrames() {
+        ignoredOpen = !ignoredOpen;
+        const ignList = document.getElementById('ignoredFramesList');
+        const toggleBtn = document.getElementById('toggleIgnoredBtn');
+        const item = errorsData[currentIndex];
+        if (ignoredOpen) {
+          ignList.classList.add('open');
+          toggleBtn.textContent = 'Hide ignore-listed frames';
+        } else {
+          ignList.classList.remove('open');
+          toggleBtn.textContent = 'Show ' + item.ignoredFrames.length + ' ignore-listed frames';
+        }
+      }
+
+      function copyErrorToClipboard() {
+        const item = errorsData[currentIndex];
+        const payload = item.title + ': ' + item.message + '\\n\\n' + (item.stack || '');
+        navigator.clipboard.writeText(payload).then(function() {
+          const btn = document.getElementById('copyBtn');
+          const original = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(function() { btn.textContent = original; }, 2000);
+        }).catch(function() {
+          alert('Failed to copy to clipboard');
+        });
       }
     </script>
 </body>
@@ -840,5 +835,6 @@ export function generateErrorPage(statusCode: number, options: Partial<ErrorPage
     stack: options.stack,
     isDev: options.isDev,
     pathname: options.pathname,
+    errors: options.errors,
   });
 }
