@@ -1,0 +1,23 @@
+@import "tailwindcss" source(none);
+@source "../app";
+@source "../components";
+
+@theme {
+  --color-brand: #00e87a;
+  --color-brand-glow: rgba(0, 232, 122, 0.2);
+  --color-surface: #111211;
+  --color-border: #1e201e;
+}
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
