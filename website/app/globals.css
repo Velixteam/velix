@@ -2,6 +2,7 @@
 
 @source "../components";
 @theme {
+  --color-velix-cyan: #39ffa0; /* used by text-/bg-/to-velix-cyan in app/compare and app/page */
   --color-velix-deep: #0a0a0a;
   --color-velix-dark: #111211;
   --color-velix-surface: #111211;
