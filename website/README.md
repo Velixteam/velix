@@ -8,7 +8,7 @@ Visit: [velix.dev](https://velix.dev) *(coming soon)*
 
 ## 📦 Tech Stack
 
-- **Framework**: Velix v5.0.7
+- **Framework**: Velix (see `package.json` for the installed version)
 - **Styling**: Tailwind CSS v4
 - **Fonts**: Inter + JetBrains Mono (Google Fonts)
 - **Deployment**: Vercel

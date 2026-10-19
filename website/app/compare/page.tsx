@@ -43,45 +43,41 @@ function FrameworkCard({ name, color, description, pros, cons, bestFor }: {
 }
 
 export default function ComparePage() {
+  // Competitor columns come from each project's public docs (checked through mid-2026) and can go
+  // stale: please verify before relying on them. Velix column = what is implemented in this repo.
   const categories = [
     { name: "Core", rows: [
       { f: "File-Based Routing", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
       { f: "Nested Layouts", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
       { f: "Dynamic Routes", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
-      { f: "Catch-All Routes", v: <Check/>, n: <Check/>, r: <Cross/>, a: <Check/> },
-      { f: "TypeScript Native", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Catch-All Routes", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "TypeScript Support", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
     ]},
     { name: "Server", rows: [
-      { f: "Server Actions", v: <Check/>, n: <Check/>, r: <Check/>, a: <Cross/> },
-      { f: "API Routes", v: <Check/>, n: <Check/>, r: <Cross/>, a: <Check/> },
-      { f: "Middleware", v: <Check/>, n: <Check/>, r: <Cross/>, a: <Partial/> },
-      { f: "Server-Side Rendering", v: <Check/>, n: <Check/>, r: <Check/>, a: <Partial/> },
-      { f: "Static Site Generation", v: <Check/>, n: <Check/>, r: <Cross/>, a: <Check/> },
-      { f: "Edge Runtime", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Server Actions / Mutations", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "API / Resource Routes", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Middleware", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Server-Side Rendering", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Streaming SSR", v: <Cross/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Static Site Generation", v: <Partial/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Edge Runtime", v: <Cross/>, n: <Check/>, r: <Partial/>, a: <Partial/> },
     ]},
     { name: "Architecture", rows: [
-      { f: "Islands Architecture", v: <Check/>, n: <Cross/>, r: <Cross/>, a: <Check/> },
-      { f: "Zero JS by Default", v: <Check/>, n: <Cross/>, r: <Cross/>, a: <Check/> },
-      { f: "Partial Hydration", v: <Check/>, n: <Partial/>, r: <Cross/>, a: <Check/> },
-      { f: "React 19 Support", v: <Check/>, n: <Check/>, r: <Check/>, a: <Cross/> },
-      { f: "Plugin System", v: <Check/>, n: <Partial/>, r: <Cross/>, a: <Check/> },
+      { f: "Islands / Partial Hydration", v: <Check/>, n: <Cross/>, r: <Cross/>, a: <Check/> },
+      { f: "React Server Components", v: <Cross/>, n: <Check/>, r: <Partial/>, a: <Cross/> },
+      { f: "React 19 Support", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Plugin System", v: <Check/>, n: <Partial/>, r: <Partial/>, a: <Check/> },
     ]},
     { name: "DX & Tooling", rows: [
-      { f: "Zero Configuration", v: <Check/>, n: <Cross/>, r: <Cross/>, a: <Check/> },
-      { f: "Built-in Tailwind CSS", v: <Check/>, n: <Cross/>, r: <Cross/>, a: <Cross/> },
+      { f: "Built-in Tailwind CSS plugin", v: <Check/>, n: <Partial/>, r: <Partial/>, a: <Partial/> },
       { f: "Hot Module Replacement", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
-      { f: "Built-in SEO Metadata", v: <Check/>, n: <Check/>, r: <Partial/>, a: <Partial/> },
-      { f: "DevTools", v: <Check/>, n: <Cross/>, r: <Cross/>, a: <Partial/> },
+      { f: "Metadata / SEO helpers", v: <Check/>, n: <Check/>, r: <Check/>, a: <Partial/> },
+      { f: "Dev overlay / DevTools", v: <Check/>, n: <Check/>, r: <Partial/>, a: <Check/> },
       { f: "CLI Scaffolding", v: <Check/>, n: <Check/>, r: <Check/>, a: <Check/> },
     ]},
-    { name: "Performance", rows: [
-      { f: "Client Bundle Size", v: <Val hl>0kb (default)</Val>, n: <Val>~85kb</Val>, r: <Val>~60kb</Val>, a: <Val>0kb (default)</Val> },
-      { f: "Time to First Byte (TTFB)", v: <Val hl>Coming soon</Val>, n: <Val>~250ms</Val>, r: <Val>~180ms</Val>, a: <Val>~120ms</Val> },
-      { f: "Cold Start Time", v: <Val hl>~120ms</Val>, n: <Val>~350ms</Val>, r: <Val>~280ms</Val>, a: <Val>~100ms</Val> },
-      { f: "Build Speed", v: <Val hl>~4.5s</Val>, n: <Val>~12s</Val>, r: <Val>~8s</Val>, a: <Val>~6s</Val> },
-    ]},
-    { name: "Hosting & Infrastructure", rows: [
-      { f: "Pricing", v: <Val hl>$0 (Velix Cloud)</Val>, n: <Val>$20/mo (Vercel Pro)</Val>, r: <Val>Variable</Val>, a: <Val>Variable</Val> },
+    { name: "Maturity", rows: [
+      { f: "Production track record", v: <Cross/>, n: <Check/>, r: <Check/>, a: <Check/> },
+      { f: "Published benchmarks", v: <Val>Not yet</Val>, n: <Val>Varies</Val>, r: <Val>Varies</Val>, a: <Val>Varies</Val> },
     ]},
   ];
 
@@ -105,7 +101,7 @@ export default function ComparePage() {
         <div className="relative z-10 max-w-4xl mx-auto">
           <span className="text-xs font-semibold tracking-widest uppercase text-velix-cyan mb-4 block drop-shadow-md">Framework Comparison</span>
           <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 drop-shadow-lg">Velix vs the <span className="gradient-text">competition</span></h1>
-          <p className="text-lg text-slate-300 max-w-2xl mx-auto drop-shadow-md">An honest, detailed comparison of Velix with Next.js, Remix, and Astro. Every framework has trade-offs — here's how they stack up.</p>
+          <p className="text-lg text-slate-300 max-w-2xl mx-auto drop-shadow-md">A candid comparison of Velix with Next.js, Remix (React Router 7), and Astro. Velix is young: where it is behind, the table says so.</p>
         </div>
       </section>
 
@@ -160,7 +156,7 @@ export default function ComparePage() {
         </div>
         <div className="max-w-7xl mx-auto mt-4 text-right">
           <p className="text-xs text-slate-500 font-mono italic">
-            * Benchmarks measured on Apple M2, Node 22, production build.
+            * We have not published benchmarks yet. Run scripts/bench-build.mjs in the repo to measure on your machine. ◐ = partial or requires extra setup.
           </p>
         </div>
       </section>
@@ -177,29 +173,29 @@ export default function ComparePage() {
               name="Next.js" color="bg-black"
               description="The most popular React framework, backed by Vercel. Mature ecosystem with extensive features and enterprise adoption."
               pros={["Massive ecosystem and community", "Excellent Vercel integration", "App Router with React Server Components", "Comprehensive documentation", "Battle-tested at scale"]}
-              cons={["Heavy client-side JavaScript (~85kb)", "Complex configuration for advanced use cases", "Vendor lock-in tendencies with Vercel", "Steep learning curve for newer features"]}
+              cons={["Larger runtime and client JavaScript footprint than islands-based frameworks", "Complex caching and rendering model", "Best experience tied to Vercel-specific features", "Fast-moving APIs"]}
               bestFor="Enterprise apps, teams needing extensive ecosystem support"
             />
             <FrameworkCard
               name="Remix" color="bg-indigo-600"
               description="A full-stack React framework focused on web standards and progressive enhancement. Now part of React Router v7."
               pros={["Excellent data loading patterns", "Strong focus on web standards", "Progressive enhancement by default", "Great error handling with error boundaries"]}
-              cons={["No built-in API routes", "Smaller ecosystem than Next.js", "No middleware support", "No static site generation"]}
+              cons={["Smaller ecosystem than Next.js", "No islands model", "Transition from Remix to React Router 7 can confuse docs and tooling"]}
               bestFor="Apps prioritizing web standards and progressive enhancement"
             />
             <FrameworkCard
               name="Astro" color="bg-orange-600"
               description="A content-focused framework with Islands architecture. Ships zero JavaScript by default and supports multiple UI frameworks."
               pros={["Zero JavaScript by default", "Islands architecture for partial hydration", "Multi-framework support (React, Vue, Svelte)", "Excellent for content-heavy sites"]}
-              cons={["Not ideal for highly interactive apps", "No React 19 support yet", "No server actions", "Limited middleware capabilities"]}
+              cons={["Less suited to highly interactive, app-like UIs", "React is one integration among several, not the core model"]}
               bestFor="Content sites, blogs, marketing pages, documentation"
             />
             <FrameworkCard
               name="Velix" color="bg-gradient-to-br from-velix-accent to-velix-cyan"
-              description="A modern full-stack React framework combining the best ideas from Next.js, Remix, and Astro into a cohesive, fast, and developer-friendly package."
-              pros={["Islands architecture with React 19", "Zero JS by default + partial hydration", "Server actions, API routes, and middleware", "Zero config — works out of the box", "Blazing fast builds with esbuild"]}
-              cons={["Newer framework, smaller community", "Fewer third-party integrations (growing)", "Less battle-tested at massive scale"]}
-              bestFor="Teams wanting the best of all worlds — speed, DX, and modern React features"
+              description="A young server-first React framework borrowing ideas from Next.js, Remix, and Astro: file-based routing, loaders, Server Actions, and islands hydration."
+              pros={["Islands hydration with React 19", "Server Actions, loaders, API routes, and middleware", "Tailwind plugin and scaffolding included", "Incremental build engine (beta) on esbuild"]}
+              cons={["Young project, small community", "No streaming SSR or React Server Components yet", "Node.js runtime only; no edge adapters yet", "Not yet proven in large production apps"]}
+              bestFor="Side projects, prototypes, and teams happy to adopt an early framework and contribute"
             />
           </div>
         </div>
@@ -208,7 +204,7 @@ export default function ComparePage() {
       {/* CTA */}
       <section className="px-6 pb-32">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6">Convinced? <span className="gradient-text">Try Velix today.</span></h2>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6">Curious? <span className="gradient-text">Try Velix.</span></h2>
           <div className="inline-flex items-center gap-3 px-5 py-3 rounded-xl bg-velix-dark/80 border border-white/5 font-mono text-sm mb-8">
             <span className="text-velix-cyan">$</span>
             <span className="text-slate-300">npx create-velix-app my-app</span>

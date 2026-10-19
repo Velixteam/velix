@@ -35,7 +35,7 @@ export default function GettingStartedPage() {
             </svg>
           }
           title="Instant HMR & Speed"
-          description="Powered by native Velix Pack incremental bundler for instant Hot Module Replacement."
+          description="Velix Pack (beta) rebuilds incrementally in development and keeps a persistent cache between runs."
         />
         <FeatureCard
           icon={
@@ -104,7 +104,7 @@ export default function GettingStartedPage() {
 └── velix.config.ts           # Velix Project Configuration`}</CodeBlock>
 
         <Callout type="warning" title="Strict Server Boundaries">
-          Code in <IC>server/</IC> is executed exclusively on Node.js or Edge runtimes and is <strong>never sent to the client browser</strong>. You can safely connect to PostgreSQL, Redis, or use secret API keys without fear of bundle leaks.
+          Code in <IC>server/</IC> is executed on the Node.js server and is <strong>never sent to the client browser</strong>. You can safely connect to PostgreSQL, Redis, or use secret API keys without fear of bundle leaks.
         </Callout>
       </Section>
 
@@ -129,7 +129,7 @@ export default function GettingStartedPage() {
               </tr>
               <tr>
                 <td className="p-3.5 text-[#00e87a] font-bold">velix build</td>
-                <td className="p-3.5 font-sans">Compiles production bundle to out/ directory</td>
+                <td className="p-3.5 font-sans">Builds the production output into the .velix/ directory</td>
               </tr>
               <tr>
                 <td className="p-3.5 text-[#00e87a] font-bold">velix start</td>

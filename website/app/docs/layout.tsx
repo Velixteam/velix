@@ -1,5 +1,8 @@
 import React from 'react';
 import { DocsSidebar } from "../../components/DocsSidebar";
+import { getVelixVersion } from "../../lib/version";
+
+const VERSION = getVelixVersion();
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +16,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#00e87a]/10 text-[#00e87a] border border-[#00e87a]/25 font-mono shadow-[0_0_12px_rgba(0,232,122,0.15)]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00e87a] animate-ping inline-block"></span>
-              v5.3.4 stable
+              v{VERSION}
             </span>
             <span className="text-xs font-medium px-3 py-1 rounded-full bg-[#111211] text-[#8e948c] border border-[#1e201e]">
               React 19 Ready
@@ -32,7 +35,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
             Velix <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00e87a] to-[#00ff87]">Documentation</span>
           </h1>
           <p className="text-base md:text-lg text-[#8e948c] max-w-2xl mb-8 leading-relaxed">
-            Master Velix v5.3 — Next-gen SSR framework with zero-bundle server boundaries, Zod-validated mutations, and instant Edge deployment.
+            Velix v{VERSION} — a server-first React framework with file-based routing, islands, loaders, and Zod-validated Server Actions.
           </p>
 
           {/* Interactive Search Bar */}
@@ -58,7 +61,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
       {/* Main Content Layout */}
       <div className="max-w-7xl mx-auto px-6 py-10 flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-12">
-        <DocsSidebar />
+        <DocsSidebar version={VERSION} />
         <main className="flex-1 min-w-0 max-w-full lg:max-w-3xl pb-24">
           {children}
         </main>

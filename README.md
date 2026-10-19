@@ -10,8 +10,8 @@ Velix is a lightweight but powerful React 19 framework featuring file-based rout
 
 ## ✨ Features
 
-- ⚡ **React 19** — Latest React with Server Components & Actions
-- 📦 **Velix Pack Beta** — Incremental build engine designed specifically for Velix (`--pack`)
+- ⚡ **React 19** — SSR, islands hydration and Server Actions (React Server Components are planned, not implemented)
+- 📦 **Velix Pack Beta** — Incremental build engine on esbuild, still in beta (`--pack`)
 - 🏗️ **Core/React Split** — Clean, decoupled architecture for stability
 - 🚀 **Advanced Caching** — High-performance LRU cache with SWR, TTL, and tags
 - 📁 **File-based Routing** — Intuitive `app/` directory convention
@@ -21,7 +21,7 @@ Velix is a lightweight but powerful React 19 framework featuring file-based rout
 - 🧩 **Plugin System** — Extend with auth, database, analytics, and more
 - 🛠️ **Powerful CLI** — Lazy-loaded CLI to scaffold pages, components, APIs, and more
 - 🔧 **DevTools** — Route explorer, hydration inspector, performance metrics
-- 📦 **Edge Ready** — Deploy to any edge platform
+- 📦 **Node.js runtime** — Runs on Node.js today; edge adapters are planned
 - 🤖 **AI Assistant** — Built-in CLI AI for code generation
 - 🔥 **HMR** — WebSocket-based Hot Module Replacement with Dev Overlay *(v5.2)*
 - 🛤️ **Type-safe API Routes** — `defineRoute` + Zod-powered Server Actions v2 *(v5.2)*
