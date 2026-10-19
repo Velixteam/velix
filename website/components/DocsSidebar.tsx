@@ -33,7 +33,7 @@ function SidebarLink({ href, children, badge }: { href: string; children: React.
   );
 }
 
-export function DocsSidebar() {
+export function DocsSidebar({ version }: { version?: string } = {}) {
   return (
     <>
       {/* Mobile Disclosure Nav */}
@@ -98,7 +98,7 @@ export function DocsSidebar() {
             <div className="p-3.5 rounded-xl border border-[#1e201e] bg-[#111211] flex flex-col gap-2">
               <span className="text-xs font-bold text-white flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-[#00e87a] animate-pulse"></span>
-                Velix v5.3.4
+                Velix{version ? ` v${version}` : ''}
               </span>
               <p className="text-[11px] text-[#8e948c]">Full-stack React framework built for extreme speed & type safety.</p>
               <a

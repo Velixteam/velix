@@ -13,6 +13,7 @@
     "app/**/*.tsx",
     "components/**/*.ts",
     "components/**/*.tsx",
+    "lib/**/*.ts",
     "server/**/*.ts"
   ],
   "exclude": [

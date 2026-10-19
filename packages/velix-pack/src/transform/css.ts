@@ -21,73 +21,69 @@ function hasTailwindDirectives(content: string): boolean {
   );
 }
 
+interface TailwindCli { bin: string; name: string }
+
+/** Walk up from `start` looking for node_modules/<pkg>/package.json. */
+function findPackageDir(start: string, pkg: string): string | null {
+  let dir = path.resolve(start);
+  for (;;) {
+    const candidate = path.join(dir, 'node_modules', pkg);
+    if (fs.existsSync(path.join(candidate, 'package.json'))) return candidate;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
+}
+
 /**
- * Detect which Tailwind CLI is available (v4: @tailwindcss/cli, v3: tailwindcss)
- * Returns null if no CLI is found.
+ * Resolve the locally installed Tailwind CLI (v4: @tailwindcss/cli, v3: tailwindcss) to a JS entry
+ * point, so it can run with the current Node binary. No `npx`: it can hit the network, hang, or
+ * pick a different version than the project depends on.
  */
-function detectTailwindCli(): string | null {
-  const v4 = spawnSync('npx --no-warnings @tailwindcss/cli --help', {
-    stdio: 'pipe',
-    timeout: 10000,
-    shell: true,
-  });
-  if (v4.status === 0) return '@tailwindcss/cli';
-
-  const v3 = spawnSync('npx --no-warnings tailwindcss --help', {
-    stdio: 'pipe',
-    timeout: 10000,
-    shell: true,
-  });
-  if (v3.status === 0) return 'tailwindcss';
-
+function resolveTailwindCli(projectRoot: string): TailwindCli | null {
+  for (const name of ['@tailwindcss/cli', 'tailwindcss']) {
+    const dir = findPackageDir(projectRoot, name);
+    if (!dir) continue;
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8'));
+      const bin = typeof pkg.bin === 'string' ? pkg.bin : pkg.bin?.tailwindcss ?? Object.values(pkg.bin ?? {})[0];
+      if (typeof bin === 'string') return { bin: path.join(dir, bin), name };
+    } catch {
+      /* try the next candidate */
+    }
+  }
   return null;
 }
 
-let _tailwindCli: string | null | undefined = undefined;
-
 export async function transformCSS(filePath: string, content: string): Promise<TransformResultCSS> {
-  // If this CSS has Tailwind directives, compile it via CLI
   if (hasTailwindDirectives(content)) {
-    if (_tailwindCli === undefined) {
-      _tailwindCli = detectTailwindCli();
-    }
-
-    if (_tailwindCli) {
-      const outputPath = path.join(process.cwd(), 'public', 'tailwind.css');
-      const outputDir = path.dirname(outputPath);
-
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-      }
-
-      const result = spawnSync(
-        `npx --no-warnings ${_tailwindCli} -i "${filePath}" -o "${outputPath}"`,
-        { cwd: process.cwd(), stdio: 'pipe', shell: true }
+    const cwd = process.cwd();
+    const cli = resolveTailwindCli(cwd);
+    if (!cli) {
+      throw new Error(
+        `[velix-pack] ${filePath} uses Tailwind directives but no Tailwind CLI is installed. ` +
+          `Install it: npm i -D tailwindcss @tailwindcss/cli`
       );
-
-      if (result.status === 0 && fs.existsSync(outputPath)) {
-        // Return the compiled CSS
-        const compiled = fs.readFileSync(outputPath, 'utf-8');
-        return {
-          code: compiled,
-          imports: [],
-          type: 'shared',
-        };
-      }
     }
 
-    // Fallback: return the raw content (will be served as-is)
-    return {
-      code: content,
-      imports: [],
-      type: 'shared',
-    };
+    const outDir = path.join(cwd, '.velix', 'cache', 'pack');
+    fs.mkdirSync(outDir, { recursive: true });
+    const outputPath = path.join(outDir, 'tailwind.compiled.css');
+
+    const result = spawnSync(process.execPath, [cli.bin, '-i', filePath, '-o', outputPath], {
+      cwd,
+      stdio: 'pipe',
+      timeout: 120000,
+    });
+
+    if (result.status !== 0 || !fs.existsSync(outputPath)) {
+      const detail = (result.stderr?.toString() || result.error?.message || '').trim();
+      throw new Error(`[velix-pack] Tailwind (${cli.name}) failed on ${filePath}:\n${detail}`);
+    }
+
+    return { code: fs.readFileSync(outputPath, 'utf-8'), imports: [], type: 'shared' };
   }
 
   // Standard CSS pass-through
-  return {
-    code: content,
-    imports: [],
-    type: 'shared',
-  };
+  return { code: content, imports: [], type: 'shared' };
 }
