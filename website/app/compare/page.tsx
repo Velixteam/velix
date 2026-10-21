@@ -92,7 +92,7 @@ export default function ComparePage() {
         <div 
           className="absolute inset-0 z-0 opacity-15"
           style={{
-            backgroundImage: "url('/velix.webp')",
+            backgroundImage: "url('/favicon.webp')",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat"
