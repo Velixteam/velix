@@ -18,7 +18,7 @@ export default function FrameworkPage() {
             Everything about <span className="gradient-green-text">Velix</span>
           </h1>
           <p className="text-lg text-[#6b7068] max-w-2xl mx-auto leading-relaxed">
-            Velix is a server-first, TypeScript-first, fullstack React framework designed for high performance, deterministic builds, and clean code separation.
+            Velix is a server-first, TypeScript-first, fullstack React framework designed for clean code separation, fast incremental rebuilds, and a small client footprint.
           </p>
         </div>
 
@@ -40,7 +40,7 @@ export default function FrameworkPage() {
             </div>
             <h3 className="text-xl font-bold text-[#e8ebe5] mb-3">Velix Pack Engine</h3>
             <p className="text-sm text-[#6b7068] leading-relaxed">
-              Incremental dependency module graph with persistent filesystem caching and route-based code splitting.
+              Incremental module graph on top of esbuild, with a persistent filesystem cache. Beta: dev rebuilds are incremental; production bundling is still being moved onto it.
             </p>
           </div>
 
@@ -67,7 +67,7 @@ export default function FrameworkPage() {
               <div>app/page.tsx           → /</div>
               <div>app/about/page.tsx     → /about</div>
               <div>app/blog/[slug]/page.tsx → /blog/:slug</div>
-              <div>app/api/hello/route.ts → GET/POST /api/hello</div>
+              <div>server/api/hello.ts   → /api/hello</div>
             </div>
           </div>
 
@@ -75,7 +75,7 @@ export default function FrameworkPage() {
           <div className="p-8 rounded-2xl bg-[#111211] border border-[#1e201e]">
             <h2 className="text-2xl font-bold text-[#e8ebe5] mb-4">2. Velix Pack Beta Build Engine</h2>
             <p className="text-sm text-[#6b7068] leading-relaxed mb-4">
-              Introduced in Velix 5.3, Velix Pack replaces monolithic bundlers with an incremental module graph:
+              Introduced in Velix 5.3, Velix Pack tracks a module graph so rebuilds only touch what changed (esbuild does the transforms). It is a beta:
             </p>
             <ul className="space-y-3 text-sm text-[#6b7068]">
               <li className="flex items-center gap-3">
@@ -84,11 +84,11 @@ export default function FrameworkPage() {
               </li>
               <li className="flex items-center gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00e87a]"></span>
-                <strong className="text-[#e8ebe5]">Persistent Cache:</strong> Stores compiled modules in <code className="text-[#00e87a]">.velix/cache/pack/</code> for near-zero startup delay.
+                <strong className="text-[#e8ebe5]">Persistent Cache:</strong> Stores compiled modules in <code className="text-[#00e87a]">.velix/cache/pack/</code> to speed up restarts (no published benchmarks yet).
               </li>
               <li className="flex items-center gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00e87a]"></span>
-                <strong className="text-[#e8ebe5]">Boundary Enforcement:</strong> Throws build error if server code is imported in client bundles.
+                <strong className="text-[#e8ebe5]">Boundary Enforcement:</strong> Fails the build when server-only code is imported into a client bundle.
               </li>
             </ul>
           </div>

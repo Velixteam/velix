@@ -33,7 +33,7 @@ function SidebarLink({ href, children, badge }: { href: string; children: React.
   );
 }
 
-export function DocsSidebar() {
+export function DocsSidebar({ version }: { version?: string } = {}) {
   return (
     <>
       {/* Mobile Disclosure Nav */}

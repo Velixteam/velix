@@ -24,13 +24,13 @@ export default function HomePage() {
           {/* Heading */}
           <h1 className="animate-fade-in-up animate-delay-100 text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight leading-[1.08] mb-8 max-w-4xl">
             The fullstack React framework <br />
-            <span className="gradient-green-text">built for speed.</span>
+            <span className="gradient-green-text">server-first, by design.</span>
           </h1>
 
           {/* Description */}
           <p className="animate-fade-in-up animate-delay-200 text-base sm:text-lg text-[#6b7068] max-w-2xl mb-10 leading-relaxed">
-            Build modern applications with a server-first architecture, zero-config tooling
-            and an ecosystem designed around performance.
+            Build applications with a server-first architecture, file-based routing, islands
+            and an incremental build engine (beta).
           </p>
 
           {/* CTA Buttons */}
@@ -73,8 +73,8 @@ export default function HomePage() {
             {[
               { title: "Incremental builds.", desc: "Rebuild only what changed in your application module graph." },
               { title: "Persistent caching.", desc: "Reuse compilation artifacts across cold and warm builds." },
-              { title: "Native server/client aware.", desc: "Strict boundary checking prevents backend leaks to browser." },
-              { title: "Lightning-fast development.", desc: "Near-instant startup and HMR tailored for React 19." },
+              { title: "Server/client aware.", desc: "Server-only code imported into a client bundle fails the build." },
+              { title: "Fast rebuilds.", desc: "Edits re-run only the affected modules; unchanged ones come from the cache. Benchmarks are not published yet." },
             ].map((f, i) => (
               <div key={i} className="p-6 rounded-xl bg-[#111211] border border-[#1e201e] hover:border-[#00e87a]/30 transition-all">
                 <div className="w-2 h-2 rounded-full bg-[#00e87a] mb-4"></div>
@@ -120,16 +120,14 @@ export default function HomePage() {
                 <div className="w-3 h-3 rounded-full bg-[#1e201e]"></div>
                 <div className="w-3 h-3 rounded-full bg-[#1e201e]"></div>
               </div>
-              <span className="mx-auto text-xs font-mono text-[#6b7068]">Terminal — velix dev --pack</span>
+              <span className="mx-auto text-xs font-mono text-[#6b7068]">Terminal — velix dev</span>
             </div>
             <div className="p-6 font-mono text-xs leading-loose text-[#e8ebe5] space-y-1">
               <div>
-                <span className="text-[#00e87a]">$</span> velix dev --pack
+                <span className="text-[#00e87a]">$</span> velix dev
               </div>
-              <div className="text-[#00e87a]">✓ Velix Pack initialized</div>
-              <div className="text-[#00e87a]">✓ Module graph ready</div>
-              <div className="text-[#00e87a]">✓ Cache restored</div>
-              <div className="text-[#00e87a]">✓ Dev server running</div>
+              <div className="text-[#6b7068]">ℹ Starting development server with Velix Pack Beta...</div>
+              <div className="text-[#00e87a]">✔ Ready</div>
               <div className="pt-2 text-[#6b7068]">
                 Local: <span className="text-[#e8ebe5] underline">http://localhost:3000</span>
               </div>
@@ -144,7 +142,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <span className="text-xs font-mono uppercase tracking-widest text-[#00e87a] mb-2 block">Performance</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#e8ebe5] mb-4">
-              Designed for speed from the ground up.
+              Built to rebuild less.
             </h2>
           </div>
 
@@ -161,7 +159,7 @@ export default function HomePage() {
               <div className="text-xs font-mono text-[#00e87a] font-bold uppercase tracking-wider mb-2">CACHED</div>
               <h3 className="text-xl font-bold text-[#e8ebe5] mb-3">Reuse previous compilation work.</h3>
               <p className="text-sm text-[#6b7068] leading-relaxed">
-                Persistent filesystem caching stores transformed modules across cold restarts, enabling near-instant cold startups.
+                Transformed modules are stored on disk in .velix/cache/pack/ and reused across restarts. We have not published cold-start numbers yet.
               </p>
             </div>
 
@@ -169,7 +167,7 @@ export default function HomePage() {
               <div className="text-xs font-mono text-[#00e87a] font-bold uppercase tracking-wider mb-2">SMART</div>
               <h3 className="text-xl font-bold text-[#e8ebe5] mb-3">Understand server and client boundaries.</h3>
               <p className="text-sm text-[#6b7068] leading-relaxed">
-                Native directive detection guarantees server-only logic (`server/`) is never accidentally bundled into browser client code.
+                Directive detection and the app/ vs server/ convention keep server-only logic out of browser bundles.
               </p>
             </div>
 
@@ -177,7 +175,7 @@ export default function HomePage() {
               <div className="text-xs font-mono text-[#00e87a] font-bold uppercase tracking-wider mb-2">FAST</div>
               <h3 className="text-xl font-bold text-[#e8ebe5] mb-3">Designed for Velix from the ground up.</h3>
               <p className="text-sm text-[#6b7068] leading-relaxed">
-                Zero legacy bundle overhead. Built specifically around React 19 Server Components and Islands architecture.
+                Built around server-side rendering with islands hydration for React 19. React Server Components are not implemented yet.
               </p>
             </div>
           </div>
@@ -193,7 +191,7 @@ export default function HomePage() {
               Velix v5.0 vs Velix v5.3
             </h2>
             <p className="text-base text-[#6b7068] max-w-xl mx-auto">
-              How Velix has evolved into a production-grade fullstack ecosystem.
+              What changed between the 5.0 and 5.3 lines.
             </p>
           </div>
 
@@ -210,7 +208,7 @@ export default function HomePage() {
                 <tr>
                   <td className="p-4 font-bold">Build System</td>
                   <td className="p-4 text-[#6b7068]">Monolithic esbuild pass</td>
-                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Velix Pack Beta (Incremental Graph)</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Velix Pack Beta (module graph + cache, esbuild transforms)</td>
                 </tr>
                 <tr>
                   <td className="p-4 font-bold">Server/Client Guard</td>
@@ -220,12 +218,12 @@ export default function HomePage() {
                 <tr>
                   <td className="p-4 font-bold">HMR & DevTools</td>
                   <td className="p-4 text-[#6b7068]">Standard dev reload</td>
-                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Enhanced DevTools with Vitals & HMR WS</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Dev overlay, vitals and HMR over WebSocket</td>
                 </tr>
                 <tr>
                   <td className="p-4 font-bold">Caching Layer</td>
                   <td className="p-4 text-[#6b7068]">Memory LRU only</td>
-                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Persistent FS Cache + Redis Pub/Sub</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Persistent FS cache + optional Redis adapter</td>
                 </tr>
                 <tr>
                   <td className="p-4 font-bold">Error Handling</td>
@@ -235,7 +233,7 @@ export default function HomePage() {
                 <tr>
                   <td className="p-4 font-bold">Project Creation</td>
                   <td className="p-4 text-[#6b7068]">Standard scaffolding</td>
-                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">AI-Native Scaffold + Velix Pack Option</td>
+                  <td className="p-4 text-[#00e87a] font-bold bg-[#00e87a]/5">Scaffold with templates + optional Velix Pack</td>
                 </tr>
               </tbody>
             </table>
@@ -252,7 +250,7 @@ export default function HomePage() {
               The Velix Ecosystem
             </h2>
             <p className="text-base text-[#6b7068] max-w-lg mx-auto">
-              A unified fullstack platform where every layer is designed to work in harmony.
+              The monorepo packages that make up Velix today.
             </p>
           </div>
 
@@ -261,13 +259,24 @@ export default function HomePage() {
             <div className="flex justify-center mb-6">
               <div className="w-px h-8 bg-[#1e201e]"></div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-center font-mono text-xs">
-              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-[#e8ebe5]">Router</div>
-              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-[#e8ebe5]">Server</div>
-              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-[#e8ebe5]">Query</div>
-              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#1e201e] text-[#e8ebe5]">Store</div>
-              <div className="p-4 rounded-xl bg-[#0a0a0a] border border-[#00e87a]/40 text-[#00e87a] font-bold">Pack</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center font-mono text-xs">
+              {[
+                { n: "velix", d: "Server runtime & CLI" },
+                { n: "velix-core", d: "Router, config, plugins" },
+                { n: "velix-react", d: "Client, islands, hooks" },
+                { n: "velix-pack", d: "Incremental build (beta)", hl: true },
+                { n: "create-velix-app", d: "Project scaffolding" },
+                { n: "cache-redis", d: "Optional cache adapter" },
+              ].map((p) => (
+                <div key={p.n} className={`p-4 rounded-xl bg-[#0a0a0a] border ${p.hl ? "border-[#00e87a]/40 text-[#00e87a] font-bold" : "border-[#1e201e] text-[#e8ebe5]"}`}>
+                  <div>{p.n}</div>
+                  <div className="text-[10px] text-[#6b7068] font-normal mt-1">{p.d}</div>
+                </div>
+              ))}
             </div>
+            <p className="text-xs text-[#6b7068] text-center mt-6 font-mono">
+              Velix Query and Velix Store are ideas, not packages yet.
+            </p>
           </div>
         </div>
       </section>
@@ -282,38 +291,44 @@ export default function HomePage() {
             </h2>
           </div>
 
+          <p className="text-center text-sm text-[#6b7068] -mt-10 mb-12 max-w-xl mx-auto">
+            No dates: we list what is shipped, what we are working on, and what is only an idea.
+          </p>
           <div className="space-y-8 font-mono text-sm">
             <div className="p-6 rounded-xl bg-[#111211] border border-[#1e201e]">
-              <div className="text-[#00e87a] font-bold mb-3">VELIX 5.3</div>
+              <div className="text-[#00e87a] font-bold mb-3">SHIPPED</div>
               <div className="space-y-2 text-xs text-[#e8ebe5]">
-                <div>✓ New identity</div>
-                <div>✓ New templates</div>
-                <div>✓ Developer experience</div>
+                <div>✓ File-based routing, loaders, Server Actions, API routes</div>
+                <div>✓ Islands hydration, error and not-found pages</div>
+                <div>✓ Tailwind plugin, image route (optional sharp)</div>
+                <div>● Velix Pack (beta)</div>
               </div>
             </div>
 
             <div className="p-6 rounded-xl bg-[#111211] border border-[#00e87a]/40">
-              <div className="text-[#00e87a] font-bold mb-3">VELIX PACK</div>
+              <div className="text-[#00e87a] font-bold mb-3">NOW — STABILISATION</div>
               <div className="space-y-2 text-xs text-[#00e87a]">
-                <div>● Beta</div>
+                <div>● Hashed assets + manifest for safe caching</div>
+                <div>● End-to-end tests (dev and production)</div>
+                <div>● Real bundling in Velix Pack</div>
               </div>
             </div>
 
             <div className="p-6 rounded-xl bg-[#111211] border border-[#1e201e]">
               <div className="text-[#6b7068] font-bold mb-3">NEXT</div>
               <div className="space-y-2 text-xs text-[#6b7068]">
-                <div>○ Velix Router</div>
-                <div>○ Velix Query</div>
-                <div>○ Velix Store</div>
+                <div>○ Streaming SSR with Suspense and loading.tsx</div>
+                <div>○ Published, reproducible benchmarks</div>
+                <div>○ Edge adapters (Node.js runtime only today)</div>
               </div>
             </div>
 
             <div className="p-6 rounded-xl bg-[#111211] border border-[#1e201e]">
-              <div className="text-[#6b7068] font-bold mb-3">FUTURE</div>
+              <div className="text-[#6b7068] font-bold mb-3">LATER / EXPLORING</div>
               <div className="space-y-2 text-xs text-[#6b7068]">
-                <div>○ Velix DevTools</div>
-                <div>○ Edge runtime improvements</div>
-                <div>○ Advanced compiler optimizations</div>
+                <div>○ React Server Components</div>
+                <div>○ Velix Query / Velix Store</div>
+                <div>○ More AI providers (OpenAI and Ollama today)</div>
               </div>
             </div>
           </div>

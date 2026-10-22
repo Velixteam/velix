@@ -1,5 +1,8 @@
 import React from "react";
 import "./globals.css";
+import { getVelixVersion } from "../lib/version";
+
+const VERSION = getVelixVersion();
 
 export const metadata = {
   title: "Velix — The Fullstack React Framework Built for Speed",
@@ -19,17 +22,17 @@ function Navbar() {
           />
           <span className="text-[#e8ebe5] font-bold text-xl tracking-tight">Velix</span>
           <span className="px-2 py-0.5 rounded-full bg-[#111211] border border-[#1e201e] text-[11px] font-mono text-[#00e87a]">
-            v5.3.7
+            v{VERSION}
           </span>
         </a>
 
         <div className="flex items-center gap-8">
           <a href="/framework" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors font-medium">Framework</a>
           <a href="/docs" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Docs</a>
-          <a href="#pack" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors flex items-center gap-1.5">
+          <a href="/#pack" className="text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors flex items-center gap-1.5">
             Pack <span className="px-1.5 py-0.2 rounded bg-[#00e87a]/10 text-[#00e87a] text-[10px] font-mono">Beta</span>
           </a>
-          <a href="#roadmap" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Roadmap</a>
+          <a href="/#roadmap" className="text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Roadmap</a>
           <a
             href="https://github.com/Velixteam/velix"
             target="_blank"
@@ -59,14 +62,14 @@ function Footer() {
             <h4 className="text-[#e8ebe5] font-semibold text-sm mb-4">Framework</h4>
             <div className="space-y-2">
               <a href="/docs" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Documentation</a>
-              <a href="#architecture" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Architecture</a>
-              <a href="#performance" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Performance</a>
+              <a href="/#architecture" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Architecture</a>
+              <a href="/#performance" className="block text-sm text-[#6b7068] hover:text-[#e8ebe5] transition-colors">Performance</a>
             </div>
           </div>
           <div>
             <h4 className="text-[#e8ebe5] font-semibold text-sm mb-4">Ecosystem</h4>
             <div className="space-y-2">
-              <a href="#pack" className="block text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors">Velix Pack Beta</a>
+              <a href="/#pack" className="block text-sm text-[#6b7068] hover:text-[#00e87a] transition-colors">Velix Pack Beta</a>
               <span className="block text-sm text-[#6b7068]/50">Velix Router (Soon)</span>
               <span className="block text-sm text-[#6b7068]/50">Velix Query (Soon)</span>
             </div>
@@ -91,7 +94,7 @@ function Footer() {
           <p className="text-xs text-[#6b7068]">&copy; 2026 Velix Team. All rights reserved.</p>
           <div className="flex items-center gap-2 text-xs text-[#6b7068] font-mono">
             <span className="w-2 h-2 rounded-full bg-[#00e87a] animate-pulse"></span>
-            Built with Velix v5.3.7 &bull; Powered by <span className="text-[#00e87a] font-semibold">Florynx Labs</span>
+            Built with Velix v{VERSION} &bull; Powered by <span className="text-[#00e87a] font-semibold">Florynx Labs</span>
           </div>
         </div>
       </div>
@@ -110,7 +113,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Geist:wght@300..900&family=Geist+Mono:wght@300..900&display=swap"
           rel="stylesheet"
         />
-        <link rel="stylesheet" href={`/tailwind.css?v=${Date.now()}`} />
+        {/* The compiled stylesheet is injected by Velix (tailwindPlugin adds it to config.styles, hashed in
+            production). The manual <link href="/tailwind.css?v={Date.now()}"> loaded it a second time and
+            changed the URL on every render, which defeated HTTP caching. */}
       </head>
       <body className="bg-[#0a0a0a] text-[#e8ebe5] font-sans antialiased min-h-screen">
         <Navbar />
