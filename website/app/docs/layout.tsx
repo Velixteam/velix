@@ -16,7 +16,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-[#00e87a]/10 text-[#00e87a] border border-[#00e87a]/25 font-mono shadow-[0_0_12px_rgba(0,232,122,0.15)]">
               <span className="w-1.5 h-1.5 rounded-full bg-[#00e87a] animate-ping inline-block"></span>
-              v{VERSION}
+              v5.3.7 stable
             </span>
             <span className="text-xs font-medium px-3 py-1 rounded-full bg-[#111211] text-[#8e948c] border border-[#1e201e]">
               React 19 Ready

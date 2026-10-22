@@ -6,16 +6,35 @@ async function main() {
   const outDir = 'dist';
   if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
 
-  const entries = [
+  const nodeEntries = [
     { in: 'index.ts', out: 'index' },
     { in: 'server/index.ts', out: 'server/index' },
-    { in: 'client/index.ts', out: 'client/index' },
     { in: 'config.ts', out: 'config' },
     { in: 'build/index.ts', out: 'build/index' },
-    { in: 'islands/index.ts', out: 'islands/index' },
     { in: 'runtime/start-dev.ts', out: 'runtime/start-dev' },
     { in: 'runtime/start-prod.ts', out: 'runtime/start-prod' },
     { in: 'runtime/start-build.ts', out: 'runtime/start-build' },
+  ];
+
+  const clientEntries = [
+    { in: 'client/index.ts', out: 'client/index' },
+    { in: 'islands/index.ts', out: 'islands/index' },
+  ];
+
+  const commonExternals = [
+    '@teamvelix/velix-core',
+    '@teamvelix/velix-react',
+    '@teamvelix/velix-pack',
+    'react',
+    'react-dom',
+    'react-dom/client',
+    'react-dom/server',
+    'esbuild',
+    'picocolors',
+    'zod',
+    'lru-cache',
+    'chokidar',
+    'sharp',
   ];
 
   const esmShimBanner = [
@@ -27,7 +46,8 @@ async function main() {
     `const __dirname = __path.dirname(__filename);`,
   ].join('\n');
 
-  await Promise.all(entries.map(e => esbuild.build({
+  // Build Node entries (with shim banner)
+  await Promise.all(nodeEntries.map(e => esbuild.build({
     entryPoints: [e.in],
     outfile: `dist/${e.out}.js`,
     bundle: true,
@@ -36,19 +56,19 @@ async function main() {
     target: 'node18',
     sourcemap: true,
     banner: { js: esmShimBanner },
-    external: [
-      '@teamvelix/velix-core',
-      '@teamvelix/velix-react',
-      '@teamvelix/velix-pack',
-      'react',
-      'react-dom',
-      'esbuild',
-      'picocolors',
-      'zod',
-      'lru-cache',
-      'chokidar',
-      'sharp',
-    ],
+    external: commonExternals,
+  })));
+
+  // Build Client entries (browser-safe: no Node shims!)
+  await Promise.all(clientEntries.map(e => esbuild.build({
+    entryPoints: [e.in],
+    outfile: `dist/${e.out}.js`,
+    bundle: true,
+    format: 'esm',
+    platform: 'neutral',
+    target: ['es2022'],
+    sourcemap: true,
+    external: commonExternals,
   })));
 
   try {

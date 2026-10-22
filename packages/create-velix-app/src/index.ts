@@ -131,8 +131,8 @@ function generateTemplate(dir: string, name: string, template: string, useTailwi
       build: usePack ? 'velix build --pack' : 'velix build',
       start: 'velix start'
     },
-    dependencies: { '@teamvelix/velix': 'latest', react: '^19.0.0', 'react-dom': '^19.0.0' },
-    devDependencies: { '@teamvelix/cli': 'latest', '@teamvelix/velix-pack': '^0.1.0-beta.1', typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
+    dependencies: { '@teamvelix/velix': 'latest', '@teamvelix/cli': 'latest', react: '^19.0.0', 'react-dom': '^19.0.0' },
+    devDependencies: { '@teamvelix/velix-pack': '^0.1.0-beta.1', typescript: '^5.7.0', '@types/react': '^19.0.0', '@types/react-dom': '^19.0.0' },
   };
 
   if (useTailwind) {

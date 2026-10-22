@@ -60,12 +60,20 @@ export async function startCommand() {
     process.exit(1);
   }
 
-  const child = spawn(`npx tsx "${prodScript}"`, {
+  const isTs = prodScript.endsWith('.ts');
+  const runner = isTs ? `npx tsx "${prodScript}"` : `"${process.execPath}" "${prodScript}"`;
+  const child = spawn(runner, {
     stdio: 'inherit', cwd, shell: true,
   });
 
   child.on('error', (err) => {
     log.error(`Failed to start production server: ${err.message}`);
     process.exit(1);
+  });
+
+  child.on('close', (code) => {
+    if (code !== 0 && code !== null) {
+      process.exit(code);
+    }
   });
 }

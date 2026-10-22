@@ -69,8 +69,12 @@ export {
   defineLoader,
   serverAction,
   buildApiManifest,
-  handleApiRequest
+  handleApiRequest,
+  loadAssetManifest,
+  type VelixManifest,
 } from '@teamvelix/velix-core';
+import { loadAssetManifest, type VelixManifest } from '@teamvelix/velix-core';
+
 
 function getProjectVersion(dep: string, projectRoot: string): string {
   try {
@@ -149,7 +153,15 @@ export async function createServer(options: {
 
   // Build route tree
   const appDir = (config as unknown as { resolvedAppDir?: string }).resolvedAppDir || path.join(projectRoot, 'app');
+  const outDir = (config as unknown as { resolvedOutDir?: string }).resolvedOutDir || path.join(projectRoot, 'dist');
   const routes = buildRouteTree(appDir);
+
+  // Load manifest strictly (deterministic, fails loudly in production)
+  const manifest = await loadAssetManifest(isDev ? 'development' : 'production', projectRoot, {
+    outDir,
+    appDir,
+    config: rawConfig,
+  });
 
   // Plugin hook: routes loaded
   await pluginManager.runHook(PluginHooks.ROUTES_LOADED, routes);
@@ -205,17 +217,29 @@ export async function createServer(options: {
       }
 
       if (pathname.startsWith('/__velix/')) {
-        await serveVelixInternal(pathname, req, res, projectRoot);
+        await serveVelixInternal(pathname, req, res, projectRoot, isDev);
         return;
       }
 
       // ── Static files ──
-      const distPublic = path.join(projectRoot, 'dist', 'public');
-      const defaultPublic = (!isDev && fs.existsSync(distPublic)) ? distPublic : path.join(projectRoot, 'public');
-      const publicDir = (config as unknown as { resolvedPublicDir?: string }).resolvedPublicDir || defaultPublic;
-      if (await serveStaticFile(pathname, publicDir, res, isDev)) {
-        if (isDev) logger.request(req.method || 'GET', pathname, 200, Date.now() - requestStart, { type: 'static' });
-        return;
+      if (isDev) {
+        const publicDir = (config as unknown as { resolvedPublicDir?: string }).resolvedPublicDir || path.join(projectRoot, 'public');
+        if (await serveStaticFile(pathname, publicDir, res, isDev)) {
+          logger.request(req.method || 'GET', pathname, 200, Date.now() - requestStart, { type: 'static' });
+          return;
+        }
+      } else {
+        // Production: serve dist/client and dist/public ONLY
+        if (pathname.startsWith('/client/')) {
+          const clientRel = pathname.replace(/^\/client\//, '');
+          if (await serveStaticFile(clientRel, path.join(outDir, 'client'), res, isDev)) {
+            return;
+          }
+        } else {
+          if (await serveStaticFile(pathname, path.join(outDir, 'public'), res, isDev)) {
+            return;
+          }
+        }
       }
 
       // ── API routes ──
@@ -229,7 +253,7 @@ export async function createServer(options: {
       // ── Page routes (SSR) ──
       const pageMatch = matchRoute(pathname, routes.appRoutes);
       if (pageMatch) {
-        await handlePageRoute(pageMatch, routes, req, res, url, config, isDev, projectRoot);
+        await handlePageRoute(pageMatch, routes, req, res, url, config, isDev, projectRoot, manifest);
         if (isDev) logger.request(req.method || 'GET', pathname, res.statusCode, Date.now() - requestStart, { type: 'ssr' });
         return;
       }
@@ -505,7 +529,8 @@ async function handleServerAction(req: http.IncomingMessage, res: http.ServerRes
 async function handlePageRoute(
   route: Route, routes: { appRoutes: { path: string }[] },
   req: http.IncomingMessage, res: http.ServerResponse,
-  url: URL, config: VelixConfig, isDev: boolean, projectRoot: string
+  url: URL, config: VelixConfig, isDev: boolean, projectRoot: string,
+  manifest: VelixManifest
 ) {
   try {
     const mod = await importModuleSSR(route.filePath, isDev) as { default?: React.ComponentType<unknown>; metadata?: Record<string, unknown>; generateMetadata?: (params: unknown) => Record<string, unknown> };
@@ -560,7 +585,7 @@ async function handlePageRoute(
 
     // Get islands for hydration
     const islands = getRegisteredIslands();
-    const hydrationScript = generateAdvancedHydrationScript(islands);
+    const hydrationScript = generateAdvancedHydrationScript(islands, manifest.islands);
     
     const reactVersion = getProjectVersion('react', projectRoot);
     const tsVersion = getProjectVersion('typescript', projectRoot);
@@ -575,11 +600,13 @@ async function handlePageRoute(
       tsVersion
     });
 
+    const routeStyles = manifest.routes[route.path]?.css || [];
     const headInjections = `
     <meta charset="utf-8">
     ${metaTags}
     ${config.favicon ? `<link rel="icon" href="${config.favicon}">` : ''}
-    ${config.styles.map(s => `<link rel="stylesheet" href="${s}">`).join('\n    ')}
+    ${manifest.styles.map(s => `<link rel="stylesheet" href="${s}">`).join('\n    ')}
+    ${routeStyles.map(s => `<link rel="stylesheet" href="${s}">`).join('\n    ')}
     `;
     // ── Resolve Error Boundaries ──
     const { resolveErrorBoundary, getErrorBoundaryType } = await import('@teamvelix/velix-core');
@@ -716,7 +743,7 @@ async function handlePageRoute(
   }
 }
 
-async function serveVelixInternal(pathname: string, req: http.IncomingMessage, res: http.ServerResponse, projectRoot: string) {
+async function serveVelixInternal(pathname: string, req: http.IncomingMessage, res: http.ServerResponse, projectRoot: string, isDev: boolean = false) {
   // HMR endpoint for dev mode
   if (pathname === '/__velix/hmr') {
     res.writeHead(200, {
@@ -824,8 +851,13 @@ async function serveVelixInternal(pathname: string, req: http.IncomingMessage, r
     }
   }
 
-  // Dynamic Island Serving
+  // Dynamic Island Serving (Development only)
   if (pathname.startsWith('/__velix/islands/') && pathname.endsWith('.js')) {
+    if (!isDev) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('Not found: dynamic island bundling is disabled in production');
+      return;
+    }
     const componentName = pathname.replace('/__velix/islands/', '').replace('.js', '');
     try {
       // Find the component file
