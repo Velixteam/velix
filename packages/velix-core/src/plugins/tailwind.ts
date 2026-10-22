@@ -98,12 +98,73 @@ function checkMisplacedImports(outputPath: string) {
   } catch {}
 }
 
+export function compileTailwindHashed(
+  projectRoot: string,
+  options: TailwindPluginOptions & { outDir?: string } = {}
+): { hashedFileName: string; hashedUrl: string; hash: string; outputPath: string } {
+  const rawInput = options.input ?? './app/globals.css';
+  const input = path.resolve(projectRoot, rawInput);
+  const outDir = options.outDir ? path.resolve(projectRoot, options.outDir) : path.join(projectRoot, 'dist');
+  const distPublic = path.join(outDir, 'public');
+
+  if (!fs.existsSync(input)) {
+    const msg = `[velix:tailwind] build: input file not found: ${input}`;
+    logger.error(msg);
+    throw new Error(msg);
+  }
+
+  const { cmd } = detectTailwindCli(projectRoot);
+  fs.mkdirSync(distPublic, { recursive: true });
+
+  // Compile to a temporary file in distPublic
+  const tempOutput = path.join(distPublic, `.temp-tailwind-${Date.now()}.css`);
+
+  let command = `${cmd} -i "${input}" -o "${tempOutput}"`;
+  if (options.minify !== false) command += ' --minify';
+
+  const result = spawnSync(command, {
+    stdio: 'pipe',
+    cwd: projectRoot,
+    shell: true,
+  });
+
+  const stderr = result.stderr?.toString().trim() || '';
+  const stdout = result.stdout?.toString().trim() || '';
+
+  if (result.status !== 0 || result.error) {
+    if (fs.existsSync(tempOutput)) fs.unlinkSync(tempOutput);
+    logger.error(
+      `[velix:tailwind] build failed (exit ${result.status ?? 'signal'}):\n` +
+      (stderr || stdout || result.error?.message || '(no output)')
+    );
+    throw result.error ?? new Error(`Tailwind exited with code ${result.status}: ${stderr || stdout}`);
+  }
+
+  assertOutputExists(tempOutput, 'build');
+  checkMisplacedImports(tempOutput);
+
+  const cssContent = fs.readFileSync(tempOutput);
+  const hash = crypto.createHash('sha256').update(cssContent).digest('hex').slice(0, 8);
+  const hashedFileName = `tailwind.${hash}.css`;
+  const hashedOutput = path.join(distPublic, hashedFileName);
+
+  fs.renameSync(tempOutput, hashedOutput);
+
+  logger.success(`Tailwind CSS built & hashed → ${path.relative(projectRoot, hashedOutput)}`);
+
+  return {
+    hashedFileName,
+    hashedUrl: `/${hashedFileName}`,
+    hash,
+    outputPath: hashedOutput,
+  };
+}
+
 export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
   const rawInput  = options.input  ?? './app/globals.css';
   const rawOutput = options.output ?? './public/tailwind.css';
 
   let cliResolved: ReturnType<typeof detectTailwindCli> | null = null;
-  let activeConfig: import('../config.js').VelixConfig | null = null;
 
   function getCli(projectRoot: string) {
     if (!cliResolved) cliResolved = detectTailwindCli(projectRoot);
@@ -120,81 +181,17 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
   return definePlugin({
     name: 'velix:tailwind',
     hooks: {
-      [PluginHooks.CONFIG]: (configArg: unknown) => {
-        const config = configArg as import('../config.js').VelixConfig;
-        activeConfig = config;
-        const relOut = rawOutput.replace(/^\.\//, '').replace(/^public\//, '');
-        const stylePath = relOut.startsWith('/') ? relOut : `/${relOut}`;
-        if (!config.styles) config.styles = [];
-        if (!config.styles.includes(stylePath)) {
-          config.styles.push(stylePath);
-        }
+      [PluginHooks.CONFIG]: () => {
+        // No-op: styles are managed deterministically via the manifest
       },
 
       [PluginHooks.BUILD_START]: async () => {
         const projectRoot = process.cwd();
-        const config = activeConfig;
-        const { input, output } = resolvePaths(projectRoot);
-        const { cmd } = getCli(projectRoot);
-
-        logger.info('Building Tailwind CSS (production)…');
-
-        if (!fs.existsSync(input)) {
-          const msg = `[velix:tailwind] build: input file not found: ${input}`;
-          logger.error(msg);
-          throw new Error(msg);
-        }
-
-        fs.mkdirSync(path.dirname(output), { recursive: true });
-
-        let command = `${cmd} -i "${input}" -o "${output}"`;
-        if (options.minify !== false) command += ' --minify';
-
-        const result = spawnSync(command, {
-          stdio: 'pipe',
-          cwd: projectRoot,
-          shell: true,
+        compileTailwindHashed(projectRoot, {
+          input: rawInput,
+          minify: options.minify,
+          outDir: 'dist',
         });
-
-        const stderr = result.stderr?.toString().trim() || '';
-        const stdout = result.stdout?.toString().trim() || '';
-
-        if (result.status !== 0 || result.error) {
-          logger.error(
-            `[velix:tailwind] build failed (exit ${result.status ?? 'signal'}):\n` +
-            (stderr || stdout || result.error?.message || '(no output)')
-          );
-          throw result.error ?? new Error(`Tailwind exited with code ${result.status}`);
-        }
-
-        assertOutputExists(output, 'build');
-        checkMisplacedImports(output);
-
-        try {
-          const cssContent = fs.readFileSync(output);
-          const hash = crypto.createHash('md5').update(cssContent).digest('hex').slice(0, 8);
-          const ext = path.extname(output);
-          const baseName = path.basename(output, ext);
-          const hashedFileName = `${baseName}.${hash}${ext}`;
-          const hashedOutput = path.join(path.dirname(output), hashedFileName);
-          fs.writeFileSync(hashedOutput, cssContent);
-
-          const relOut = rawOutput.replace(/^\.\//, '').replace(/^public\//, '');
-          const unhashedStyle = relOut.startsWith('/') ? relOut : `/${relOut}`;
-          const hashedStyle = path.posix.join(path.posix.dirname(unhashedStyle), hashedFileName);
-
-          if (config && config.styles) {
-            const idx = config.styles.indexOf(unhashedStyle);
-            if (idx !== -1) {
-              config.styles[idx] = hashedStyle;
-            } else if (!config.styles.includes(hashedStyle)) {
-              config.styles.push(hashedStyle);
-            }
-          }
-          logger.success(`Tailwind CSS built & hashed → ${path.relative(projectRoot, hashedOutput)}`);
-        } catch (err: any) {
-          logger.warn(`[velix:tailwind] could not generate hashed CSS: ${err?.message}`);
-        }
       },
 
       [PluginHooks.SERVER_START]: async (context: { config: import('../config.js').VelixConfig; isDev: boolean; projectRoot: string }, isDev: boolean) => {

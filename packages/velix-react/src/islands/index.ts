@@ -8,7 +8,6 @@
  */
 
 import React from 'react';
-import crypto from 'crypto';
 
 // Island registry for tracking all islands in a render
 const islandRegistry = new Map();
@@ -122,12 +121,16 @@ export function createLazyIsland(Component: React.ComponentType<Record<string, u
 /**
  * Generates the client-side hydration script for islands
  */
-export function generateHydrationScript(islands: Array<{ id: string; name: string; clientPath: string; props: Record<string, unknown> }>): string {
+export function generateHydrationScript(
+  islands: Array<{ id: string; name: string; clientPath: string; props: Record<string, unknown> }>,
+  manifestIslands?: Record<string, string>
+): string {
   if (!islands.length) return '';
 
   const islandData = islands.map((island) => ({
     id: island.id, name: island.name,
-    path: island.clientPath, props: island.props
+    path: (manifestIslands && manifestIslands[island.name]) ? manifestIslands[island.name] : island.clientPath,
+    props: island.props
   }));
 
   return `
@@ -162,11 +165,15 @@ export function generateHydrationScript(islands: Array<{ id: string; name: strin
 /**
  * Generates advanced hydration script with loading strategies
  */
-export function generateAdvancedHydrationScript(islands: Array<{ id: string; name: string; clientPath: string; props: Record<string, unknown>; strategy?: string; media?: string | null }>): string {
+export function generateAdvancedHydrationScript(
+  islands: Array<{ id: string; name: string; clientPath: string; props: Record<string, unknown>; strategy?: string; media?: string | null }>,
+  manifestIslands?: Record<string, string>
+): string {
   if (!islands.length) return '';
 
   const islandData = islands.map((island) => ({
-    id: island.id, name: island.name, path: island.clientPath,
+    id: island.id, name: island.name,
+    path: (manifestIslands && manifestIslands[island.name]) ? manifestIslands[island.name] : island.clientPath,
     props: island.props, strategy: island.strategy || LoadStrategy.IMMEDIATE,
     media: island.media
   }));

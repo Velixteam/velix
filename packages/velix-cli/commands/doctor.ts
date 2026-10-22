@@ -8,6 +8,7 @@ import { execSync } from 'child_process';
 import pc from 'picocolors';
 import { VERSION } from '../version.js';
 import { showBanner, log } from './shared.js';
+import { ManifestSchema } from '@teamvelix/velix-core';
 
 interface DiagnosticResult {
   name: string;
@@ -80,8 +81,16 @@ export async function doctorCommand() {
   }
 
   const publicCssPath = path.join(cwd, 'public', 'tailwind.css');
-  const distCssPath = path.join(cwd, 'dist', 'public', 'tailwind.css');
-  const cssOutputPath = fs.existsSync(distCssPath) ? distCssPath : (fs.existsSync(publicCssPath) ? publicCssPath : null);
+  let distCssPath: string | null = null;
+  const distPublicDir = path.join(cwd, 'dist', 'public');
+  if (fs.existsSync(distPublicDir)) {
+    try {
+      const files = fs.readdirSync(distPublicDir);
+      const cssFile = files.find(f => f.startsWith('tailwind') && f.endsWith('.css'));
+      if (cssFile) distCssPath = path.join(distPublicDir, cssFile);
+    } catch {}
+  }
+  const cssOutputPath = distCssPath || (fs.existsSync(publicCssPath) ? publicCssPath : null);
 
   if (cssOutputPath) {
     const outputStat = fs.statSync(cssOutputPath);
@@ -128,29 +137,106 @@ export async function doctorCommand() {
     results.push({ name: 'Compiled CSS output', status: 'warn', message: 'public/tailwind.css not generated yet (run velix build or velix dev)' });
   }
 
-  // 6. Declared styles exist
-  // Inspect velix.config.ts if present
-  let configStyles: string[] = ['/tailwind.css'];
-  try {
-    const configContent = fs.existsSync(path.join(cwd, 'velix.config.ts')) ? fs.readFileSync(path.join(cwd, 'velix.config.ts'), 'utf8') : '';
-    const stylesMatch = configContent.match(/styles\s*:\s*\[([\s\S]*?)\]/);
-    if (stylesMatch) {
-      configStyles = stylesMatch[1].split(',').map(s => s.replace(/['"\s]/g, '')).filter(Boolean);
-    }
-  } catch {}
+  // 6. Build Manifest Verification (dist/manifest.json)
+  const distDir = path.join(cwd, 'dist');
+  if (fs.existsSync(distDir)) {
+    const manifestPath = path.join(distDir, 'manifest.json');
+    if (!fs.existsSync(manifestPath)) {
+      results.push({
+        name: 'Build manifest (dist/manifest.json)',
+        status: 'fail',
+        message: 'dist/manifest.json is missing. Run `velix build` to generate the production manifest.',
+      });
+    } else {
+      try {
+        const raw = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        const parseResult = ManifestSchema.safeParse(raw);
+        if (!parseResult.success) {
+          results.push({
+            name: 'Build manifest schema',
+            status: 'fail',
+            message: `dist/manifest.json failed schema validation: ${parseResult.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ')}`,
+          });
+        } else {
+          const manifest = parseResult.data;
+          const missingFiles: string[] = [];
+          let totalChecked = 0;
 
-  let allStylesExist = true;
-  for (const styleUrl of configStyles) {
-    const rel = styleUrl.startsWith('/') ? styleUrl.slice(1) : styleUrl;
-    const loc1 = path.join(cwd, 'public', rel);
-    const loc2 = path.join(cwd, 'dist', 'public', rel);
-    if (!fs.existsSync(loc1) && !fs.existsSync(loc2)) {
-      allStylesExist = false;
-      results.push({ name: `Declared style ${styleUrl}`, status: 'warn', message: `File does not exist in public/ or dist/public/` });
+          // Routes
+          for (const [rPath, rEntry] of Object.entries(manifest.routes)) {
+            totalChecked++;
+            if (!fs.existsSync(path.join(distDir, rEntry.serverFile))) {
+              missingFiles.push(`route ${rPath} (${rEntry.serverFile})`);
+            }
+            for (const layout of rEntry.layouts) {
+              totalChecked++;
+              if (!fs.existsSync(path.join(distDir, layout))) {
+                missingFiles.push(`layout (${layout})`);
+              }
+            }
+            for (const chunk of rEntry.clientChunks) {
+              totalChecked++;
+              if (!fs.existsSync(path.join(distDir, chunk))) {
+                missingFiles.push(`client chunk (${chunk})`);
+              }
+            }
+          }
+
+          // Islands
+          for (const [islandName, islandPath] of Object.entries(manifest.islands)) {
+            totalChecked++;
+            const rel = islandPath.startsWith('/') ? islandPath.slice(1) : islandPath;
+            if (!fs.existsSync(path.join(distDir, rel))) {
+              missingFiles.push(`island ${islandName} (${islandPath})`);
+            }
+          }
+
+          // Styles
+          for (const style of manifest.styles) {
+            totalChecked++;
+            const rel = style.startsWith('/') ? style.slice(1) : style;
+            if (!fs.existsSync(path.join(distDir, 'public', rel))) {
+              missingFiles.push(`style (${style})`);
+            }
+          }
+
+          // Assets
+          for (const assetPath of Object.keys(manifest.assets)) {
+            totalChecked++;
+            const rel = assetPath.startsWith('/') ? assetPath.slice(1) : assetPath;
+            if (!fs.existsSync(path.join(distDir, 'public', rel))) {
+              missingFiles.push(`asset (${assetPath})`);
+            }
+          }
+
+          if (missingFiles.length > 0) {
+            results.push({
+              name: 'Build manifest consistency',
+              status: 'fail',
+              message: `Manifest references ${missingFiles.length} missing file(s): ${missingFiles.slice(0, 3).join(', ')}${missingFiles.length > 3 ? '...' : ''}`,
+            });
+          } else {
+            results.push({
+              name: 'Build manifest & referenced files',
+              status: 'pass',
+              detail: `Schema v${manifest.schemaVersion}, buildId: ${manifest.buildId.slice(0, 8)}, ${totalChecked} files verified`,
+            });
+          }
+        }
+      } catch (err: unknown) {
+        results.push({
+          name: 'Build manifest parsing',
+          status: 'fail',
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
     }
-  }
-  if (allStylesExist && configStyles.length > 0) {
-    results.push({ name: 'Declared styles verification', status: 'pass', detail: `${configStyles.length} style(s) verified` });
+  } else {
+    results.push({
+      name: 'Build manifest',
+      status: 'warn',
+      message: 'dist/ directory not found (run `velix build` to test production manifest)',
+    });
   }
 
   // 7. Accessibility of /__velix/hmr-client.js
@@ -158,8 +244,13 @@ export async function doctorCommand() {
   const hmrCandidates = [
     path.join(cwd, 'node_modules', '@teamvelix', 'velix-react', 'dist', 'hmr-client.js'),
     path.join(cwd, 'node_modules', '@teamvelix', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+    path.join(cwd, 'node_modules', '@teamvelix', 'velix', 'dist', 'hmr-client.js'),
     path.join(cwd, 'packages', 'velix-react', 'dist', 'hmr-client.js'),
     path.join(cwd, 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+    path.join(cwd, 'packages', 'velix', 'dist', 'hmr-client.js'),
+    path.join(cwd, '..', 'packages', 'velix-react', 'dist', 'hmr-client.js'),
+    path.join(cwd, '..', 'packages', 'velix-react', 'src', 'hmr', 'hmr-client.ts'),
+    path.join(cwd, '..', 'packages', 'velix', 'dist', 'hmr-client.js'),
   ];
   for (const c of hmrCandidates) {
     if (fs.existsSync(c)) {
@@ -174,19 +265,53 @@ export async function doctorCommand() {
 
   // 8. Single copy of react / react-dom
   try {
-    let duplicateReact = false;
-    const whyReact = execSync('pnpm why react', { cwd, stdio: 'pipe' }).toString();
-    const matches = whyReact.match(/react\s+([\d.]+)/g);
-    const uniqueVersions = new Set(matches?.map(m => m.trim()));
-    if (uniqueVersions.size > 1) {
-      duplicateReact = true;
+    const nodeModulesDir = path.join(cwd, 'node_modules');
+    const reactVersions = new Set<string>();
+    const reactDomVersions = new Set<string>();
+
+    function findPkgVersions(dir: string, depth = 0) {
+      if (depth > 4 || !fs.existsSync(dir)) return;
+      try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            const full = path.join(dir, entry.name);
+            if (entry.name === 'react') {
+              const p = path.join(full, 'package.json');
+              if (fs.existsSync(p)) {
+                try { reactVersions.add(JSON.parse(fs.readFileSync(p, 'utf8')).version); } catch {}
+              }
+            } else if (entry.name === 'react-dom') {
+              const p = path.join(full, 'package.json');
+              if (fs.existsSync(p)) {
+                try { reactDomVersions.add(JSON.parse(fs.readFileSync(p, 'utf8')).version); } catch {}
+              }
+            } else if (entry.name.startsWith('@') || entry.name === '.pnpm') {
+              findPkgVersions(full, depth + 1);
+            }
+          }
+        }
+      } catch {}
+    }
+
+    if (fs.existsSync(nodeModulesDir)) {
+      findPkgVersions(nodeModulesDir);
+    }
+
+    if (reactVersions.size > 1 || reactDomVersions.size > 1) {
       results.push({
         name: 'React instance deduplication',
         status: 'warn',
-        message: `Multiple react versions detected: ${Array.from(uniqueVersions).join(', ')} (may cause Invalid Hook Call)`
+        message: `Multiple react versions detected (react: ${Array.from(reactVersions).join(', ')}; react-dom: ${Array.from(reactDomVersions).join(', ')})`,
+      });
+    } else if (reactVersions.size === 1) {
+      results.push({
+        name: 'React instance deduplication',
+        status: 'pass',
+        detail: `Single React v${Array.from(reactVersions)[0]} & ReactDOM verified`,
       });
     } else {
-      results.push({ name: 'React instance deduplication', status: 'pass', detail: 'Single React version resolved' });
+      results.push({ name: 'React instance deduplication', status: 'pass', detail: 'React resolved' });
     }
   } catch {
     results.push({ name: 'React instance deduplication', status: 'pass', detail: 'React resolved' });

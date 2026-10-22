@@ -38,7 +38,7 @@ const BuildConfigSchema = z.object({
   minify: z.boolean().default(true),
   sourcemap: z.boolean().default(true),
   splitting: z.boolean().default(true),
-  outDir: z.string().default('.velix'),
+  outDir: z.string().default('dist'),
 }).default({});
 
 const ExperimentalConfigSchema = z.object({
