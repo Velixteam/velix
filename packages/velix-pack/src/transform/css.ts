@@ -177,7 +177,6 @@ async function applyPostcss(
   let config;
   try {
     config = await loadPostcssConfig(
-      {},
       { env: process.env.NODE_ENV ?? 'development' },
       projectRoot
     );
