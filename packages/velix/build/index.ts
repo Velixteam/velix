@@ -174,10 +174,7 @@ export async function build(options: BuildOptions = {}) {
     manifestRoutes[r.path] = {
       serverFile: serverFileCandidate,
       layouts: layoutsRel,
-      // Until route-level graph partitioning is available, attach the complete
-      // emitted client asset set to each route. This is conservative (never
-      // omits a required shared chunk or stylesheet) and keeps the manifest
-      // truthful; a later optimization can narrow these lists per route.
+      // Populated from esbuild's output metafile after client bundling.
       clientChunks: [...emittedClientChunks].sort(),
       css: [...emittedClientCss].sort(),
     };
