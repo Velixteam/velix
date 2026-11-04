@@ -119,6 +119,7 @@ export async function build(options: BuildOptions = {}) {
 
   const appDir = resolved.resolvedAppDir;
   const routes = buildRouteTree(appDir);
+  let serverMetafile: ClientMetafile | undefined;
 
   // Collect source files for server bundle
   const sourceFiles = findFiles(appDir, /\.(tsx?|jsx?)$/);
@@ -143,6 +144,10 @@ export async function build(options: BuildOptions = {}) {
       logLevel: 'silent',
       treeShaking: true,
       legalComments: 'none',
+      metafile: true,
+    }).then(result => {
+      serverMetafile = result.metafile;
+      return result;
     });
 
     logger.success('Server bundle built');
@@ -194,16 +199,17 @@ type ClientMetafile = {
  */
 export function collectRouteClientAssets(
   routes: Array<{ path: string; sourceFiles: string[] }>,
-  metafile: ClientMetafile,
+  dependencyMetafile: Pick<ClientMetafile, 'inputs'>,
+  clientMetafile: Pick<ClientMetafile, 'outputs'>,
   projectRoot: string,
   clientOutDir: string
 ): Record<string, { clientChunks: string[]; css: string[] }> {
   const inputByAbsolutePath = new Map<string, string>();
-  for (const inputKey of Object.keys(metafile.inputs)) {
+  for (const inputKey of Object.keys(dependencyMetafile.inputs)) {
     inputByAbsolutePath.set(path.resolve(projectRoot, inputKey), inputKey);
   }
 
-  const outputAssets = Object.entries(metafile.outputs).map(([outputKey, output]) => ({
+  const outputAssets = Object.entries(clientMetafile.outputs).map(([outputKey, output]) => ({
     output,
     absolutePath: path.resolve(projectRoot, outputKey),
     inputKeys: Object.keys(output.inputs ?? {}),
@@ -222,7 +228,7 @@ export function collectRouteClientAssets(
       if (reachable.has(inputKey)) continue;
       reachable.add(inputKey);
 
-      const input = metafile.inputs[inputKey];
+      const input = dependencyMetafile.inputs[inputKey];
       for (const imported of input?.imports ?? []) {
         if (imported.external) continue;
         const resolved = path.resolve(path.dirname(path.resolve(projectRoot, inputKey)), imported.path);
@@ -323,12 +329,13 @@ export function collectRouteClientAssets(
 
   // Route asset lists are finalized from the client metafile after bundling.
 
-  if (clientMetafile) {
+  if (serverMetafile && clientMetafile) {
     const routeAssets = collectRouteClientAssets(
       routes.appRoutes.map(route => ({
         path: route.path,
         sourceFiles: [route.filePath, ...collectLayouts(route.filePath, appDir)],
       })),
+      serverMetafile,
       clientMetafile,
       projectRoot,
       clientOutDir
