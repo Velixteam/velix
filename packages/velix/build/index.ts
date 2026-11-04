@@ -154,6 +154,8 @@ export async function build(options: BuildOptions = {}) {
 
   // Build route manifest entries
   const manifestRoutes: Record<string, RouteManifestEntry> = {};
+  const emittedClientChunks = new Set<string>();
+  const emittedClientCss = new Set<string>();
   for (const r of routes.appRoutes) {
     const relFromApp = path.relative(appDir, r.filePath).replace(/\.(tsx?|jsx?)$/, '.js');
     const serverFilePath = path.join('server', 'app', relFromApp).replace(/\\/g, '/');
@@ -204,8 +206,6 @@ export async function build(options: BuildOptions = {}) {
   });
 
   const manifestIslands: Record<string, string> = {};
-  const emittedClientChunks = new Set<string>();
-  const emittedClientCss = new Set<string>();
 
   if (clientFiles.length > 0) {
     try {
@@ -234,7 +234,7 @@ export async function build(options: BuildOptions = {}) {
       if (clientResult.metafile) {
         for (const [outPath, outData] of Object.entries(clientResult.metafile.outputs)) {
           const absoluteOutput = path.resolve(projectRoot, outPath);
-          const relativeOutput = path.relative(clientOutDir, absoluteOutput).replace(/\\\\/g, '/');
+          const relativeOutput = path.relative(clientOutDir, absoluteOutput).split(path.sep).join('/');
           // Ignore outputs outside clientOutDir; only publish paths owned by this build.
           if (relativeOutput && !relativeOutput.startsWith('../') && !path.isAbsolute(relativeOutput)) {
             if (/\\.css$/i.test(relativeOutput)) {
