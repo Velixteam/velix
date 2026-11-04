@@ -32,8 +32,6 @@ export class Bundler {
     const chunks = splitter.splitIntoChunks();
     const allModules = Array.from(moduleGraph.getAllModules().values());
 
-    // CSS is an asset, not a JavaScript entry point. It is emitted by the
-    // browser build when imported by a client module.
     const serverFiles = allModules
       .filter(m => m.type !== 'client' && JS_ENTRY_RE.test(m.path) && fs.existsSync(m.path))
       .map(m => m.path);
@@ -43,6 +41,11 @@ export class Bundler {
 
     const serverOutDir = path.join(this.outDir, 'server');
     const clientOutDir = path.join(this.outDir, 'client');
+
+    // Remove only generated JS output trees so deleted entries cannot leave
+    // stale chunks behind. Other output assets owned by the caller are kept.
+    fs.rmSync(serverOutDir, { recursive: true, force: true });
+    fs.rmSync(clientOutDir, { recursive: true, force: true });
     fs.mkdirSync(serverOutDir, { recursive: true });
     fs.mkdirSync(clientOutDir, { recursive: true });
 
@@ -56,7 +59,6 @@ export class Bundler {
       legalComments: 'none' as const,
     };
 
-    // Bundle local server code while leaving runtime dependencies to Node.
     if (serverFiles.length > 0) {
       await esbuild.build({
         ...common,
@@ -73,8 +75,6 @@ export class Bundler {
       });
     }
 
-    // Browser entries share a single ESM chunk graph instead of emitting
-    // one unbundled file per source module.
     if (clientFiles.length > 0) {
       await esbuild.build({
         ...common,
