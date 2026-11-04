@@ -29,7 +29,7 @@ function createProject(options: {
   );
   fs.writeFileSync(
     path.join(packageDir, 'cli.cjs'),
-    `const fs = require('node:fs');
+    String.raw`const fs = require('node:fs');
 const args = process.argv.slice(2);
 const input = args[args.indexOf('-i') + 1];
 const output = args[args.indexOf('-o') + 1];
