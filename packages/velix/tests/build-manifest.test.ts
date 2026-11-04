@@ -47,7 +47,7 @@ describe('collectRouteClientAssets', () => {
     const clientOutDir = path.join(projectRoot, 'dist', 'client');
     const dependencyMetafile = {
       inputs: {
-        'app/alpha/page.tsx': { imports: [{ path: '../../components/alpha', external: true }] },
+        'app/alpha/page.tsx': { imports: [{ path: '../../components/alpha.js', external: true }] },
         'app/beta/page.tsx': { imports: [{ path: '../../components/beta.tsx' }] },
         'components/alpha.tsx': { imports: [{ path: './shared.tsx' }, { path: '../styles/alpha.css' }] },
         'components/beta.tsx': { imports: [{ path: './shared.tsx' }] },
