@@ -26,7 +26,8 @@ export function isClientModule(filePath: string, content?: string): boolean {
   }
   if (content) {
     const firstLines = content.split('\n').slice(0, 5).map(l => l.trim());
-    if (firstLines.some(l => l === "'use client'" || l === '"use client"' || l === "'use island'" || l === '"use island"')) {
+    // JavaScript directive prologues may include a trailing semicolon.
+    if (firstLines.some(l => /^(?:'use (?:client|island)'|"use (?:client|island)")\s*;?$/.test(l))) {
       return true;
     }
   }
