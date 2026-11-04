@@ -32,7 +32,9 @@
     "@teamvelix/velix-core": "workspace:*",
     "chokidar": "^3.6.0",
     "esbuild": "0.25.0",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "postcss": "^8.5.6",
+    "postcss-load-config": "^6.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
