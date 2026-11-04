@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { ModuleType } from '../types.js';
 
@@ -129,10 +128,6 @@ export async function transformCSS(filePath: string, content: string): Promise<T
     }
 
     const code = fs.readFileSync(outputPath, 'utf8');
-    // Touch the hash to make the output's content identity explicit for
-    // debugging/profiling without persisting a shared mutable artifact.
-    crypto.createHash('sha256').update(code).digest('hex');
-
     return { code, imports: [], type: 'shared' };
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
