@@ -25,6 +25,7 @@ type ClientMetafile = {
   inputs: Record<string, { imports?: Array<{ path: string; external?: boolean }> }>;
   outputs: Record<string, {
     inputs?: Record<string, unknown>;
+    entryPoint?: string;
     imports?: Array<{ path: string; external?: boolean; kind?: string }>;
   }>;
 };
@@ -50,6 +51,7 @@ export function collectRouteClientAssets(
     output,
     absolutePath: path.resolve(projectRoot, outputKey),
     inputKeys: Object.keys(output.inputs ?? {}),
+    entryPoint: output.entryPoint,
   }));
 
   const result: Record<string, { clientChunks: string[]; css: string[] }> = {};
@@ -77,7 +79,14 @@ export function collectRouteClientAssets(
     const chunks = new Set<string>();
     const css = new Set<string>();
     for (const emitted of outputAssets) {
-      if (!emitted.inputKeys.some(inputKey => reachable.has(inputKey))) continue;
+      // Entry-point bundles belong only to the route that can reach that entry.
+      // Shared non-entry chunks are selected by their reachable input modules.
+      if (emitted.entryPoint) {
+        const entryKey = inputByAbsolutePath.get(path.resolve(projectRoot, emitted.entryPoint));
+        if (!entryKey || !reachable.has(entryKey)) continue;
+      } else if (!emitted.inputKeys.some(inputKey => reachable.has(inputKey))) {
+        continue;
+      }
       const relative = path.relative(clientOutDir, emitted.absolutePath).split(path.sep).join('/');
       if (!relative || relative === '..' || relative.startsWith('../') || path.isAbsolute(relative)) continue;
       if (/\.css$/i.test(relative)) css.add('/client/' + relative);
