@@ -23,7 +23,7 @@ export class TransformPipeline {
       const result = await transformTypeScript(filePath, content, this.resolver);
       return { ...result, hash };
     } else if (ext === '.css') {
-      const result = await transformCSS(filePath, content);
+      const result = await transformCSS(filePath, content, this.resolver);
       return { ...result, hash };
     } else if (ext === '.json') {
       const result = await transformJSON(filePath, content);
