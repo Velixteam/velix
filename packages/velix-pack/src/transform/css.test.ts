@@ -38,7 +38,7 @@ if (${options.failure === 'exit'}) {
   process.exit(3);
 }
 if (${options.failure !== 'empty'}) {
-  fs.writeFileSync(output, fs.readFileSync(input, 'utf8') + '\\n/* compiled */\\n.utility { color: red; }');
+  fs.writeFileSync(output, fs.readFileSync(input, 'utf8') + '\n/* compiled */\n.utility { color: red; }');
 }
 `
   );
@@ -117,7 +117,7 @@ describe('transformCSS', () => {
 
     const result = await transformCSS(
       cssPath,
-      '@import url("./theme.css");\\n@import "https://cdn.example.com/reset.css";\\n@import "some-package/styles.css";',
+      '@import url("./theme.css");\n@import "https://cdn.example.com/reset.css";\n@import "some-package/styles.css";',
       resolver
     );
 
