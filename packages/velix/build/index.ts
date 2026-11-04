@@ -233,17 +233,6 @@ export async function build(options: BuildOptions = {}) {
       // Map islands to their hashed outputs
       if (clientResult.metafile) {
         for (const [outPath, outData] of Object.entries(clientResult.metafile.outputs)) {
-          const absoluteOutput = path.resolve(projectRoot, outPath);
-          const relativeOutput = path.relative(clientOutDir, absoluteOutput).split(path.sep).join('/');
-          // Ignore outputs outside clientOutDir; only publish paths owned by this build.
-          if (relativeOutput && !relativeOutput.startsWith('../') && !path.isAbsolute(relativeOutput)) {
-            if (/\\.css$/i.test(relativeOutput)) {
-              emittedClientCss.add(`/client/${relativeOutput}`);
-            } else if (/\\.(?:m?js)$/i.test(relativeOutput)) {
-              emittedClientChunks.add(path.posix.join('client', relativeOutput));
-            }
-          }
-
           if (outData.entryPoint) {
             const entryFile = path.resolve(projectRoot, outData.entryPoint);
             const compName = path.basename(entryFile, path.extname(entryFile));
@@ -251,6 +240,9 @@ export async function build(options: BuildOptions = {}) {
             manifestIslands[compName] = `/client/${hashedRel}`;
           }
         }
+        const clientAssets = collectClientAssetPaths(Object.keys(clientResult.metafile.outputs), projectRoot, clientOutDir);
+        clientAssets.chunks.forEach(asset => emittedClientChunks.add(asset));
+        clientAssets.css.forEach(asset => emittedClientCss.add(asset));
       }
 
       logger.success(`Client bundle built (${clientFiles.length} component${clientFiles.length > 1 ? 's' : ''})`);
@@ -379,6 +371,35 @@ function getDirSize(dir: string): number {
     else size += fs.statSync(fullPath).size;
   }
   return size;
+}
+
+
+/**
+ * Convert esbuild metafile output paths into manifest-safe client asset URLs.
+ * Outputs outside clientOutDir are ignored to prevent publishing invalid paths.
+ */
+export function collectClientAssetPaths(
+  outputPaths: string[],
+  projectRoot: string,
+  clientOutDir: string
+): { chunks: string[]; css: string[] } {
+  const chunks = new Set<string>();
+  const css = new Set<string>();
+
+  for (const outputPath of outputPaths) {
+    const absoluteOutput = path.resolve(projectRoot, outputPath);
+    const relativeOutput = path.relative(clientOutDir, absoluteOutput).split(path.sep).join('/');
+    if (!relativeOutput || relativeOutput === '..' || relativeOutput.startsWith('../') || path.isAbsolute(relativeOutput)) {
+      continue;
+    }
+    if (/\.css$/i.test(relativeOutput)) {
+      css.add('/client/' + relativeOutput);
+    } else if (/\.(?:m?js)$/i.test(relativeOutput)) {
+      chunks.add(path.posix.join('client', relativeOutput));
+    }
+  }
+
+  return { chunks: [...chunks].sort(), css: [...css].sort() };
 }
 
 export default { build };
