@@ -12,6 +12,8 @@ export interface BundlerOptions {
   sourcemap?: boolean;
 }
 
+const JS_ENTRY_RE = /\.(?:[cm]?[jt]sx?)$/i;
+
 export class Bundler {
   private projectRoot: string;
   private outDir: string;
@@ -19,8 +21,8 @@ export class Bundler {
   private sourcemap: boolean;
 
   constructor(options: BundlerOptions) {
-    this.projectRoot = options.projectRoot;
-    this.outDir = options.outDir;
+    this.projectRoot = path.resolve(options.projectRoot);
+    this.outDir = path.resolve(options.outDir);
     this.minify = options.minify ?? false;
     this.sourcemap = options.sourcemap ?? true;
   }
@@ -28,51 +30,65 @@ export class Bundler {
   public async bundle(moduleGraph: ModuleGraph): Promise<Chunk[]> {
     const splitter = new CodeSplitter(moduleGraph);
     const chunks = splitter.splitIntoChunks();
-
     const allModules = Array.from(moduleGraph.getAllModules().values());
-    const serverFiles = allModules
-      .filter(m => m.type !== 'client' && fs.existsSync(m.path))
-      .map(m => m.path);
 
+    // CSS is an asset, not a JavaScript entry point. It is emitted by the
+    // browser build when imported by a client module.
+    const serverFiles = allModules
+      .filter(m => m.type !== 'client' && JS_ENTRY_RE.test(m.path) && fs.existsSync(m.path))
+      .map(m => m.path);
     const clientFiles = allModules
-      .filter(m => m.type === 'client' && fs.existsSync(m.path))
+      .filter(m => m.type === 'client' && JS_ENTRY_RE.test(m.path) && fs.existsSync(m.path))
       .map(m => m.path);
 
     const serverOutDir = path.join(this.outDir, 'server');
     const clientOutDir = path.join(this.outDir, 'client');
+    fs.mkdirSync(serverOutDir, { recursive: true });
+    fs.mkdirSync(clientOutDir, { recursive: true });
 
-    if (!fs.existsSync(serverOutDir)) fs.mkdirSync(serverOutDir, { recursive: true });
-    if (!fs.existsSync(clientOutDir)) fs.mkdirSync(clientOutDir, { recursive: true });
+    const common = {
+      outbase: this.projectRoot,
+      minify: this.minify,
+      sourcemap: this.sourcemap,
+      target: ['es2022'],
+      logLevel: 'silent' as const,
+      treeShaking: true,
+      legalComments: 'none' as const,
+    };
 
-    // 1. Bundle server modules
+    // Bundle local server code while leaving runtime dependencies to Node.
     if (serverFiles.length > 0) {
       await esbuild.build({
+        ...common,
         entryPoints: serverFiles,
         outdir: serverOutDir,
-        bundle: false,
+        bundle: true,
+        splitting: false,
         format: 'esm',
         platform: 'node',
-        target: 'es2022',
-        minify: this.minify,
-        sourcemap: this.sourcemap,
+        packages: 'external',
+        target: 'node18',
         jsx: 'automatic',
-        logLevel: 'silent',
+        external: ['*.css'],
       });
     }
 
-    // 2. Bundle client modules
+    // Browser entries share a single ESM chunk graph instead of emitting
+    // one unbundled file per source module.
     if (clientFiles.length > 0) {
       await esbuild.build({
+        ...common,
         entryPoints: clientFiles,
         outdir: clientOutDir,
-        bundle: false,
+        bundle: true,
+        splitting: true,
         format: 'esm',
         platform: 'browser',
-        target: 'es2022',
-        minify: this.minify,
-        sourcemap: this.sourcemap,
         jsx: 'automatic',
-        logLevel: 'silent',
+        external: ['react', 'react-dom', 'react-dom/client'],
+        entryNames: '[dir]/[name]-[hash]',
+        chunkNames: 'chunks/[name]-[hash]',
+        assetNames: 'assets/[name]-[hash]',
       });
     }
 
