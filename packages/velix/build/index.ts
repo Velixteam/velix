@@ -73,10 +73,15 @@ export function collectRouteClientAssets(
         // when they resolve to local project files. Match against the complete
         // server input set instead of dropping every import flagged external.
         const resolved = path.resolve(path.dirname(path.resolve(projectRoot, inputKey)), imported.path);
+        const importPath = imported.path;
+        const resolvedFromProject = path.resolve(projectRoot, importPath);
+        const withoutRuntimeExtension = resolved.replace(/\\.(?:m?js|cjs)$/i, '');
+        const projectWithoutRuntimeExtension = resolvedFromProject.replace(/\\.(?:m?js|cjs)$/i, '');
+        const bases = [...new Set([resolved, resolvedFromProject, withoutRuntimeExtension, projectWithoutRuntimeExtension])];
         const candidates = [
-          resolved,
-          ...['.tsx', '.ts', '.jsx', '.js', '.mts', '.mjs', '.cts', '.cjs'].map(ext => resolved + ext),
-          ...['index.tsx', 'index.ts', 'index.jsx', 'index.js'].map(file => path.join(resolved, file)),
+          ...bases,
+          ...bases.flatMap(base => ['.tsx', '.ts', '.jsx', '.js', '.mts', '.mjs', '.cts', '.cjs'].map(ext => base + ext)),
+          ...bases.flatMap(base => ['index.tsx', 'index.ts', 'index.jsx', 'index.js'].map(file => path.join(base, file))),
         ];
         const dependencyKey = candidates
           .map(candidate => inputByAbsolutePath.get(candidate))
