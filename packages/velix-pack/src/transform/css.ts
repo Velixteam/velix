@@ -18,11 +18,6 @@ interface TailwindCli {
   name: '@tailwindcss/cli' | 'tailwindcss';
 }
 
-interface PostcssConfig {
-  plugins: Parameters<typeof postcss>[0];
-  options: Record<string, unknown>;
-}
-
 const POSTCSS_CONFIG_FILES = [
   'postcss.config.js',
   'postcss.config.cjs',
@@ -179,13 +174,13 @@ async function applyPostcss(
 ): Promise<string> {
   if (!hasPostcssConfig(projectRoot)) return content;
 
-  let config: PostcssConfig;
+  let config;
   try {
     config = await loadPostcssConfig(
       {},
       { env: process.env.NODE_ENV ?? 'development' },
       projectRoot
-    ) as PostcssConfig;
+    );
   } catch (error) {
     throw new Error(
       `[velix-pack] Failed to load PostCSS config for ${inputPath}: ${error instanceof Error ? error.message : String(error)}`
