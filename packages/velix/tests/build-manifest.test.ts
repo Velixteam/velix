@@ -57,8 +57,8 @@ describe('collectRouteClientAssets', () => {
     };
     const clientMetafile = {
       outputs: {
-        'dist/client/alpha-AAA.js': { inputs: { 'components/alpha.tsx': {}, 'components/shared.tsx': {} } },
-        'dist/client/beta-BBB.js': { inputs: { 'components/beta.tsx': {}, 'components/shared.tsx': {} } },
+        'dist/client/alpha-AAA.js': { entryPoint: 'components/alpha.tsx', inputs: { 'components/alpha.tsx': {}, 'components/shared.tsx': {} } },
+        'dist/client/beta-BBB.js': { entryPoint: 'components/beta.tsx', inputs: { 'components/beta.tsx': {}, 'components/shared.tsx': {} } },
         'dist/client/chunks/shared-CCC.js': { inputs: { 'components/shared.tsx': {} } },
         'dist/client/alpha-DDD.css': { inputs: { 'styles/alpha.css': {} } },
       },
