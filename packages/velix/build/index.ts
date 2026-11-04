@@ -154,8 +154,6 @@ export async function build(options: BuildOptions = {}) {
 
   // Build route manifest entries
   const manifestRoutes: Record<string, RouteManifestEntry> = {};
-  const emittedClientChunks = new Set<string>();
-  const emittedClientCss = new Set<string>();
   for (const r of routes.appRoutes) {
     const relFromApp = path.relative(appDir, r.filePath).replace(/\.(tsx?|jsx?)$/, '.js');
     const serverFilePath = path.join('server', 'app', relFromApp).replace(/\\/g, '/');
@@ -175,8 +173,8 @@ export async function build(options: BuildOptions = {}) {
       serverFile: serverFileCandidate,
       layouts: layoutsRel,
       // Populated from esbuild's output metafile after client bundling.
-      clientChunks: [...emittedClientChunks].sort(),
-      css: [...emittedClientCss].sort(),
+      clientChunks: [],
+      css: [],
     };
   }
 
@@ -275,6 +273,7 @@ export function collectRouteClientAssets(
   });
 
   const manifestIslands: Record<string, string> = {};
+  let clientMetafile: ClientMetafile | undefined;
 
   if (clientFiles.length > 0) {
     try {
@@ -299,6 +298,9 @@ export function collectRouteClientAssets(
         metafile: true,
       });
 
+      // Retain the metafile for route-level dependency mapping.
+      clientMetafile = clientResult.metafile;
+
       // Map islands to their hashed outputs
       if (clientResult.metafile) {
         for (const [outPath, outData] of Object.entries(clientResult.metafile.outputs)) {
@@ -309,9 +311,6 @@ export function collectRouteClientAssets(
             manifestIslands[compName] = `/client/${hashedRel}`;
           }
         }
-        const clientAssets = collectClientAssetPaths(Object.keys(clientResult.metafile.outputs), projectRoot, clientOutDir);
-        clientAssets.chunks.forEach(asset => emittedClientChunks.add(asset));
-        clientAssets.css.forEach(asset => emittedClientCss.add(asset));
       }
 
       logger.success(`Client bundle built (${clientFiles.length} component${clientFiles.length > 1 ? 's' : ''})`);
@@ -323,6 +322,25 @@ export function collectRouteClientAssets(
   }
 
   // Route asset lists are finalized from the client metafile after bundling.
+
+  if (clientMetafile) {
+    const routeAssets = collectRouteClientAssets(
+      routes.appRoutes.map(route => ({
+        path: route.path,
+        sourceFiles: [route.filePath, ...collectLayouts(route.filePath, appDir)],
+      })),
+      clientMetafile,
+      projectRoot,
+      clientOutDir
+    );
+    for (const [routePath, assets] of Object.entries(routeAssets)) {
+      const routeManifest = manifestRoutes[routePath];
+      if (routeManifest) {
+        routeManifest.clientChunks = assets.clientChunks;
+        routeManifest.css = assets.css;
+      }
+    }
+  }
 
   // 6. Compute Build ID (deterministic hash of all generated artefacts)
   const allGeneratedFiles: string[] = [];
