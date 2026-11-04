@@ -31,6 +31,7 @@ function createProject(options: {
     path.join(packageDir, 'cli.cjs'),
     `const fs = require('node:fs');
 const args = process.argv.slice(2);
+const input = args[args.indexOf('-i') + 1];
 const output = args[args.indexOf('-o') + 1];
 if (${options.failure === 'exit'}) {
   process.stderr.write('synthetic Tailwind failure');
@@ -89,7 +90,7 @@ describe('transformCSS', () => {
 
     const result = await transformCSS(
       cssPath,
-      '@import "./tokens.css";\\n@import "./button.css";\\n.page { color: black; }',
+      '@import "./tokens.css";\n@import "./button.css";\n.page { color: black; }',
       resolver
     );
 
