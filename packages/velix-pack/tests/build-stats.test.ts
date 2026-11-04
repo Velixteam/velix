@@ -30,7 +30,7 @@ describe('VelixPack build statistics', () => {
     const clientDir = path.join(outDir, 'client');
     const emitted = fs.readdirSync(clientDir, { recursive: true })
       .map(String)
-      .filter(file => /\\.(?:m?js)$/i.test(file));
+      .filter(file => /\.(?:m?js)$/i.test(file));
     const actualBytes = emitted.reduce((total, file) => total + fs.statSync(path.join(clientDir, file)).size, 0);
 
     expect(stats.chunksCount).toBe(emitted.length);
@@ -49,7 +49,7 @@ describe('VelixPack build statistics', () => {
 
     const clientDir = path.join(outDir, 'client');
     const emitted = fs.existsSync(clientDir)
-      ? fs.readdirSync(clientDir, { recursive: true }).map(String).filter(file => /\\.(?:m?js)$/i.test(file))
+      ? fs.readdirSync(clientDir, { recursive: true }).map(String).filter(file => /\.(?:m?js)$/i.test(file))
       : [];
     expect(emitted).toEqual([]);
   });
