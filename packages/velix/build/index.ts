@@ -172,8 +172,12 @@ export async function build(options: BuildOptions = {}) {
     manifestRoutes[r.path] = {
       serverFile: serverFileCandidate,
       layouts: layoutsRel,
-      clientChunks: [],
-      css: [],
+      // Until route-level graph partitioning is available, attach the complete
+      // emitted client asset set to each route. This is conservative (never
+      // omits a required shared chunk or stylesheet) and keeps the manifest
+      // truthful; a later optimization can narrow these lists per route.
+      clientChunks: [...emittedClientChunks].sort(),
+      css: [...emittedClientCss].sort(),
     };
   }
 
@@ -200,6 +204,8 @@ export async function build(options: BuildOptions = {}) {
   });
 
   const manifestIslands: Record<string, string> = {};
+  const emittedClientChunks = new Set<string>();
+  const emittedClientCss = new Set<string>();
 
   if (clientFiles.length > 0) {
     try {
@@ -227,6 +233,17 @@ export async function build(options: BuildOptions = {}) {
       // Map islands to their hashed outputs
       if (clientResult.metafile) {
         for (const [outPath, outData] of Object.entries(clientResult.metafile.outputs)) {
+          const absoluteOutput = path.resolve(projectRoot, outPath);
+          const relativeOutput = path.relative(clientOutDir, absoluteOutput).replace(/\\\\/g, '/');
+          // Ignore outputs outside clientOutDir; only publish paths owned by this build.
+          if (relativeOutput && !relativeOutput.startsWith('../') && !path.isAbsolute(relativeOutput)) {
+            if (/\\.css$/i.test(relativeOutput)) {
+              emittedClientCss.add(`/client/${relativeOutput}`);
+            } else if (/\\.(?:m?js)$/i.test(relativeOutput)) {
+              emittedClientChunks.add(path.posix.join('client', relativeOutput));
+            }
+          }
+
           if (outData.entryPoint) {
             const entryFile = path.resolve(projectRoot, outData.entryPoint);
             const compName = path.basename(entryFile, path.extname(entryFile));
