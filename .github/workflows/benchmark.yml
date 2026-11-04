@@ -13,10 +13,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-benchmark:
-    name: Build benchmark
+  benchmark:
+    name: Measure website startup and build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -38,22 +38,5 @@ jobs:
       - name: Build framework packages
         run: pnpm --filter "./packages/*" -r run build
 
-      - name: Generate benchmark app
-        run: node scripts/create-bench-app.js
-
-      - name: Install benchmark app dependencies
-        working-directory: bench-app
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Measure production build
-        run: node scripts/bench-build.js
-        working-directory: bench-app
-
-      - name: Upload benchmark result
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: velix-build-benchmark-${{ github.sha }}
-          path: bench-app/bench-results.json
-          if-no-files-found: warn
-          retention-days: 14
+      - name: Run benchmark
+        run: node scripts/bench-build.mjs website --runs 1
