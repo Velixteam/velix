@@ -132,6 +132,7 @@ export async function build(options: BuildOptions = {}) {
   // 4. Build server bundle
   try {
     await esbuild.build({
+      absWorkingDir: projectRoot,
       entryPoints: sourceFiles,
       outdir: serverOutDir,
       bundle: false,
@@ -284,6 +285,7 @@ export function collectRouteClientAssets(
   if (clientFiles.length > 0) {
     try {
       const clientResult = await esbuild.build({
+        absWorkingDir: projectRoot,
         entryPoints: clientFiles,
         outdir: clientOutDir,
         bundle: true,
