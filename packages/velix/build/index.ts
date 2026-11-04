@@ -202,8 +202,18 @@ export async function build(options: BuildOptions = {}) {
   const routes = buildRouteTree(appDir);
   let serverMetafile: ClientMetafile | undefined;
 
-  // Collect source files for server bundle
-  const sourceFiles = findFiles(appDir, /\.(tsx?|jsx?)$/);
+  // Include project components and islands in the server compilation graph as
+  // well as app routes. With bundle:false, esbuild only emits declared entry
+  // points, so omitting these directories leaves imported modules out of dist
+  // and out of the metafile used to associate client assets with routes.
+  const candidateDirs = [
+    appDir,
+    path.join(projectRoot, 'components'),
+    path.join(projectRoot, 'islands'),
+  ];
+  const sourceFiles = [...new Set(candidateDirs
+    .filter(dir => fs.existsSync(dir))
+    .flatMap(dir => findFiles(dir, /\.(tsx?|jsx?)$/)))];
 
   if (sourceFiles.length === 0) {
     logger.warn('No source files found in app/ directory');
@@ -267,11 +277,6 @@ export async function build(options: BuildOptions = {}) {
 
 
   // 5. Build client bundle (client components and islands)
-  const candidateDirs = [
-    appDir,
-    path.join(projectRoot, 'components'),
-    path.join(projectRoot, 'islands'),
-  ];
   const allClientCandidates: string[] = [];
   for (const d of candidateDirs) {
     if (fs.existsSync(d)) {
