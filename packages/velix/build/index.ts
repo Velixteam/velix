@@ -21,6 +21,78 @@ import {
   type AssetManifestEntry,
 } from '@teamvelix/velix-core';
 
+type ClientMetafile = {
+  inputs: Record<string, { imports?: Array<{ path: string; external?: boolean }> }>;
+  outputs: Record<string, {
+    inputs?: Record<string, unknown>;
+    imports?: Array<{ path: string; external?: boolean; kind?: string }>;
+  }>;
+};
+
+/**
+ * Resolve each route's client dependency closure against esbuild's metafile.
+ * Shared chunks are included whenever their input modules are reachable from
+ * the route, while unrelated route entrypoints are excluded.
+ */
+export function collectRouteClientAssets(
+  routes: Array<{ path: string; sourceFiles: string[] }>,
+  dependencyMetafile: Pick<ClientMetafile, 'inputs'>,
+  clientMetafile: Pick<ClientMetafile, 'outputs'>,
+  projectRoot: string,
+  clientOutDir: string
+): Record<string, { clientChunks: string[]; css: string[] }> {
+  const inputByAbsolutePath = new Map<string, string>();
+  for (const inputKey of Object.keys(dependencyMetafile.inputs)) {
+    inputByAbsolutePath.set(path.resolve(projectRoot, inputKey), inputKey);
+  }
+
+  const outputAssets = Object.entries(clientMetafile.outputs).map(([outputKey, output]) => ({
+    output,
+    absolutePath: path.resolve(projectRoot, outputKey),
+    inputKeys: Object.keys(output.inputs ?? {}),
+  }));
+
+  const result: Record<string, { clientChunks: string[]; css: string[] }> = {};
+
+  for (const route of routes) {
+    const reachable = new Set<string>();
+    const pending = route.sourceFiles
+      .map(file => inputByAbsolutePath.get(path.resolve(file)) ?? inputByAbsolutePath.get(path.resolve(projectRoot, path.relative(projectRoot, file))))
+      .filter((key): key is string => Boolean(key));
+
+    while (pending.length > 0) {
+      const inputKey = pending.pop()!;
+      if (reachable.has(inputKey)) continue;
+      reachable.add(inputKey);
+
+      const input = dependencyMetafile.inputs[inputKey];
+      for (const imported of input?.imports ?? []) {
+        if (imported.external) continue;
+        const resolved = path.resolve(path.dirname(path.resolve(projectRoot, inputKey)), imported.path);
+        const dependencyKey = inputByAbsolutePath.get(resolved);
+        if (dependencyKey && !reachable.has(dependencyKey)) pending.push(dependencyKey);
+      }
+    }
+
+    const chunks = new Set<string>();
+    const css = new Set<string>();
+    for (const emitted of outputAssets) {
+      if (!emitted.inputKeys.some(inputKey => reachable.has(inputKey))) continue;
+      const relative = path.relative(clientOutDir, emitted.absolutePath).split(path.sep).join('/');
+      if (!relative || relative === '..' || relative.startsWith('../') || path.isAbsolute(relative)) continue;
+      if (/\.css$/i.test(relative)) css.add('/client/' + relative);
+      else if (/\.(?:m?js)$/i.test(relative)) chunks.add(path.posix.join('client', relative));
+    }
+
+    result[route.path] = {
+      clientChunks: [...chunks].sort(),
+      css: [...css].sort(),
+    };
+  }
+
+  return result;
+}
+
 export interface BuildOptions {
   projectRoot?: string;
   outDir?: string;
@@ -184,78 +256,6 @@ export async function build(options: BuildOptions = {}) {
     };
   }
 
-
-type ClientMetafile = {
-  inputs: Record<string, { imports?: Array<{ path: string; external?: boolean }> }>;
-  outputs: Record<string, {
-    inputs?: Record<string, unknown>;
-    imports?: Array<{ path: string; external?: boolean; kind?: string }>;
-  }>;
-};
-
-/**
- * Resolve each route's client dependency closure against esbuild's metafile.
- * Shared chunks are included whenever their input modules are reachable from
- * the route, while unrelated route entrypoints are excluded.
- */
-export function collectRouteClientAssets(
-  routes: Array<{ path: string; sourceFiles: string[] }>,
-  dependencyMetafile: Pick<ClientMetafile, 'inputs'>,
-  clientMetafile: Pick<ClientMetafile, 'outputs'>,
-  projectRoot: string,
-  clientOutDir: string
-): Record<string, { clientChunks: string[]; css: string[] }> {
-  const inputByAbsolutePath = new Map<string, string>();
-  for (const inputKey of Object.keys(dependencyMetafile.inputs)) {
-    inputByAbsolutePath.set(path.resolve(projectRoot, inputKey), inputKey);
-  }
-
-  const outputAssets = Object.entries(clientMetafile.outputs).map(([outputKey, output]) => ({
-    output,
-    absolutePath: path.resolve(projectRoot, outputKey),
-    inputKeys: Object.keys(output.inputs ?? {}),
-  }));
-
-  const result: Record<string, { clientChunks: string[]; css: string[] }> = {};
-
-  for (const route of routes) {
-    const reachable = new Set<string>();
-    const pending = route.sourceFiles
-      .map(file => inputByAbsolutePath.get(path.resolve(file)) ?? inputByAbsolutePath.get(path.resolve(projectRoot, path.relative(projectRoot, file))))
-      .filter((key): key is string => Boolean(key));
-
-    while (pending.length > 0) {
-      const inputKey = pending.pop()!;
-      if (reachable.has(inputKey)) continue;
-      reachable.add(inputKey);
-
-      const input = dependencyMetafile.inputs[inputKey];
-      for (const imported of input?.imports ?? []) {
-        if (imported.external) continue;
-        const resolved = path.resolve(path.dirname(path.resolve(projectRoot, inputKey)), imported.path);
-        const dependencyKey = inputByAbsolutePath.get(resolved);
-        if (dependencyKey && !reachable.has(dependencyKey)) pending.push(dependencyKey);
-      }
-    }
-
-    const chunks = new Set<string>();
-    const css = new Set<string>();
-    for (const emitted of outputAssets) {
-      if (!emitted.inputKeys.some(inputKey => reachable.has(inputKey))) continue;
-      const relative = path.relative(clientOutDir, emitted.absolutePath).split(path.sep).join('/');
-      if (!relative || relative === '..' || relative.startsWith('../') || path.isAbsolute(relative)) continue;
-      if (/\.css$/i.test(relative)) css.add('/client/' + relative);
-      else if (/\.(?:m?js)$/i.test(relative)) chunks.add(path.posix.join('client', relative));
-    }
-
-    result[route.path] = {
-      clientChunks: [...chunks].sort(),
-      css: [...css].sort(),
-    };
-  }
-
-  return result;
-}
 
   // 5. Build client bundle (client components and islands)
   const candidateDirs = [
