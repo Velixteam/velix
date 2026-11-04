@@ -154,6 +154,8 @@ export async function build(options: BuildOptions = {}) {
 
   // Build route manifest entries
   const manifestRoutes: Record<string, RouteManifestEntry> = {};
+  const emittedClientChunks = new Set<string>();
+  const emittedClientCss = new Set<string>();
   for (const r of routes.appRoutes) {
     const relFromApp = path.relative(appDir, r.filePath).replace(/\.(tsx?|jsx?)$/, '.js');
     const serverFilePath = path.join('server', 'app', relFromApp).replace(/\\/g, '/');
@@ -172,8 +174,9 @@ export async function build(options: BuildOptions = {}) {
     manifestRoutes[r.path] = {
       serverFile: serverFileCandidate,
       layouts: layoutsRel,
-      clientChunks: [],
-      css: [],
+      // Populated from esbuild's output metafile after client bundling.
+      clientChunks: [...emittedClientChunks].sort(),
+      css: [...emittedClientCss].sort(),
     };
   }
 
@@ -234,6 +237,9 @@ export async function build(options: BuildOptions = {}) {
             manifestIslands[compName] = `/client/${hashedRel}`;
           }
         }
+        const clientAssets = collectClientAssetPaths(Object.keys(clientResult.metafile.outputs), projectRoot, clientOutDir);
+        clientAssets.chunks.forEach(asset => emittedClientChunks.add(asset));
+        clientAssets.css.forEach(asset => emittedClientCss.add(asset));
       }
 
       logger.success(`Client bundle built (${clientFiles.length} component${clientFiles.length > 1 ? 's' : ''})`);
@@ -242,6 +248,15 @@ export async function build(options: BuildOptions = {}) {
       logger.error('Client build failed', error);
       process.exit(1);
     }
+  }
+
+  // Attach the finalized client output inventory after esbuild has emitted it.
+  // The current manifest schema is route-aware, but the bundler does not yet
+  // expose per-route dependency closures; include all client assets so shared
+  // chunks and extracted CSS are never accidentally omitted.
+  for (const route of Object.values(manifestRoutes)) {
+    route.clientChunks = [...emittedClientChunks].sort();
+    route.css = [...emittedClientCss].sort();
   }
 
   // 6. Compute Build ID (deterministic hash of all generated artefacts)
@@ -353,6 +368,35 @@ function getDirSize(dir: string): number {
     else size += fs.statSync(fullPath).size;
   }
   return size;
+}
+
+
+/**
+ * Convert esbuild metafile output paths into manifest-safe client asset URLs.
+ * Outputs outside clientOutDir are ignored to prevent publishing invalid paths.
+ */
+export function collectClientAssetPaths(
+  outputPaths: string[],
+  projectRoot: string,
+  clientOutDir: string
+): { chunks: string[]; css: string[] } {
+  const chunks = new Set<string>();
+  const css = new Set<string>();
+
+  for (const outputPath of outputPaths) {
+    const absoluteOutput = path.resolve(projectRoot, outputPath);
+    const relativeOutput = path.relative(clientOutDir, absoluteOutput).split(path.sep).join('/');
+    if (!relativeOutput || relativeOutput === '..' || relativeOutput.startsWith('../') || path.isAbsolute(relativeOutput)) {
+      continue;
+    }
+    if (/\.css$/i.test(relativeOutput)) {
+      css.add('/client/' + relativeOutput);
+    } else if (/\.(?:m?js)$/i.test(relativeOutput)) {
+      chunks.add(path.posix.join('client', relativeOutput));
+    }
+  }
+
+  return { chunks: [...chunks].sort(), css: [...css].sort() };
 }
 
 export default { build };
