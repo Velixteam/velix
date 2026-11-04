@@ -69,9 +69,18 @@ export function collectRouteClientAssets(
 
       const input = dependencyMetafile.inputs[inputKey];
       for (const imported of input?.imports ?? []) {
-        if (imported.external) continue;
+        // With bundle:false, esbuild marks preserved imports as external even
+        // when they resolve to local project files. Match against the complete
+        // server input set instead of dropping every import flagged external.
         const resolved = path.resolve(path.dirname(path.resolve(projectRoot, inputKey)), imported.path);
-        const dependencyKey = inputByAbsolutePath.get(resolved);
+        const candidates = [
+          resolved,
+          ...['.tsx', '.ts', '.jsx', '.js', '.mts', '.mjs', '.cts', '.cjs'].map(ext => resolved + ext),
+          ...['index.tsx', 'index.ts', 'index.jsx', 'index.js'].map(file => path.join(resolved, file)),
+        ];
+        const dependencyKey = candidates
+          .map(candidate => inputByAbsolutePath.get(candidate))
+          .find((key): key is string => Boolean(key));
         if (dependencyKey && !reachable.has(dependencyKey)) pending.push(dependencyKey);
       }
     }

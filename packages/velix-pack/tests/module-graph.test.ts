@@ -29,6 +29,8 @@ describe('Velix Pack Module Graph & Boundaries', () => {
   it('should detect client modules by directive', () => {
     expect(isClientModule('app/page.tsx', "'use client'\nexport default function Page() {}")).toBe(true);
     expect(isClientModule('app/page.tsx', "'use island'\nexport default function Widget() {}")).toBe(true);
+    expect(isClientModule('app/page.tsx', '"use client";\nexport default function Page() {}')).toBe(true);
+    expect(isClientModule('app/widget.tsx', "'use island';\nexport default function Widget() {}")).toBe(true);
   });
 
   it('should detect boundary violations', () => {
