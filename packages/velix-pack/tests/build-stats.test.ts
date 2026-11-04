@@ -11,7 +11,7 @@ function fixture() {
   roots.push(root);
   const app = path.join(root, 'app');
   fs.mkdirSync(app, { recursive: true });
-  fs.writeFileSync(path.join(app, 'page.ts'), '"use client"; import { shared } from "./shared.js"; console.log(shared);');
+  fs.writeFileSync(path.join(app, 'page.ts'), '"use client";\nimport { shared } from "./shared.js";\nconsole.log(shared);');
   fs.writeFileSync(path.join(app, 'shared.ts'), 'export const shared = "shared-module-payload";');
   return { root, app };
 }
