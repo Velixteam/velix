@@ -73,10 +73,20 @@ export function collectRouteClientAssets(
         // when they resolve to local project files. Match against the complete
         // server input set instead of dropping every import flagged external.
         const resolved = path.resolve(path.dirname(path.resolve(projectRoot, inputKey)), imported.path);
-        const candidates = [
+        // TypeScript projects commonly import source modules with a .js
+        // specifier. esbuild can preserve that specifier as external while the
+        // corresponding server input is still .ts/.tsx in the metafile.
+        const resolvedFromProject = path.resolve(projectRoot, imported.path);
+        const bases = [...new Set([
           resolved,
-          ...['.tsx', '.ts', '.jsx', '.js', '.mts', '.mjs', '.cts', '.cjs'].map(ext => resolved + ext),
-          ...['index.tsx', 'index.ts', 'index.jsx', 'index.js'].map(file => path.join(resolved, file)),
+          resolvedFromProject,
+          resolved.replace(/\\.(?:m?js|cjs)$/i, ''),
+          resolvedFromProject.replace(/\\.(?:m?js|cjs)$/i, ''),
+        ])];
+        const candidates = [
+          ...bases,
+          ...bases.flatMap(base => ['.tsx', '.ts', '.jsx', '.js', '.mts', '.mjs', '.cts', '.cjs'].map(ext => base + ext)),
+          ...bases.flatMap(base => ['index.tsx', 'index.ts', 'index.jsx', 'index.js'].map(file => path.join(base, file))),
         ];
         const dependencyKey = candidates
           .map(candidate => inputByAbsolutePath.get(candidate))
