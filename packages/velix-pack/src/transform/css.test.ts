@@ -109,6 +109,22 @@ describe('transformCSS', () => {
       .rejects.toThrow(/Cannot resolve local CSS import/);
   });
 
+  it('resolves url() CSS imports and leaves remote and package imports to PostCSS', async () => {
+    const cssPath = createProject();
+    const root = process.cwd();
+    fs.writeFileSync(path.join(root, 'src', 'theme.css'), ':root { --theme: dark; }');
+    const resolver = new Resolver({ projectRoot: root });
+
+    const result = await transformCSS(
+      cssPath,
+      '@import url("./theme.css");\\n@import "https://cdn.example.com/reset.css";\\n@import "some-package/styles.css";',
+      resolver
+    );
+
+    expect(result.imports).toEqual([path.join(root, 'src', 'theme.css')]);
+  });
+
+
   it('runs plugins from postcss.config.cjs for plain CSS', async () => {
     createProject();
     fs.writeFileSync(
