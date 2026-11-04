@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { hasTailwindDirectives, transformCSS } from './css.js';
+import { Resolver } from '../resolver/index.js';
 
 const originalCwd = process.cwd();
 const projectRoots: string[] = [];
@@ -36,7 +37,7 @@ if (${options.failure === 'exit'}) {
   process.exit(3);
 }
 if (${options.failure !== 'empty'}) {
-  fs.writeFileSync(output, '/* compiled */\\n.utility { color: red; }');
+  fs.writeFileSync(output, fs.readFileSync(input, 'utf8') + '\\n/* compiled */\\n.utility { color: red; }');
 }
 `
   );
@@ -77,6 +78,54 @@ describe('transformCSS', () => {
     expect(result.code).toBe('.card { color: red; }');
     expect(result.imports).toEqual([]);
     expect(result.type).toBe('shared');
+  });
+
+  it('tracks relative CSS imports for component and global style dependencies', async () => {
+    const cssPath = createProject();
+    const root = process.cwd();
+    fs.writeFileSync(path.join(root, 'src', 'tokens.css'), ':root { --brand: red; }');
+    fs.writeFileSync(path.join(root, 'src', 'button.css'), '@import "./tokens.css"; .button { color: var(--brand); }');
+    const resolver = new Resolver({ projectRoot: root });
+
+    const result = await transformCSS(
+      cssPath,
+      '@import "./tokens.css";\\n@import "./button.css";\\n.page { color: black; }',
+      resolver
+    );
+
+    expect(result.imports).toEqual([
+      path.join(root, 'src', 'tokens.css'),
+      path.join(root, 'src', 'button.css'),
+    ]);
+    expect(result.code).toContain('.page');
+  });
+
+  it('fails clearly when a relative CSS import cannot be resolved', async () => {
+    const cssPath = createProject();
+    const resolver = new Resolver({ projectRoot: process.cwd() });
+
+    await expect(transformCSS(cssPath, '@import "./missing.css";', resolver))
+      .rejects.toThrow(/Cannot resolve local CSS import/);
+  });
+
+  it('runs plugins from postcss.config.cjs for plain CSS', async () => {
+    createProject();
+    fs.writeFileSync(
+      path.join(process.cwd(), 'postcss.config.cjs'),
+      `module.exports = {
+        plugins: [{
+          postcssPlugin: 'velix-test-plugin',
+          Once(root) {
+            root.append({ selector: '.from-postcss', nodes: [{ prop: 'color', value: 'red' }] });
+          }
+        }]
+      };`
+    );
+
+    const result = await transformCSS('src/plain.css', '.plain { color: black; }');
+
+    expect(result.code).toContain('.from-postcss');
+    expect(result.code).toContain('color: red');
   });
 
   it.each(['@tailwindcss/cli', 'tailwindcss'] as const)(
