@@ -45,7 +45,7 @@ describe('collectRouteClientAssets', () => {
   it('keeps unrelated route entrypoints out while including reachable shared chunks and CSS', () => {
     const projectRoot = path.resolve('/tmp/velix-route-assets');
     const clientOutDir = path.join(projectRoot, 'dist', 'client');
-    const metafile = {
+    const dependencyMetafile = {
       inputs: {
         'app/alpha/page.tsx': { imports: [{ path: '../../components/alpha.tsx' }] },
         'app/beta/page.tsx': { imports: [{ path: '../../components/beta.tsx' }] },
@@ -54,6 +54,8 @@ describe('collectRouteClientAssets', () => {
         'components/shared.tsx': { imports: [] },
         'styles/alpha.css': { imports: [] },
       },
+    };
+    const clientMetafile = {
       outputs: {
         'dist/client/alpha-AAA.js': { inputs: { 'components/alpha.tsx': {}, 'components/shared.tsx': {} } },
         'dist/client/beta-BBB.js': { inputs: { 'components/beta.tsx': {}, 'components/shared.tsx': {} } },
@@ -65,7 +67,7 @@ describe('collectRouteClientAssets', () => {
     const result = collectRouteClientAssets([
       { path: '/alpha', sourceFiles: [path.join(projectRoot, 'app/alpha/page.tsx')] },
       { path: '/beta', sourceFiles: [path.join(projectRoot, 'app/beta/page.tsx')] },
-    ], metafile, projectRoot, clientOutDir);
+    ], dependencyMetafile, clientMetafile, projectRoot, clientOutDir);
 
     expect(result['/alpha']).toEqual({
       clientChunks: ['client/alpha-AAA.js', 'client/chunks/shared-CCC.js'],
@@ -81,7 +83,7 @@ describe('collectRouteClientAssets', () => {
     const projectRoot = path.resolve('/tmp/velix-route-assets');
     const result = collectRouteClientAssets([
       { path: '/server-only', sourceFiles: [path.join(projectRoot, 'app/server-only/page.tsx')] },
-    ], { inputs: {}, outputs: {} }, projectRoot, path.join(projectRoot, 'dist/client'));
+    ], { inputs: {} }, { outputs: {} }, projectRoot, path.join(projectRoot, 'dist/client'));
 
     expect(result['/server-only']).toEqual({ clientChunks: [], css: [] });
   });
