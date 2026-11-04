@@ -120,6 +120,13 @@ export async function loadAssetManifest(
           missing.push(`Client chunk: ${chunk} (looked in ${chunkFile})`);
         }
       }
+      for (const stylesheet of route.css) {
+        const relativeStylesheet = stylesheet.startsWith('/') ? stylesheet.slice(1) : stylesheet;
+        const stylesheetFile = path.join(outDir, relativeStylesheet);
+        if (!fs.existsSync(stylesheetFile)) {
+          missing.push(`Route stylesheet: ${stylesheet} (looked in ${stylesheetFile})`);
+        }
+      }
     }
 
     // 2. Verify islands
