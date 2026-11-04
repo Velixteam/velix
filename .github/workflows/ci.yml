@@ -6,64 +6,79 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: true
+  PNPM_HOME: ~/.local/share/pnpm
+
 jobs:
-  test:
-    name: Build & Test (Node ${{ matrix.node-version }})
+  validate:
+    name: Validate (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18, 20, 22]
-
+        node: [20, 22]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
           version: 12.5.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Build workspace packages
-        run: pnpm build:packages
+      - name: Build framework packages
+        run: pnpm --filter "./packages/*" -r run build
 
-      - name: Build Velix framework
+      - name: Build repository app
         run: pnpm build
 
-      - name: TypeCheck all packages
-        run: pnpm --recursive run typecheck
+      - name: Type-check
+        run: pnpm typecheck
 
-      - name: Run Test Suite
+      - name: Run tests
         run: pnpm test
 
-  create-velix-app:
-    name: Build create-velix-app
+  create-app:
+    name: Verify create-velix-app
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 12.5.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'pnpm'
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
-      - name: Build create-velix-app
-        run: pnpm --filter create-velix-app build
+      - name: Build framework packages
+        run: pnpm --filter "./packages/*" -r run build
+
+      - name: Build app generator
+        run: pnpm --filter create-velix-app run build
