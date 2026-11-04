@@ -261,6 +261,15 @@ export async function build(options: BuildOptions = {}) {
     }
   }
 
+  // Attach the finalized client output inventory after esbuild has emitted it.
+  // The current manifest schema is route-aware, but the bundler does not yet
+  // expose per-route dependency closures; include all client assets so shared
+  // chunks and extracted CSS are never accidentally omitted.
+  for (const route of Object.values(manifestRoutes)) {
+    route.clientChunks = [...emittedClientChunks].sort();
+    route.css = [...emittedClientCss].sort();
+  }
+
   // 6. Compute Build ID (deterministic hash of all generated artefacts)
   const allGeneratedFiles: string[] = [];
   function collectFiles(dir: string) {
