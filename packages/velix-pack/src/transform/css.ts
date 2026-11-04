@@ -1,7 +1,8 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { ModuleType } from '../types.js';
-import fs from 'fs';
-import path from 'path';
-import { spawnSync } from 'child_process';
 
 export interface TransformResultCSS {
   code: string;
@@ -9,81 +10,131 @@ export interface TransformResultCSS {
   type: ModuleType;
 }
 
-/**
- * Detect if the CSS content contains Tailwind v4 directives (@import "tailwindcss")
- * or Tailwind v3 directives (@tailwind base/components/utilities)
- */
-function hasTailwindDirectives(content: string): boolean {
-  return (
-    content.includes('@import "tailwindcss"') ||
-    content.includes("@import 'tailwindcss'") ||
-    /^@tailwind\s+(base|components|utilities)/m.test(content)
-  );
+interface TailwindCli {
+  bin: string;
+  name: '@tailwindcss/cli' | 'tailwindcss';
 }
 
-interface TailwindCli { bin: string; name: string }
+/**
+ * Ignore comments before scanning for Tailwind at-rules. This avoids false
+ * positives when documentation/examples are embedded in CSS comments.
+ */
+function stripCssComments(content: string): string {
+  return content.replace(/\/\*[\s\S]*?\*\//g, '');
+}
 
-/** Walk up from `start` looking for node_modules/<pkg>/package.json. */
-function findPackageDir(start: string, pkg: string): string | null {
-  let dir = path.resolve(start);
-  for (;;) {
-    const candidate = path.join(dir, 'node_modules', pkg);
+/** Detect common Tailwind v3 directives and the v4 package import. */
+export function hasTailwindDirectives(content: string): boolean {
+  const css = stripCssComments(content);
+  const v4Import = /@import\s+(?:url\(\s*)?(['"])tailwindcss(?:\/[^'"]*)?\1\s*\)?\s*;/i;
+  const v3Directive = /@tailwind\s+(?:base|components|utilities|screens|variants)\s*;/i;
+  return v4Import.test(css) || v3Directive.test(css);
+}
+
+function findPackageDir(start: string, packageName: string): string | null {
+  let directory = path.resolve(start);
+
+  while (true) {
+    const candidate = path.join(directory, 'node_modules', packageName);
     if (fs.existsSync(path.join(candidate, 'package.json'))) return candidate;
-    const parent = path.dirname(dir);
-    if (parent === dir) return null;
-    dir = parent;
+
+    const parent = path.dirname(directory);
+    if (parent === directory) return null;
+    directory = parent;
   }
 }
 
 /**
- * Resolve the locally installed Tailwind CLI (v4: @tailwindcss/cli, v3: tailwindcss) to a JS entry
- * point, so it can run with the current Node binary. No `npx`: it can hit the network, hang, or
- * pick a different version than the project depends on.
+ * Resolve only a project-local Tailwind CLI. Never use npx here: transforms
+ * must be deterministic and must not download packages or access the network.
  */
-function resolveTailwindCli(projectRoot: string): TailwindCli | null {
-  for (const name of ['@tailwindcss/cli', 'tailwindcss']) {
-    const dir = findPackageDir(projectRoot, name);
-    if (!dir) continue;
-    try {
-      const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf-8'));
-      const bin = typeof pkg.bin === 'string' ? pkg.bin : pkg.bin?.tailwindcss ?? Object.values(pkg.bin ?? {})[0];
-      if (typeof bin === 'string') return { bin: path.join(dir, bin), name };
-    } catch {
-      /* try the next candidate */
-    }
-  }
-  return null;
-}
+function resolveTailwindCli(projectRoot: string): TailwindCli {
+  for (const name of ['@tailwindcss/cli', 'tailwindcss'] as const) {
+    const packageDir = findPackageDir(projectRoot, name);
+    if (!packageDir) continue;
 
-export async function transformCSS(filePath: string, content: string): Promise<TransformResultCSS> {
-  if (hasTailwindDirectives(content)) {
-    const cwd = process.cwd();
-    const cli = resolveTailwindCli(cwd);
-    if (!cli) {
+    const packageJsonPath = path.join(packageDir, 'package.json');
+    let packageJson: { bin?: string | Record<string, string> };
+
+    try {
+      packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    } catch (error) {
       throw new Error(
-        `[velix-pack] ${filePath} uses Tailwind directives but no Tailwind CLI is installed. ` +
-          `Install it: npm i -D tailwindcss @tailwindcss/cli`
+        `[velix-pack] Cannot read ${packageJsonPath}: ${error instanceof Error ? error.message : String(error)}`
       );
     }
 
-    const outDir = path.join(cwd, '.velix', 'cache', 'pack');
-    fs.mkdirSync(outDir, { recursive: true });
-    const outputPath = path.join(outDir, 'tailwind.compiled.css');
+    const bin = typeof packageJson.bin === 'string'
+      ? packageJson.bin
+      : packageJson.bin?.tailwindcss ?? Object.values(packageJson.bin ?? {})[0];
 
-    const result = spawnSync(process.execPath, [cli.bin, '-i', filePath, '-o', outputPath], {
-      cwd,
-      stdio: 'pipe',
-      timeout: 120000,
-    });
+    if (typeof bin !== 'string') continue;
 
-    if (result.status !== 0 || !fs.existsSync(outputPath)) {
-      const detail = (result.stderr?.toString() || result.error?.message || '').trim();
-      throw new Error(`[velix-pack] Tailwind (${cli.name}) failed on ${filePath}:\n${detail}`);
-    }
-
-    return { code: fs.readFileSync(outputPath, 'utf-8'), imports: [], type: 'shared' };
+    const binPath = path.resolve(packageDir, bin);
+    if (fs.existsSync(binPath)) return { bin: binPath, name };
   }
 
-  // Standard CSS pass-through
-  return { code: content, imports: [], type: 'shared' };
+  throw new Error(
+    '[velix-pack] Tailwind directives were found, but no local Tailwind CLI is installed. ' +
+    'For Tailwind v4 install "tailwindcss" and "@tailwindcss/cli"; ' +
+    'for Tailwind v3 install "tailwindcss". Velix Pack never runs npx.'
+  );
+}
+
+export async function transformCSS(filePath: string, content: string): Promise<TransformResultCSS> {
+  if (!hasTailwindDirectives(content)) {
+    return { code: content, imports: [], type: 'shared' };
+  }
+
+  const projectRoot = process.cwd();
+  const inputPath = path.resolve(projectRoot, filePath);
+
+  if (!fs.existsSync(inputPath)) {
+    throw new Error(`[velix-pack] CSS input file does not exist: ${inputPath}`);
+  }
+
+  const cli = resolveTailwindCli(projectRoot);
+  const cacheRoot = path.join(projectRoot, '.velix', 'cache', 'pack');
+  fs.mkdirSync(cacheRoot, { recursive: true });
+
+  // Every transform gets a private directory: parallel transforms cannot
+  // overwrite one another or accidentally read a previous compilation.
+  const tempDir = fs.mkdtempSync(path.join(cacheRoot, 'css-'));
+  const outputPath = path.join(tempDir, 'compiled.css');
+
+  try {
+    const result = spawnSync(
+      process.execPath,
+      [cli.bin, '-i', inputPath, '-o', outputPath],
+      {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        stdio: 'pipe',
+        timeout: 120_000,
+        windowsHide: true,
+      }
+    );
+
+    if (result.error || result.status !== 0) {
+      const details = [result.stderr, result.stdout, result.error?.message]
+        .filter(Boolean).join('\n').trim();
+      throw new Error(
+        `[velix-pack] Tailwind (${cli.name}) failed for ${filePath} ` +
+        `(exit ${result.status ?? 'unknown'}):\n${details || 'No compiler output was provided.'}`
+      );
+    }
+
+    if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+      throw new Error(`[velix-pack] Tailwind produced an empty CSS output for ${filePath}.`);
+    }
+
+    const code = fs.readFileSync(outputPath, 'utf8');
+    // Touch the hash to make the output's content identity explicit for
+    // debugging/profiling without persisting a shared mutable artifact.
+    crypto.createHash('sha256').update(code).digest('hex');
+
+    return { code, imports: [], type: 'shared' };
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
 }
