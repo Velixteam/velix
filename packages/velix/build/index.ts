@@ -119,6 +119,7 @@ export async function build(options: BuildOptions = {}) {
 
   const appDir = resolved.resolvedAppDir;
   const routes = buildRouteTree(appDir);
+  let serverMetafile: ClientMetafile | undefined;
 
   // Collect source files for server bundle
   const sourceFiles = findFiles(appDir, /\.(tsx?|jsx?)$/);
@@ -131,6 +132,7 @@ export async function build(options: BuildOptions = {}) {
   // 4. Build server bundle
   try {
     await esbuild.build({
+      absWorkingDir: projectRoot,
       entryPoints: sourceFiles,
       outdir: serverOutDir,
       bundle: false,
@@ -143,6 +145,10 @@ export async function build(options: BuildOptions = {}) {
       logLevel: 'silent',
       treeShaking: true,
       legalComments: 'none',
+      metafile: true,
+    }).then(result => {
+      serverMetafile = result.metafile;
+      return result;
     });
 
     logger.success('Server bundle built');
@@ -154,8 +160,6 @@ export async function build(options: BuildOptions = {}) {
 
   // Build route manifest entries
   const manifestRoutes: Record<string, RouteManifestEntry> = {};
-  const emittedClientChunks = new Set<string>();
-  const emittedClientCss = new Set<string>();
   for (const r of routes.appRoutes) {
     const relFromApp = path.relative(appDir, r.filePath).replace(/\.(tsx?|jsx?)$/, '.js');
     const serverFilePath = path.join('server', 'app', relFromApp).replace(/\\/g, '/');
@@ -175,10 +179,83 @@ export async function build(options: BuildOptions = {}) {
       serverFile: serverFileCandidate,
       layouts: layoutsRel,
       // Populated from esbuild's output metafile after client bundling.
-      clientChunks: [...emittedClientChunks].sort(),
-      css: [...emittedClientCss].sort(),
+      clientChunks: [],
+      css: [],
     };
   }
+
+
+type ClientMetafile = {
+  inputs: Record<string, { imports?: Array<{ path: string; external?: boolean }> }>;
+  outputs: Record<string, {
+    inputs?: Record<string, unknown>;
+    imports?: Array<{ path: string; external?: boolean; kind?: string }>;
+  }>;
+};
+
+/**
+ * Resolve each route's client dependency closure against esbuild's metafile.
+ * Shared chunks are included whenever their input modules are reachable from
+ * the route, while unrelated route entrypoints are excluded.
+ */
+export function collectRouteClientAssets(
+  routes: Array<{ path: string; sourceFiles: string[] }>,
+  dependencyMetafile: Pick<ClientMetafile, 'inputs'>,
+  clientMetafile: Pick<ClientMetafile, 'outputs'>,
+  projectRoot: string,
+  clientOutDir: string
+): Record<string, { clientChunks: string[]; css: string[] }> {
+  const inputByAbsolutePath = new Map<string, string>();
+  for (const inputKey of Object.keys(dependencyMetafile.inputs)) {
+    inputByAbsolutePath.set(path.resolve(projectRoot, inputKey), inputKey);
+  }
+
+  const outputAssets = Object.entries(clientMetafile.outputs).map(([outputKey, output]) => ({
+    output,
+    absolutePath: path.resolve(projectRoot, outputKey),
+    inputKeys: Object.keys(output.inputs ?? {}),
+  }));
+
+  const result: Record<string, { clientChunks: string[]; css: string[] }> = {};
+
+  for (const route of routes) {
+    const reachable = new Set<string>();
+    const pending = route.sourceFiles
+      .map(file => inputByAbsolutePath.get(path.resolve(file)) ?? inputByAbsolutePath.get(path.resolve(projectRoot, path.relative(projectRoot, file))))
+      .filter((key): key is string => Boolean(key));
+
+    while (pending.length > 0) {
+      const inputKey = pending.pop()!;
+      if (reachable.has(inputKey)) continue;
+      reachable.add(inputKey);
+
+      const input = dependencyMetafile.inputs[inputKey];
+      for (const imported of input?.imports ?? []) {
+        if (imported.external) continue;
+        const resolved = path.resolve(path.dirname(path.resolve(projectRoot, inputKey)), imported.path);
+        const dependencyKey = inputByAbsolutePath.get(resolved);
+        if (dependencyKey && !reachable.has(dependencyKey)) pending.push(dependencyKey);
+      }
+    }
+
+    const chunks = new Set<string>();
+    const css = new Set<string>();
+    for (const emitted of outputAssets) {
+      if (!emitted.inputKeys.some(inputKey => reachable.has(inputKey))) continue;
+      const relative = path.relative(clientOutDir, emitted.absolutePath).split(path.sep).join('/');
+      if (!relative || relative === '..' || relative.startsWith('../') || path.isAbsolute(relative)) continue;
+      if (/\.css$/i.test(relative)) css.add('/client/' + relative);
+      else if (/\.(?:m?js)$/i.test(relative)) chunks.add(path.posix.join('client', relative));
+    }
+
+    result[route.path] = {
+      clientChunks: [...chunks].sort(),
+      css: [...css].sort(),
+    };
+  }
+
+  return result;
+}
 
   // 5. Build client bundle (client components and islands)
   const candidateDirs = [
@@ -203,10 +280,12 @@ export async function build(options: BuildOptions = {}) {
   });
 
   const manifestIslands: Record<string, string> = {};
+  let clientMetafile: ClientMetafile | undefined;
 
   if (clientFiles.length > 0) {
     try {
       const clientResult = await esbuild.build({
+        absWorkingDir: projectRoot,
         entryPoints: clientFiles,
         outdir: clientOutDir,
         bundle: true,
@@ -227,6 +306,9 @@ export async function build(options: BuildOptions = {}) {
         metafile: true,
       });
 
+      // Retain the metafile for route-level dependency mapping.
+      clientMetafile = clientResult.metafile;
+
       // Map islands to their hashed outputs
       if (clientResult.metafile) {
         for (const [outPath, outData] of Object.entries(clientResult.metafile.outputs)) {
@@ -237,9 +319,6 @@ export async function build(options: BuildOptions = {}) {
             manifestIslands[compName] = `/client/${hashedRel}`;
           }
         }
-        const clientAssets = collectClientAssetPaths(Object.keys(clientResult.metafile.outputs), projectRoot, clientOutDir);
-        clientAssets.chunks.forEach(asset => emittedClientChunks.add(asset));
-        clientAssets.css.forEach(asset => emittedClientCss.add(asset));
       }
 
       logger.success(`Client bundle built (${clientFiles.length} component${clientFiles.length > 1 ? 's' : ''})`);
@@ -250,13 +329,26 @@ export async function build(options: BuildOptions = {}) {
     }
   }
 
-  // Attach the finalized client output inventory after esbuild has emitted it.
-  // The current manifest schema is route-aware, but the bundler does not yet
-  // expose per-route dependency closures; include all client assets so shared
-  // chunks and extracted CSS are never accidentally omitted.
-  for (const route of Object.values(manifestRoutes)) {
-    route.clientChunks = [...emittedClientChunks].sort();
-    route.css = [...emittedClientCss].sort();
+  // Route asset lists are finalized from the client metafile after bundling.
+
+  if (serverMetafile && clientMetafile) {
+    const routeAssets = collectRouteClientAssets(
+      routes.appRoutes.map(route => ({
+        path: route.path,
+        sourceFiles: [route.filePath, ...collectLayouts(route.filePath, appDir)],
+      })),
+      serverMetafile,
+      clientMetafile,
+      projectRoot,
+      clientOutDir
+    );
+    for (const [routePath, assets] of Object.entries(routeAssets)) {
+      const routeManifest = manifestRoutes[routePath];
+      if (routeManifest) {
+        routeManifest.clientChunks = assets.clientChunks;
+        routeManifest.css = assets.css;
+      }
+    }
   }
 
   // 6. Compute Build ID (deterministic hash of all generated artefacts)
