@@ -216,7 +216,7 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
         fs.mkdirSync(path.dirname(output), { recursive: true });
 
         logger.info('Building Tailwind CSS (initial dev build)…');
-        runTailwind(projectRoot, cli, input, output, options, 'dev');
+        runTailwind(projectRoot, cli, input, output, { ...options, minify: false }, 'dev');
         checkMisplacedImports(output);
         logger.success(`Tailwind CSS built → ${path.relative(projectRoot, output)}`);
 
