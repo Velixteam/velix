@@ -157,6 +157,21 @@ describe('transformCSS', () => {
     }
   );
 
+  it('compiles the current transform content instead of stale on-disk CSS', async () => {
+    const cssPath = createProject();
+    fs.writeFileSync(cssPath, '@import "tailwindcss"; .stale { color: blue; }');
+
+    const result = await transformCSS(
+      cssPath,
+      '@import "tailwindcss"; .current { color: red; }'
+    );
+
+    expect(result.code).toContain('.current');
+    expect(result.code).not.toContain('.stale');
+    expect(fs.readdirSync(path.dirname(cssPath)).filter(file => file.includes('.velix.css'))).toEqual([]);
+  });
+
+
   it('fails with an actionable message when the CLI is missing', async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'velix-pack-css-missing-'));
     projectRoots.push(root);
