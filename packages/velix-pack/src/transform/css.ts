@@ -1,6 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import postcss from 'postcss';
+import loadPostcssConfig from 'postcss-load-config';
+import { Resolver } from '../resolver/index.js';
 import { ModuleType } from '../types.js';
 
 export interface TransformResultCSS {
@@ -14,10 +18,31 @@ interface TailwindCli {
   name: '@tailwindcss/cli' | 'tailwindcss';
 }
 
-/**
- * Ignore comments before scanning for Tailwind at-rules. This avoids false
- * positives when documentation/examples are embedded in CSS comments.
- */
+interface PostcssConfig {
+  plugins: Parameters<typeof postcss>[0];
+  options: Record<string, unknown>;
+}
+
+const POSTCSS_CONFIG_FILES = [
+  'postcss.config.js',
+  'postcss.config.cjs',
+  'postcss.config.mjs',
+  'postcss.config.ts',
+  'postcss.config.cts',
+  'postcss.config.mts',
+  '.postcssrc',
+  '.postcssrc.json',
+  '.postcssrc.js',
+  '.postcssrc.cjs',
+  '.postcssrc.mjs',
+  '.postcssrc.yaml',
+  '.postcssrc.yml',
+  '.postcssrc.ts',
+  '.postcssrc.cts',
+  '.postcssrc.mts',
+];
+
+/** Ignore comments before scanning for Tailwind at-rules. */
 function stripCssComments(content: string): string {
   return content.replace(/\/\*[\s\S]*?\*\//g, '');
 }
@@ -43,10 +68,7 @@ function findPackageDir(start: string, packageName: string): string | null {
   }
 }
 
-/**
- * Resolve only a project-local Tailwind CLI. Never use npx here: transforms
- * must be deterministic and must not download packages or access the network.
- */
+/** Resolve only a project-local Tailwind CLI. Never invoke npx. */
 function resolveTailwindCli(projectRoot: string): TailwindCli {
   for (const name of ['@tailwindcss/cli', 'tailwindcss'] as const) {
     const packageDir = findPackageDir(projectRoot, name);
@@ -80,56 +102,177 @@ function resolveTailwindCli(projectRoot: string): TailwindCli {
   );
 }
 
-export async function transformCSS(filePath: string, content: string): Promise<TransformResultCSS> {
-  if (!hasTailwindDirectives(content)) {
-    return { code: content, imports: [], type: 'shared' };
-  }
+function parseImportSpecifier(params: string): string | null {
+  const match = params.trim().match(
+    /^(?:url\(\s*)?(?:"([^"]+)"|'([^']+)'|([^\s)]+))\s*\)?/i
+  );
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? null;
+}
 
-  const projectRoot = process.cwd();
-  const inputPath = path.resolve(projectRoot, filePath);
+/**
+ * Collect local CSS imports for dependency graph/HMR tracking.
+ * Bare package imports, Tailwind's package import and remote URLs are left
+ * to the CSS compiler; only project files become graph dependencies.
+ */
+export function extractCssImports(
+  content: string,
+  filePath: string,
+  resolver: Resolver
+): string[] {
+  const root = postcss.parse(content, { from: filePath });
+  const imports = new Set<string>();
 
-  if (!fs.existsSync(inputPath)) {
-    throw new Error(`[velix-pack] CSS input file does not exist: ${inputPath}`);
-  }
+  root.walkAtRules('import', atRule => {
+    const specifier = parseImportSpecifier(atRule.params);
+    if (!specifier) return;
 
-  const cli = resolveTailwindCli(projectRoot);
-  const cacheRoot = path.join(projectRoot, '.velix', 'cache', 'pack');
-  fs.mkdirSync(cacheRoot, { recursive: true });
+    if (
+      specifier === 'tailwindcss' ||
+      specifier.startsWith('http://') ||
+      specifier.startsWith('https://') ||
+      specifier.startsWith('//') ||
+      specifier.startsWith('data:') ||
+      (!specifier.startsWith('.') && !specifier.startsWith('/'))
+    ) {
+      return;
+    }
 
-  // Every transform gets a private directory: parallel transforms cannot
-  // overwrite one another or accidentally read a previous compilation.
-  const tempDir = fs.mkdtempSync(path.join(cacheRoot, 'css-'));
-  const outputPath = path.join(tempDir, 'compiled.css');
-
-  try {
-    const result = spawnSync(
-      process.execPath,
-      [cli.bin, '-i', inputPath, '-o', outputPath],
-      {
-        cwd: projectRoot,
-        encoding: 'utf8',
-        stdio: 'pipe',
-        timeout: 120_000,
-        windowsHide: true,
-      }
-    );
-
-    if (result.error || result.status !== 0) {
-      const details = [result.stderr, result.stdout, result.error?.message]
-        .filter(Boolean).join('\n').trim();
-      throw new Error(
-        `[velix-pack] Tailwind (${cli.name}) failed for ${filePath} ` +
-        `(exit ${result.status ?? 'unknown'}):\n${details || 'No compiler output was provided.'}`
+    const resolved = resolver.resolve(specifier, filePath);
+    if (!resolved) {
+      throw atRule.error(
+        `Cannot resolve local CSS import "${specifier}" from ${filePath}`,
+        { plugin: 'velix-pack' }
       );
     }
+    if (path.extname(resolved).toLowerCase() !== '.css') {
+      throw atRule.error(
+        `CSS import "${specifier}" must resolve to a .css file (resolved: ${resolved})`,
+        { plugin: 'velix-pack' }
+      );
+    }
+    imports.add(resolved);
+  });
 
-    if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
-      throw new Error(`[velix-pack] Tailwind produced an empty CSS output for ${filePath}.`);
+  return [...imports];
+}
+
+function hasPostcssConfig(projectRoot: string): boolean {
+  if (POSTCSS_CONFIG_FILES.some(file => fs.existsSync(path.join(projectRoot, file)))) {
+    return true;
+  }
+
+  const packageJsonPath = path.join(projectRoot, 'package.json');
+  if (!fs.existsSync(packageJsonPath)) return false;
+
+  try {
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+    return Boolean(packageJson.postcss);
+  } catch {
+    return false;
+  }
+}
+
+async function applyPostcss(
+  content: string,
+  inputPath: string,
+  projectRoot: string
+): Promise<string> {
+  if (!hasPostcssConfig(projectRoot)) return content;
+
+  let config: PostcssConfig;
+  try {
+    config = await loadPostcssConfig(
+      {},
+      { env: process.env.NODE_ENV ?? 'development' },
+      projectRoot
+    ) as PostcssConfig;
+  } catch (error) {
+    throw new Error(
+      `[velix-pack] Failed to load PostCSS config for ${inputPath}: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+
+  try {
+    const result = await postcss(config.plugins).process(content, {
+      ...config.options,
+      from: inputPath,
+      to: inputPath,
+      map: false,
+    });
+    return result.css;
+  } catch (error) {
+    throw new Error(
+      `[velix-pack] PostCSS processing failed for ${inputPath}: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+export async function transformCSS(
+  filePath: string,
+  content: string,
+  resolver?: Resolver
+): Promise<TransformResultCSS> {
+  const projectRoot = process.cwd();
+  const inputPath = path.resolve(projectRoot, filePath);
+  const cssResolver = resolver ?? new Resolver({ projectRoot });
+
+  // Parse CSS even when Tailwind is absent: imports are still dependencies
+  // and must participate in incremental rebuilds and HMR.
+  const imports = extractCssImports(content, inputPath, cssResolver);
+  let code = content;
+
+  if (hasTailwindDirectives(content)) {
+    if (!fs.existsSync(inputPath)) {
+      throw new Error(`[velix-pack] CSS input file does not exist: ${inputPath}`);
     }
 
-    const code = fs.readFileSync(outputPath, 'utf8');
-    return { code, imports: [], type: 'shared' };
-  } finally {
-    fs.rmSync(tempDir, { recursive: true, force: true });
+    const cli = resolveTailwindCli(projectRoot);
+    const cacheRoot = path.join(projectRoot, '.velix', 'cache', 'pack');
+    fs.mkdirSync(cacheRoot, { recursive: true });
+
+    // Keep the temporary input beside the source so relative @import and
+    // @source paths retain their original resolution semantics.
+    const tempInput = path.join(
+      path.dirname(inputPath),
+      `.${path.basename(inputPath, '.css')}.${crypto.randomUUID()}.velix.css`
+    );
+    const tempDir = fs.mkdtempSync(path.join(cacheRoot, 'css-'));
+    const outputPath = path.join(tempDir, 'compiled.css');
+
+    try {
+      fs.writeFileSync(tempInput, content, 'utf8');
+      const result = spawnSync(
+        process.execPath,
+        [cli.bin, '-i', tempInput, '-o', outputPath],
+        {
+          cwd: projectRoot,
+          encoding: 'utf8',
+          stdio: 'pipe',
+          timeout: 120_000,
+          windowsHide: true,
+        }
+      );
+
+      if (result.error || result.status !== 0) {
+        const details = [result.stderr, result.stdout, result.error?.message]
+          .filter(Boolean).join('\n').trim();
+        throw new Error(
+          `[velix-pack] Tailwind (${cli.name}) failed for ${filePath} ` +
+          `(exit ${result.status ?? 'unknown'}):\n${details || 'No compiler output was provided.'}`
+        );
+      }
+
+      if (!fs.existsSync(outputPath) || fs.statSync(outputPath).size === 0) {
+        throw new Error(`[velix-pack] Tailwind produced an empty CSS output for ${filePath}.`);
+      }
+
+      code = fs.readFileSync(outputPath, 'utf8');
+    } finally {
+      fs.rmSync(tempInput, { force: true });
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
   }
+
+  code = await applyPostcss(code, inputPath, projectRoot);
+  return { code, imports, type: 'shared' };
 }
