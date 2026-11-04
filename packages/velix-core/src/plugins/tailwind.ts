@@ -67,10 +67,11 @@ function cliArgs(
   input: string,
   output: string,
   options: TailwindPluginOptions,
+  projectRoot: string,
   watch = false
 ): string[] {
   const args = [cli.bin, '-i', input, '-o', output];
-  if (options.config) args.push('-c', path.resolve(options.config));
+  if (options.config) args.push('-c', path.resolve(projectRoot, options.config));
   if (options.minify !== false && !watch) args.push('--minify');
   if (watch) args.push('--watch');
   return args;
@@ -86,7 +87,7 @@ function runTailwind(
 ): void {
   const result = spawnSync(
     process.execPath,
-    cliArgs(cli, input, output, options),
+    cliArgs(cli, input, output, options, projectRoot),
     { cwd: projectRoot, encoding: 'utf8', timeout: 120_000, windowsHide: true }
   );
 
@@ -221,7 +222,7 @@ export default function tailwindPlugin(options: TailwindPluginOptions = {}) {
 
         watcher = spawn(
           process.execPath,
-          cliArgs(cli, input, output, options, true),
+          cliArgs(cli, input, output, options, projectRoot, true),
           { cwd: projectRoot, stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true }
         );
 
