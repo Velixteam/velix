@@ -43,7 +43,7 @@ describe('production build integration', () => {
     const route = manifest.routes['/'];
 
     expect(route).toBeDefined();
-    expect(route.serverFile).toBe('server/page.js');
+    expect(route.serverFile).toBe('server/app/page.js');
     expect(route.clientChunks).toHaveLength(1);
     expect(route.clientChunks[0]).toMatch(/^client\/Counter-.+\.js$/);
     expect(fs.existsSync(path.join(outDir, route.serverFile))).toBe(true);
